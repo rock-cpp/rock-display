@@ -1,6 +1,7 @@
 #include <rtt/TaskContext.hpp> 
 #include "TaskModel.hpp"
 #include <orocos_cpp/CorbaNameService.hpp>
+#include "TaskItem.hpp"
 
 TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent), nameService(new orocos_cpp::CorbaNameService())
 {
@@ -13,49 +14,26 @@ void TaskModel::updateTask(RTT::TaskContext* task)
 {
     std::string taskName = task->getName();
     auto it = nameToData.find(taskName);
-    TaskData data;
+    TaskItem *item = nullptr;
     if(it == nameToData.end())
     {
-        data.nameItem = new QStandardItem(taskName.c_str());
-        data.statusItem = new QStandardItem();
-        nameToData.insert(std::make_pair(taskName, data));
-        
-        appendRow({data.nameItem, data.statusItem});
+        item = new TaskItem;
+        nameToData.insert(std::make_pair(taskName, item));
+        appendRow(item->getRow());
     }
     else
     {
-        data = it->second;
+        item = it->second;
     }
     
-    QString stateString;
-    RTT::base::TaskCore::TaskState state = task->getTaskState();
-    switch(state)
+    if(!item->update(task))
     {
-        case RTT::base::TaskCore::Exception:
-            stateString = "Exception";
-            break;
-        case RTT::base::TaskCore::FatalError:
-            stateString = "FatalError";
-            break;
-        case RTT::base::TaskCore::Init:
-            stateString = "Init";
-            break;
-        case RTT::base::TaskCore::PreOperational:
-            stateString = "PreOperational";
-            break;
-        case RTT::base::TaskCore::Running:
-            stateString = "Running";
-            break;
-        case RTT::base::TaskCore::RunTimeError:
-            stateString = "RunTimeError";
-            break;
-        case RTT::base::TaskCore::Stopped:
-            stateString = "Stopped";
-            break;
+        //make it gray, disconnect
     }
-    data.statusItem->setText(stateString);
-
-    emit dataChanged(data.statusItem->index(), data.statusItem->index());
+    else
+    {
+        emit dataChanged(item->updateLeft(), item->updateRight());
+    }
 }
 
 void TaskModel::queryTasks()

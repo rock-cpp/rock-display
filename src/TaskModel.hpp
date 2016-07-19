@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QStandardItemModel>
-#include <QStandardItem>
+#include "TaskItem.hpp"
 
 namespace RTT
 {
@@ -16,14 +16,8 @@ namespace orocos_cpp
 class TaskModel : public QStandardItemModel 
 {
     Q_OBJECT
-    class TaskData
-    {
-    public:
-        QStandardItem *nameItem;
-        QStandardItem *statusItem;
-    };
     
-    std::map<std::string, TaskData> nameToData;
+    std::map<std::string, TaskItem *> nameToData;
     orocos_cpp::NameService *nameService;
 public:
     explicit TaskModel(QObject* parent = 0);

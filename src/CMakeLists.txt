@@ -1,6 +1,8 @@
 rock_library(rock-display
 SOURCES 
     TaskModel.cpp
+    TaskItem.cpp
+    PortItem.cpp
 MOC 
     TaskModel.hpp
 HEADERS 
@@ -10,10 +12,9 @@ DEPS_PKGCONFIG
     QtGui
 )
 
-rock_executable(rock-display_bin Main.cpp TaskModel.cpp
+rock_executable(rock-display_bin Main.cpp
 DEPS
     rock-display
-MOC TaskModel.hpp
 DEPS_PKGCONFIG 
     orocos_cpp
     QtCore 
