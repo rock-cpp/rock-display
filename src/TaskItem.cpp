@@ -1,14 +1,13 @@
 #include <rtt/TaskContext.hpp>
 #include "TaskItem.hpp"
 
-TaskItem::TaskItem()
+TaskItem::TaskItem() : nameItem(ItemType::TASK), statusItem(ItemType::TASK)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
     nameItem.appendRow(&inputPorts);
     nameItem.appendRow(&outputPorts);
 }
-
 
 bool TaskItem::update(RTT::TaskContext* task)
 {
@@ -25,7 +24,7 @@ bool TaskItem::update(RTT::TaskContext* task)
 
     updateState(task);
     updatePorts(task);
-    
+
     return true;
 }
 
@@ -33,8 +32,8 @@ bool TaskItem::updatePorts(RTT::TaskContext* task)
 {
     const RTT::DataFlowInterface *dfi = task->ports();
     std::vector<std::string> portNames = dfi->getPortNames();
-    
-    
+
+
     for(RTT::base::PortInterface *pi : dfi->getPorts())
     {
         const std::string portName(pi->getName());
@@ -60,14 +59,14 @@ bool TaskItem::updatePorts(RTT::TaskContext* task)
         {
             item = it->second;
         }
-        
+
         if(outIf)
         {
             OutputPortItem *outIt = static_cast<OutputPortItem *> (item);
             outIt->updataValue();
         }
     }
-    
+
     return true;
 }
 
@@ -117,5 +116,3 @@ QModelIndex TaskItem::updateRight()
 {
     return statusItem.index();
 }
-
-

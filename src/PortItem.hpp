@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QStandardItem>
+#include "TypedItem.hpp"
+#include "Types.hpp"
 
 namespace RTT
 {
@@ -14,8 +16,8 @@ namespace RTT
 class PortItem
 {
 protected:
-    QStandardItem nameItem;
-    QStandardItem valueItem;
+    TypedItem nameItem;
+    TypedItem valueItem;
 
 public:
     PortItem(const std::string &name);
@@ -25,9 +27,6 @@ public:
 
 class OutputPortItem : public PortItem
 {
-    QStandardItem nameItem;
-    QStandardItem valueItem;
-    
     RTT::base::InputPortInterface *reader;
 
 public:

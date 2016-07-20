@@ -13,10 +13,10 @@ namespace orocos_cpp
     class NameService;
 }
 
-class TaskModel : public QStandardItemModel 
+class TaskModel : public QStandardItemModel
 {
     Q_OBJECT
-    
+
     std::map<std::string, TaskItem *> nameToData;
     orocos_cpp::NameService *nameService;
 public:

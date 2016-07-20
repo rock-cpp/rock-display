@@ -1,6 +1,8 @@
 #pragma once
 #include <QStandardItem>
 #include "PortItem.hpp"
+#include "TypedItem.hpp"
+#include "Types.hpp"
 
 namespace RTT
 {
@@ -10,8 +12,8 @@ namespace RTT
 class TaskItem
 {
 private:
-    QStandardItem nameItem;
-    QStandardItem statusItem;
+    TypedItem nameItem;
+    TypedItem statusItem;
 
     QStandardItem inputPorts;
     QStandardItem outputPorts;
@@ -20,16 +22,11 @@ public:
     TaskItem();
     void updateState(RTT::TaskContext* task);
     bool updatePorts(RTT::TaskContext* task);
-    
+
     bool update(RTT::TaskContext *tk);
 
     QList<QStandardItem *> getRow();
-    
-    
+
     QModelIndex updateLeft();
     QModelIndex updateRight();
-    
-    
 };
-
-

@@ -4,7 +4,6 @@
 #include <boost/lexical_cast.hpp>
 #include "PortItem.hpp"
 
-
 std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortInterface* portIf)
 {
     int cnt = 0;
@@ -22,13 +21,13 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name)
+PortItem::PortItem(const std::string& name) : nameItem(ItemType::PORT), valueItem(ItemType::PORT)
 {
     nameItem.setText(name.c_str());
     valueItem.setText("Dummy");
 }
 
-QList< QStandardItem* > PortItem::getRow()
+QList<QStandardItem* > PortItem::getRow()
 {
     return {&nameItem, &valueItem};
 }
@@ -37,7 +36,7 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
 {
     reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
     if(!reader)
-        throw std::runtime_error("Error, could not get reader for port " + port->getName()); 
+        throw std::runtime_error("Error, could not get reader for port " + port->getName());
     RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
     reader->setName(getFreePortName(clientTask, port));
     clientTask->addPort(*reader);

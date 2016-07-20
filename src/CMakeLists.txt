@@ -1,30 +1,31 @@
 rock_library(rock-display
-SOURCES 
+SOURCES
     TaskModel.cpp
     TaskItem.cpp
     PortItem.cpp
-MOC 
+    TypedItem.cpp
+MOC
     TaskModel.hpp
-HEADERS 
-DEPS_PKGCONFIG 
+    RDItemDelegate.hpp
+HEADERS
+DEPS_PKGCONFIG
     orocos_cpp
-    QtCore 
+    QtCore
     QtGui
 )
 
 rock_executable(rock-display_bin Main.cpp
 DEPS
     rock-display
-DEPS_PKGCONFIG 
+DEPS_PKGCONFIG
     orocos_cpp
-    QtCore 
+    QtCore
     QtGui
 UI
-    task_inspector_window.ui   
+    task_inspector_window.ui
 )
 
 rock_executable(list_tasks List.cpp
-DEPS_PKGCONFIG 
+DEPS_PKGCONFIG
     orocos_cpp
 )
-
