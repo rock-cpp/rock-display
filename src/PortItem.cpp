@@ -85,7 +85,7 @@ bool OutputPortItem::updataValue()
     
     if(reader->read(handle->sample) == RTT::NewData)
     {
-        handle->transport->setOrocosSample(handle->transportHandle, handle->sample.get(), true);
+        handle->transport->refreshTypelibSample(handle->transportHandle);
         Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
         
         libConfig::TypelibConfiguration tc;
