@@ -6,6 +6,7 @@ SOURCES
     TypedItem.cpp
     RDItemDelegate.cpp
 MOC
+    ConfigItem.cpp
     TaskModel.hpp
     RDItemDelegate.hpp
     Types.hpp
@@ -14,6 +15,7 @@ DEPS_PKGCONFIG
     orocos_cpp
     QtCore
     QtGui
+    lib_config
 )
 
 rock_executable(rock-display_bin Main.cpp

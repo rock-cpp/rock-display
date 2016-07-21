@@ -13,6 +13,8 @@ namespace RTT
     }
 }
 
+class PortHandle;
+
 class PortItem
 {
 protected:
@@ -27,6 +29,7 @@ public:
 
 class OutputPortItem : public PortItem
 {
+    PortHandle *handle;
     RTT::base::InputPortInterface *reader;
 
 public:
