@@ -33,7 +33,6 @@ bool TaskItem::updatePorts(RTT::TaskContext* task)
     const RTT::DataFlowInterface *dfi = task->ports();
     std::vector<std::string> portNames = dfi->getPortNames();
 
-
     for(RTT::base::PortInterface *pi : dfi->getPorts())
     {
         const std::string portName(pi->getName());

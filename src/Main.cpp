@@ -13,7 +13,6 @@
 
 orocos_cpp::TypeRegistry typeReg;
 
-
 bool loadTypkekit(const std::string &typeName)
 {
     std::cout << "Type " << typeName << " requested " << std::endl;
@@ -51,7 +50,6 @@ int main(int argc, char** argv)
     RDItemDelegate rdid(ui.treeView);
     ui.treeView->setItemDelegate(&rdid);
 
-
     RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
@@ -59,11 +57,8 @@ int main(int argc, char** argv)
     QTimer timer;
     timer.setInterval(100);
 
-
     QObject::connect(&timer, SIGNAL(timeout()), model, SLOT(queryTasks()));
     timer.start();
 
-
     return app.exec();
-
 }

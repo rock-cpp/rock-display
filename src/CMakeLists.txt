@@ -4,9 +4,11 @@ SOURCES
     TaskItem.cpp
     PortItem.cpp
     TypedItem.cpp
+    RDItemDelegate.cpp
 MOC
     TaskModel.hpp
     RDItemDelegate.hpp
+    Types.hpp
 HEADERS
 DEPS_PKGCONFIG
     orocos_cpp

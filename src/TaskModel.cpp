@@ -1,4 +1,4 @@
-#include <rtt/TaskContext.hpp> 
+#include <rtt/TaskContext.hpp>
 #include "TaskModel.hpp"
 #include <orocos_cpp/CorbaNameService.hpp>
 #include "TaskItem.hpp"
@@ -8,7 +8,6 @@ TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent), nameService(n
     setColumnCount(2);
     setHorizontalHeaderLabels(QStringList({"Name","Value"}));
 }
-
 
 void TaskModel::updateTask(RTT::TaskContext* task)
 {
@@ -25,7 +24,7 @@ void TaskModel::updateTask(RTT::TaskContext* task)
     {
         item = it->second;
     }
-    
+
     if(!item->update(task))
     {
         //make it gray, disconnect
@@ -53,5 +52,4 @@ void TaskModel::queryTasks()
         RTT::TaskContext *task = nameService->getTaskContext(tname);
         updateTask(task);
     }
-
 }
