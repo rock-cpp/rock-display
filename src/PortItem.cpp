@@ -38,7 +38,6 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
 PortItem::PortItem(const std::string& name) : nameItem(ItemType::PORT), valueItem(ItemType::PORT)
 {
     nameItem.setText(name.c_str());
-    valueItem.setText("Dummy");        
 }
 
 QList<QStandardItem* > PortItem::getRow()
@@ -73,6 +72,8 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     handle->sample = handle->transport->getDataSource(handle->transportHandle);
 
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
+    
+    valueItem.setText(type->getTypeName().c_str());
 }
 
 bool OutputPortItem::updataValue()

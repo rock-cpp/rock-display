@@ -29,15 +29,17 @@ QList< QStandardItem* > ConfigItem::getComplex(const std::shared_ptr< libConfig:
 {
     libConfig::ComplexConfigValue *cVal = static_cast<libConfig::ComplexConfigValue *>(value.get());
     QStandardItem *topName = new QStandardItem(cVal->getName().c_str());
+    QStandardItem *typeName = new QStandardItem(cVal->getCxxTypeName().c_str());
     
     for(auto &v : cVal->getValues())
     {
         auto list = getValue(v.second);
+        list.front()->setText(v.first.c_str());
 //         list.insert(0, new QStandardItem(v.second->getName().c_str()));
         topName->appendRow( list );
     }
     
-    return {topName};
+    return {topName, typeName};
 }
 
 QList< QStandardItem* > ConfigItem::getSimple(const std::shared_ptr< libConfig::ConfigValue >& value)
@@ -51,13 +53,18 @@ QList< QStandardItem* > ConfigItem::getArray(const std::shared_ptr< libConfig::C
 {
     libConfig::ArrayConfigValue *aVal = static_cast<libConfig::ArrayConfigValue *>(value.get());
     QStandardItem *topName = new QStandardItem(aVal->getName().c_str());
+    QStandardItem *typeName = new QStandardItem(aVal->getCxxTypeName().c_str());
     
+    size_t cnt = 0;
     for(auto &v : aVal->getValues())
     {
-        topName->appendRow(getValue(v));
+        auto list = getValue(v);
+        list.front()->setText(QString::number(cnt));
+        topName->appendRow(list);
+        cnt++;
     }
     
-    return {topName};
+    return {topName, typeName};
 }
 
 void ConfigItem::update(const std::shared_ptr< libConfig::ConfigValue >& value, QStandardItem* parent)
@@ -66,8 +73,6 @@ void ConfigItem::update(const std::shared_ptr< libConfig::ConfigValue >& value, 
     parent->removeRows(0, parent->rowCount());
 
     parent->appendRow(getValue(value));
-    
-    parent->setText("FOO");
 }
 
 // QList< QStandardItem* >  ConfigItem::update(std::shared_ptr< libConfig::ConfigValue >& value)
