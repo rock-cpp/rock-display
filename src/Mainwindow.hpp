@@ -5,6 +5,8 @@
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include "TaskModel.hpp"
+#include "Vizkit3dPluginRepository.hpp"
+#include <vizkit3d/Vizkit3DWidget.hpp>
 
 namespace Ui {
     class MainWindow;
@@ -35,4 +37,6 @@ private:
     QTreeView *view;
     TaskModel *model;
     RTT::TaskContext *task;
+    vizkit3d::Vizkit3DWidget widget3d;
+    Vizkit3dPluginRepository *pluginRepo;
 };

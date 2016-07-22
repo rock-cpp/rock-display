@@ -35,9 +35,13 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::PORT)), valueItem(new TypedItem(ItemType::PORT))
+PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT))
 {
     nameItem->setText(name.c_str());
+
+    nameItem->setData(this);
+    valueItem->setData(this);
+    
 }
 
 QList<QStandardItem* > PortItem::getRow()
@@ -47,6 +51,11 @@ QList<QStandardItem* > PortItem::getRow()
 
 OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)
 {
+    nameItem->setType(ItemType::OUTPUTPORT);
+    valueItem->setType(ItemType::OUTPUTPORT);
+    nameItem->setData(this);
+    valueItem->setData(this);
+    
     reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
     if(!reader)
         throw std::runtime_error("Error, could not get reader for port " + port->getName());
@@ -93,7 +102,7 @@ bool OutputPortItem::updataValue()
         if(!item)
         {
             item = getItem(conf);
-            item->setType(PORT, nullptr);
+            item->setType(OUTPUTPORT, this);
             QStandardItem *parent = nameItem->parent();
             int pos = nameItem->row();
             item->getRow().first()->setText(nameItem->text());
@@ -114,4 +123,13 @@ bool OutputPortItem::updataValue()
     }
     
     return false;
+}
+
+const std::string& OutputPortItem::getType()
+{
+    if(!reader->getTypeInfo())
+    {
+        throw std::runtime_error("Internal error, not typeInfo available");
+    }
+    return reader->getTypeInfo()->getTypeName();
 }

@@ -4,6 +4,7 @@
 #include "TypedItem.hpp"
 #include "Types.hpp"
 #include "ConfigItem.hpp"
+#include "Vizkit3dPluginRepository.hpp"
 
 namespace RTT
 {
@@ -33,8 +34,13 @@ class OutputPortItem : public PortItem
 {
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
-
+    std::vector<PluginHandle> activePlugins;
+    
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port);
     bool updataValue();
+    
+    const std::string &getType();
+    
+    void addPlugin();
 };

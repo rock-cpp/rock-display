@@ -18,11 +18,16 @@ MainWindow::MainWindow(QWidget *parent) :
     model = new TaskModel(this);
 
     view->setModel(model);
+
+    auto *list = widget3d.getAvailablePlugins();
+    pluginRepo = new Vizkit3dPluginRepository(*list);
+    delete list;
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete pluginRepo;
 }
 
 void MainWindow::prepareMenu(const QPoint & pos)
@@ -49,8 +54,20 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 }
                 break;
             case ItemType::OUTPUTPORT:
+            {
                 // for (b : bla) {}
-                menu.addAction("Widget");
+                OutputPortItem *outPort = static_cast<OutputPortItem *>( ti->getData());
+                std::cout << "Type of port is " << outPort->getType() << std::endl;
+                const auto &handles = pluginRepo->getPluginsForType(outPort->getType()); 
+                
+                std::cout << "Got " << handles.size() << " handles " << std::endl;
+                
+                for(const PluginHandle &handle: handles)
+                {
+                    menu.addAction(handle.pluginName.c_str());
+                }
+                
+            }
                 break;
             default:
                 printf("Falscher Typ %d\n", ti->type());

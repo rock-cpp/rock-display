@@ -2,7 +2,6 @@
 
 ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem())
 {
-    isEditable(false);
 }
 
 ItemBase::~ItemBase()
@@ -13,7 +12,9 @@ ItemBase::~ItemBase()
 void ItemBase::setType(int newType, void* data)
 {
     name->setType(newType);
+    name->setData(data);
     value->setType(newType);
+    value->setData(data);
 }
 
 Array::Array(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
