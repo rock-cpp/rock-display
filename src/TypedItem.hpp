@@ -10,5 +10,7 @@ private:
 
 public:
     explicit TypedItem(int type);
+    TypedItem();
+    void setType(int newType);
     virtual int type();
 };

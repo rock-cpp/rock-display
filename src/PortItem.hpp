@@ -3,6 +3,7 @@
 #include <QStandardItem>
 #include "TypedItem.hpp"
 #include "Types.hpp"
+#include "ConfigItem.hpp"
 
 namespace RTT
 {
@@ -18,8 +19,9 @@ class PortHandle;
 class PortItem
 {
 protected:
-    TypedItem nameItem;
-    TypedItem valueItem;
+    std::shared_ptr<ItemBase> item;
+    TypedItem *nameItem;
+    TypedItem *valueItem;
 
 public:
     PortItem(const std::string &name);

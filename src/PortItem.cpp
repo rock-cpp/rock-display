@@ -35,14 +35,14 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name) : nameItem(ItemType::PORT), valueItem(ItemType::PORT)
+PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::PORT)), valueItem(new TypedItem(ItemType::PORT))
 {
-    nameItem.setText(name.c_str());
+    nameItem->setText(name.c_str());
 }
 
 QList<QStandardItem* > PortItem::getRow()
 {
-    return {&nameItem, &valueItem};
+    return {nameItem, valueItem};
 }
 
 OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)
@@ -73,7 +73,7 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
 
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
     
-    valueItem.setText(type->getTypeName().c_str());
+    valueItem->setText(type->getTypeName().c_str());
 }
 
 bool OutputPortItem::updataValue()
@@ -89,10 +89,26 @@ bool OutputPortItem::updataValue()
         Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
         
         libConfig::TypelibConfiguration tc;
-        ConfigItem ci;
         std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(val);
-        conf->print(std::cout);
-        ci.update(conf, &nameItem);
+//         conf->print(std::cout);
+        if(!item)
+        {
+            item = getItem(conf);
+            item->setType(PORT, nullptr);
+            QStandardItem *parent = nameItem->parent();
+            int pos = nameItem->row();
+            item->getRow().first()->setText(nameItem->text());
+            parent->removeRow(pos);
+            parent->insertRow(pos, item->getRow());
+
+            //note, the removeRow deletes these items
+            nameItem = nullptr;
+            valueItem = nullptr;
+        }
+        else
+        {
+            item->update(conf);
+        }
         
         
         return true;
