@@ -1,8 +1,8 @@
+#include <rtt/TaskContext.hpp>
 #include "Mainwindow.hpp"
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"
 #include "TypedItem.hpp"
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -30,29 +30,21 @@ void MainWindow::prepareMenu(const QPoint & pos)
     QStandardItem *item = model->itemFromIndex(mi);
     QMenu menu(this);
 
-    if (TypedItem *ti = dynamic_cast<TypedItem*>(item)) {
-        qDebug() << ti->text();
-
+    if (TypedItem *ti = dynamic_cast<TypedItem*>(item))
+    {
         switch (ti->type()) {
             case ItemType::TASK:
                 {
+
                 QAction *act = menu.addAction("Activate");
                 QAction *sta = menu.addAction("Start");
                 QAction *sto = menu.addAction("Stop");
                 QAction *con = menu.addAction("Configure");
-                /*
-                QSignalMapper* signalMapper = new QSignalMapper (this);
-                connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
-                connect(sta, SIGNAL(triggered()), signalMapper, SLOT(map()));
-                connect(sto, SIGNAL(triggered()), signalMapper, SLOT(map()));
-                connect(con, SIGNAL(triggered()), signalMapper, SLOT(map()));
 
-                signalMapper->setMapping(act, new SignalInformation(SignalInformation::CmdType::ACTIVATE, item->text()));
-                signalMapper->setMapping(sta, new SignalInformation(SignalInformation::CmdType::START, item->text()));
-                signalMapper->setMapping(sto, new SignalInformation(SignalInformation::CmdType::STOP, item->text()));
-                signalMapper->setMapping(con, new SignalInformation(SignalInformation::CmdType::CONFIGURE, item->text())); */
-
-                //connect(signalMapper, SIGNAL(mapped(QObject *)), this, SLOT(executeCmd(QObject *)));
+                connect(act, SIGNAL(triggered()), this, SLOT(activateTask()));
+                connect(sta, SIGNAL(triggered()), this, SLOT(startTask()));
+                connect(sto, SIGNAL(triggered()), this, SLOT(stopTask()));
+                connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
                 }
                 break;
             case ItemType::PORT:
@@ -70,6 +62,27 @@ void MainWindow::prepareMenu(const QPoint & pos)
     }
 }
 
-void MainWindow::queryTasks() {
+void MainWindow::queryTasks()
+{
     model->queryTasks();
+}
+
+void MainWindow::activateTask()
+{
+
+}
+
+void MainWindow::startTask()
+{
+    //task->start();
+}
+
+void MainWindow::stopTask()
+{
+    //task->stopTask();
+}
+
+void MainWindow::configureTask()
+{
+    //task->configure();
 }

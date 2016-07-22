@@ -2,12 +2,12 @@
 #include <rtt/transports/corba/ApplicationServer.hpp>
 #include <rtt/types/TypeInfoRepository.hpp>
 
-#include <QApplication>
-#include <QTimer>
 #include "TaskModel.hpp"
 #include "Mainwindow.hpp"
 #include <vizkit3d/Vizkit3DWidget.hpp>
 #include "Vizkit3dPluginRepository.hpp"
+#include <QApplication>
+#include <QTimer>
 
 #include <orocos_cpp/TypeRegistry.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
@@ -46,16 +46,16 @@ int main(int argc, char** argv)
 
     vizkit3d::Vizkit3DWidget vizkit3dWidget;
     QStringList *plugins = vizkit3dWidget.getAvailablePlugins();
-    
-    
-    
+
+
+
     for(QString &p : *plugins)
     {
         std::cout << "Plugin : " << p.toStdString() << std::endl;
     }
-    
+
     Vizkit3dPluginRepository repo(*plugins);
-    
+
     QTimer timer;
     timer.setInterval(100);
 
