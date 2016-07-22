@@ -55,18 +55,24 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 break;
             case ItemType::OUTPUTPORT:
             {
-                // for (b : bla) {}
                 OutputPortItem *outPort = static_cast<OutputPortItem *>( ti->getData());
                 std::cout << "Type of port is " << outPort->getType() << std::endl;
-                const auto &handles = pluginRepo->getPluginsForType(outPort->getType()); 
-                
+                const auto &handles = pluginRepo->getPluginsForType(outPort->getType());
+
                 std::cout << "Got " << handles.size() << " handles " << std::endl;
-                
-                for(const PluginHandle &handle: handles)
+
+                for (const PluginHandle &handle : handles)
                 {
-                    menu.addAction(handle.pluginName.c_str());
+                    QSignalMapper* signalMapper = new QSignalMapper (this) ;
+                    QAction *act = menu.addAction(handle.pluginName.c_str());
+
+                    connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
+
+                    signalMapper->setMapping(act, new DataContainer(handle, outPort));
+
+                    connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputport(QObject*)));
                 }
-                
+
             }
                 break;
             default:
@@ -78,6 +84,15 @@ void MainWindow::prepareMenu(const QPoint & pos)
     } else {
         printf("Cast kaputt... Type: %d\n", item->type()); //TODO remove after testing
     }
+}
+
+void MainWindow::handleOutputPort(QObject *obj)
+{
+    DataContainer *d = static_cast<DataContainer*>(obj);
+    OutputPortItem *it = d->getOutputPortItem();
+    PluginHandle ph = d->getPluginHandle();
+
+    //TODO
 }
 
 void MainWindow::queryTasks()

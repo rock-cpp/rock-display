@@ -25,7 +25,8 @@ public:
     ~MainWindow();
 
 public slots:
-    void prepareMenu(const QPoint & pos);
+    void prepareMenu(const QPoint &pos);
+    void handleOutputPort(QObject *obj);
     void queryTasks();
     void activateTask();
     void startTask();
