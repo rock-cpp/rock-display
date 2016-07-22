@@ -22,6 +22,7 @@ class TaskModel : public QStandardItemModel
 public:
     explicit TaskModel(QObject* parent = 0);
     void updateTask(RTT::TaskContext *task);
+    
 public slots:
     void queryTasks();
 };

@@ -4,13 +4,15 @@ SOURCES
     TaskItem.cpp
     PortItem.cpp
     TypedItem.cpp
-    RDItemDelegate.cpp
+    Mainwindow.cpp
 MOC
     ConfigItem.cpp
     TaskModel.hpp
-    RDItemDelegate.hpp
+    Mainwindow.hpp
     Types.hpp
 HEADERS
+UI
+    task_inspector_window.ui
 DEPS_PKGCONFIG
     orocos_cpp
     QtCore
