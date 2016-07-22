@@ -3,6 +3,7 @@
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"
 #include "TypedItem.hpp"
+#include <QCursor>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -56,7 +57,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
         }
 
         QPoint pt(pos);
-        menu.exec(view->mapToGlobal(pos));
+        menu.exec(QCursor::pos());
     } else {
         printf("Cast kaputt... Type: %d\n", item->type()); //TODO remove after testing
     }
