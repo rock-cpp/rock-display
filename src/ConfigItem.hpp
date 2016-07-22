@@ -3,6 +3,8 @@
 #include <QStandardItem>
 #include <lib_config/Configuration.hpp>
 
+
+
 class ConfigItem
 {
     std::vector<QStandardItem *> items;
