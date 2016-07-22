@@ -1,3 +1,3 @@
 #pragma once
 
-enum ItemType {TASK = 1001, OUTPUPORT = 1002, INPUTPORT};
+enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT};

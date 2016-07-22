@@ -47,7 +47,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
                 }
                 break;
-            case ItemType::PORT:
+            case ItemType::OUTPUTPORT:
                 // for (b : bla) {}
                 menu.addAction("Widget");
                 break;
