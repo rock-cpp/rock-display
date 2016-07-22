@@ -47,8 +47,6 @@ int main(int argc, char** argv)
     vizkit3d::Vizkit3DWidget vizkit3dWidget;
     QStringList *plugins = vizkit3dWidget.getAvailablePlugins();
 
-
-
     for(QString &p : *plugins)
     {
         std::cout << "Plugin : " << p.toStdString() << std::endl;
