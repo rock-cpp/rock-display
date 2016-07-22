@@ -1,7 +1,7 @@
 #include <rtt/TaskContext.hpp>
 #include "TaskItem.hpp"
 
-TaskItem::TaskItem() : nameItem(ItemType::TASK), statusItem(ItemType::TASK)
+TaskItem::TaskItem(RTT::TaskContext* _task) : task(_task), nameItem(ItemType::TASK), statusItem(ItemType::TASK)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -9,7 +9,7 @@ TaskItem::TaskItem() : nameItem(ItemType::TASK), statusItem(ItemType::TASK)
     nameItem.appendRow(&outputPorts);
 }
 
-bool TaskItem::update(RTT::TaskContext* task)
+bool TaskItem::update()
 {
     if(nameItem.text().isEmpty())
     {
@@ -22,13 +22,13 @@ bool TaskItem::update(RTT::TaskContext* task)
         }
     }
 
-    updateState(task);
-    updatePorts(task);
+    updateState();
+    updatePorts();
 
     return true;
 }
 
-bool TaskItem::updatePorts(RTT::TaskContext* task)
+bool TaskItem::updatePorts()
 {
     const RTT::DataFlowInterface *dfi = task->ports();
     std::vector<std::string> portNames = dfi->getPortNames();
@@ -69,7 +69,7 @@ bool TaskItem::updatePorts(RTT::TaskContext* task)
     return true;
 }
 
-void TaskItem::updateState(RTT::TaskContext *task)
+void TaskItem::updateState()
 {
     QString stateString;
     RTT::base::TaskCore::TaskState state = task->getTaskState();
@@ -114,4 +114,9 @@ QModelIndex TaskItem::updateLeft()
 QModelIndex TaskItem::updateRight()
 {
     return statusItem.index();
+}
+
+RTT::TaskContext* TaskItem::getTaskContext()
+{
+    return task;
 }

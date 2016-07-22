@@ -18,12 +18,16 @@ private:
     QStandardItem inputPorts;
     QStandardItem outputPorts;
     std::map<std::string, PortItem *> ports;
-public:
-    TaskItem();
-    void updateState(RTT::TaskContext* task);
-    bool updatePorts(RTT::TaskContext* task);
+    RTT::TaskContext *task;
 
-    bool update(RTT::TaskContext *tk);
+public:
+    TaskItem(RTT::TaskContext* _task);
+    void updateState();
+    bool updatePorts();
+
+    bool update();
+
+    RTT::TaskContext* getTaskContext();
 
     QList<QStandardItem *> getRow();
 

@@ -40,7 +40,10 @@ void MainWindow::prepareMenu(const QPoint & pos)
     {
         switch (ti->type()) {
             case ItemType::TASK:
-                {
+            {
+                TaskItem *titem = dynamic_cast<TaskItem*>(ti);
+
+                task = titem->getTaskContext();
 
                 QAction *act = menu.addAction("Activate");
                 QAction *sta = menu.addAction("Start");
@@ -51,7 +54,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 connect(sta, SIGNAL(triggered()), this, SLOT(startTask()));
                 connect(sto, SIGNAL(triggered()), this, SLOT(stopTask()));
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
-                }
+            }
                 break;
             case ItemType::OUTPUTPORT:
             {
@@ -95,7 +98,7 @@ void MainWindow::handleOutputPort(QObject *obj)
     VizHandle nh = pluginRepo->getNewVizHandle(ph);
     widget3d.addPlugin(nh.plugin);
     widget3d.show();
-    
+
     it->addPlugin(nh);
 }
 
@@ -106,20 +109,20 @@ void MainWindow::queryTasks()
 
 void MainWindow::activateTask()
 {
-
+    task->activate();
 }
 
 void MainWindow::startTask()
 {
-    //task->start();
+    task->start();
 }
 
 void MainWindow::stopTask()
 {
-    //task->stopTask();
+    task->stop();
 }
 
 void MainWindow::configureTask()
 {
-    //task->configure();
+    task->configure();
 }

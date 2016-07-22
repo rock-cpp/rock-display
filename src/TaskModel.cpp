@@ -16,7 +16,7 @@ void TaskModel::updateTask(RTT::TaskContext* task)
     TaskItem *item = nullptr;
     if(it == nameToData.end())
     {
-        item = new TaskItem;
+        item = new TaskItem(task);
         nameToData.insert(std::make_pair(taskName, item));
         appendRow(item->getRow());
     }
@@ -25,7 +25,7 @@ void TaskModel::updateTask(RTT::TaskContext* task)
         item = it->second;
     }
 
-    if(!item->update(task))
+    if(!item->update())
     {
         //make it gray, disconnect
         //item.setEnabled(false);
