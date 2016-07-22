@@ -36,10 +36,10 @@ void MainWindow::prepareMenu(const QPoint & pos)
         switch (ti->type()) {
             case ItemType::TASK:
                 {
-                /*QAction *act = menu.addAction("Activate");
+                QAction *act = menu.addAction("Activate");
                 QAction *sta = menu.addAction("Start");
                 QAction *sto = menu.addAction("Stop");
-                QAction *con = menu.addAction("Configure");*/
+                QAction *con = menu.addAction("Configure");
                 /*
                 QSignalMapper* signalMapper = new QSignalMapper (this);
                 connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
