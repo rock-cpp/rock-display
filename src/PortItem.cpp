@@ -117,12 +117,22 @@ bool OutputPortItem::updataValue()
         {
             item->update(conf);
         }
-        
+
+        for(const VizHandle &vizHandle : activeVizualizer)
+        {
+            QGenericArgument data("data", handle->sample->getRawConstPointer());
+            vizHandle.method.invoke(vizHandle.plugin, data);
+        }
         
         return true;
     }
     
     return false;
+}
+
+void OutputPortItem::addPlugin(const VizHandle& handle)
+{
+    activeVizualizer.push_back(handle);
 }
 
 const std::string& OutputPortItem::getType()

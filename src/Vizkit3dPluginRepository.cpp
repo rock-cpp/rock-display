@@ -35,7 +35,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         }        
         for(const QString &pName: *availablePlugins)
         {
-            std::map<std::string, bool> typeMap;
+            std::map<std::string, PluginHandle> typeMap;
             handle.pluginName = pName.toStdString();
             QObject *plugin = factory->createPlugin(pName);
             
@@ -53,18 +53,21 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
                     handle.typeName = parameterList[0].data();
-                    typeMap[handle.typeName] = true;
+                    handle.method = method;
+//                     std::cout << "Into typeMap " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
+                    typeMap[handle.typeName] = handle;
                 }
             }
             
+            
+            delete plugin;
             std::cout << "Cur Plugin " << pName.toStdString() << std::endl;
             
             for(const auto &it : typeMap)
-            {
-                handle.typeName = it.first;
-                
+            {                
+                handle = it.second;
                 std::cout << "Regisering handle " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
-                typeToPlugins[handle.typeName].push_back(handle);
+                typeToPlugins[it.second.typeName].push_back(it.second);
             }
             std::cout << std::endl;
         }
@@ -73,8 +76,16 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
     }
 }
 
-#include <boost/regex.hpp>
+VizHandle Vizkit3dPluginRepository::getNewVizHandle(const PluginHandle& handle)
+{
+    VizHandle newHandle;
+    newHandle.plugin = handle.factory->createPlugin(handle.pluginName.c_str());
+    newHandle.method = handle.method;
+    return newHandle;
+}
 
+
+#include <boost/regex.hpp>
 const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type)
 {
     if(type.empty())

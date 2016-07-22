@@ -70,7 +70,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
 
                     signalMapper->setMapping(act, new DataContainer(handle, outPort));
 
-                    connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputport(QObject*)));
+                    connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
                 }
 
             }
@@ -92,7 +92,11 @@ void MainWindow::handleOutputPort(QObject *obj)
     OutputPortItem *it = d->getOutputPortItem();
     PluginHandle ph = d->getPluginHandle();
 
-    //TODO
+    VizHandle nh = pluginRepo->getNewVizHandle(ph);
+    widget3d.addPlugin(nh.plugin);
+    widget3d.show();
+    
+    it->addPlugin(nh);
 }
 
 void MainWindow::queryTasks()

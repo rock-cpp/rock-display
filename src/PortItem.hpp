@@ -15,8 +15,6 @@ namespace RTT
     }
 }
 
-class PortHandle;
-
 class PortItem
 {
 protected:
@@ -29,9 +27,11 @@ public:
     QList<QStandardItem *> getRow();
 };
 
+class PortHandle;
 
 class OutputPortItem : public PortItem
 {
+    std::vector<VizHandle> activeVizualizer;
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
     std::vector<PluginHandle> activePlugins;
@@ -42,5 +42,5 @@ public:
     
     const std::string &getType();
     
-    void addPlugin();
+    void addPlugin(const VizHandle &handle);
 };
