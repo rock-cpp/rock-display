@@ -2,7 +2,7 @@
 
 TypedItem::TypedItem(int type) : QStandardItem(), _type(type)
 {
-
+    isEditable(false);
 }
 
 TypedItem::TypedItem() : _type(-1)
