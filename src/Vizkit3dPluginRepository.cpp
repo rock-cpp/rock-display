@@ -3,10 +3,15 @@
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
 {
     QPluginLoader loader;
-    
+    std::set<std::string> libSet;
     for(QString &pluginString : plugins)
     {
-        loader.setFileName(pluginString.split('@').back());
+        libSet.insert(pluginString.split('@').back().toStdString());
+    }    
+    
+    for(const std::string &libPath: libSet)
+    {
+        loader.setFileName(libPath.c_str());
         if(!loader.load())
         {
             std::cout << "Fail " << std::endl;
@@ -20,14 +25,18 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         
         PluginHandle handle;
         handle.factory = factory;
-        handle.pluginName = pluginString.split('@').front().toStdString();
+        handle.libararyName = libPath;
         
         QStringList *availablePlugins = factory->getAvailablePlugins();
         
-        std::map<std::string, bool> typeMap;
-        
         for(const QString &pName: *availablePlugins)
         {
+            std::cout << "Plugins : " << pName.toStdString() << std::endl;
+        }        
+        for(const QString &pName: *availablePlugins)
+        {
+            std::map<std::string, bool> typeMap;
+            handle.pluginName = pName.toStdString();
             QObject *plugin = factory->createPlugin(pName);
             
             const QMetaObject *metaPlugin = plugin->metaObject();
@@ -43,26 +52,50 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 std::string update("update");
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
-                    typeMap[(parameterList.first().data())] = true;
+                    handle.typeName = parameterList[0].data();
+                    typeMap[handle.typeName] = true;
                 }
             }
+            
+            std::cout << "Cur Plugin " << pName.toStdString() << std::endl;
+            
+            for(const auto &it : typeMap)
+            {
+                handle.typeName = it.first;
+                
+                std::cout << "Regisering handle " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
+                typeToPlugins[handle.typeName].push_back(handle);
+            }
+            std::cout << std::endl;
         }
-        
-//         std::cout << "Plugin " << pluginString.toStdString() << "  supports following types " << std::endl;
-        for(auto it : typeMap)
-        {
-            handle.typeName = it.first;
-//             std::cout << it.first << std::endl;
-            typeToPlugins[it.first].push_back(handle);
-        }
-        
+
         delete availablePlugins;
     }
 }
 
+#include <boost/regex.hpp>
+
 const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type)
 {
-    auto it = typeToPlugins.find(type);
+    if(type.empty())
+        return empty;
+
+    std::string dottedType = type.substr(1, type.size());
+    dottedType = boost::regex_replace(dottedType, boost::regex("/"), "::");
+    
+    std::cout << "Dttet type '" << dottedType << "'" << std::endl;
+ 
+    for(const auto &h: typeToPlugins)
+    {
+        std::cout << "Type '" << h.first << "' handles " << h.second.size() << std::endl;
+        if(h.first == dottedType)
+        {
+            std::cout << "FOUND MATCH" << std::endl;
+            return h.second;
+        }
+    }
+    
+    auto it = typeToPlugins.find(dottedType);
     
     if(it == typeToPlugins.end());
        return empty;

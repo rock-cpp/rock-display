@@ -7,6 +7,7 @@ class PluginHandle
 {
 public:
     vizkit3d::VizkitPluginFactory *factory;
+    std::string libararyName;
     std::string pluginName;
     std::string typeName;
 };
