@@ -6,6 +6,8 @@
 #include <QTimer>
 #include "TaskModel.hpp"
 #include "Mainwindow.hpp"
+#include <vizkit3d/Vizkit3DWidget.hpp>
+#include "Vizkit3dPluginRepository.hpp"
 
 #include <orocos_cpp/TypeRegistry.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
@@ -42,6 +44,18 @@ int main(int argc, char** argv)
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
 
+    vizkit3d::Vizkit3DWidget vizkit3dWidget;
+    QStringList *plugins = vizkit3dWidget.getAvailablePlugins();
+    
+    
+    
+    for(QString &p : *plugins)
+    {
+        std::cout << "Plugin : " << p.toStdString() << std::endl;
+    }
+    
+    Vizkit3dPluginRepository repo(*plugins);
+    
     QTimer timer;
     timer.setInterval(100);
 

@@ -90,7 +90,6 @@ bool OutputPortItem::updataValue()
         
         libConfig::TypelibConfiguration tc;
         std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(val);
-//         conf->print(std::cout);
         if(!item)
         {
             item = getItem(conf);

@@ -5,6 +5,7 @@ SOURCES
     PortItem.cpp
     TypedItem.cpp
     Mainwindow.cpp
+    Vizkit3dPluginRepository.cpp
 MOC
     ConfigItem.cpp
     TaskModel.hpp
@@ -18,6 +19,7 @@ DEPS_PKGCONFIG
     QtCore
     QtGui
     lib_config
+    vizkit3d
 )
 
 rock_executable(rock-display_bin Main.cpp
