@@ -2,7 +2,7 @@
 
 ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem())
 {
-
+    isEditable(false);
 }
 
 ItemBase::~ItemBase()
@@ -37,13 +37,13 @@ void Array::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
         name->removeRows(childs.size(), values.size());
         childs.resize(values.size());
     }
-    
+
     for(size_t i = 0 ; i < childs.size(); i++)
     {
         childs[i]->update(values[i]);
     }
-    
-    
+
+
     for(size_t i = childs.size(); i < values.size(); i++)
     {
         std::shared_ptr<ItemBase> newVal = getItem(values[i]);
@@ -84,7 +84,7 @@ Complex::~Complex()
 void Complex::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
 {
     libConfig::ComplexConfigValue *cVal = static_cast<libConfig::ComplexConfigValue *>(valueIn.get());
-    
+
     size_t i = 0;
     for(auto val : cVal->getValues())
     {
@@ -97,7 +97,7 @@ void Complex::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
             i++;
             continue;
         }
-        
+
         childs[i]->update(val.second);
         i++;
     }
@@ -117,7 +117,6 @@ std::shared_ptr< ItemBase > getItem(const std::shared_ptr< libConfig::ConfigValu
             return std::shared_ptr<ItemBase>( new Complex(value));
             break;
     }
-    
+
     throw std::runtime_error("Internal Error");
 }
-

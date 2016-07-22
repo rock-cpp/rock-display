@@ -28,8 +28,7 @@ void TaskModel::updateTask(RTT::TaskContext* task)
     if(!item->update(task))
     {
         //make it gray, disconnect
-        //item->setFlags(Qt::NoItemFlags);
-        // Reactivate with Qt::ItemIsEnabled
+        //item.setEnabled(false);
     }
     else
     {
