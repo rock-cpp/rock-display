@@ -12,6 +12,7 @@ namespace RTT
     {
         class OutputPortInterface;
         class InputPortInterface;
+        class PortInterface;
     }
 }
 
@@ -24,6 +25,7 @@ protected:
 
 public:
     PortItem(const std::string &name);
+    virtual ~PortItem() {};
     QList<QStandardItem *> getRow();
 };
 
@@ -40,7 +42,9 @@ public:
     OutputPortItem(RTT::base::OutputPortInterface* port);
     bool updataValue();
     
+    void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();
+    RTT::base::PortInterface* getPort();
     
     void addPlugin(const VizHandle &handle);
 };

@@ -18,6 +18,11 @@ public:
     const Typelib::Type *type;
 };
 
+RTT::base::PortInterface* OutputPortItem::getPort()
+{
+    return this->handle->port;
+}
+
 std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortInterface* portIf)
 {
     int cnt = 0;
@@ -56,6 +61,11 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     nameItem->setData(this);
     valueItem->setData(this);
     
+    updateOutputPortInterface(port);
+}
+
+void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
+{
     reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
     if(!reader)
         throw std::runtime_error("Error, could not get reader for port " + port->getName());

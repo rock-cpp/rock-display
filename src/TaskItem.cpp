@@ -12,6 +12,19 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     nameItem.appendRow(&outputPorts);
 }
 
+bool TaskItem::clearPorts()
+{
+    std::map<std::string, PortItem*>::iterator it = ports.begin();
+    while (it != ports.end())
+    {
+        delete it->second;
+        it = ports.erase(it);
+    }
+    
+    inputPorts.removeRows(0, inputPorts.rowCount());
+    outputPorts.removeRows(0, outputPorts.rowCount());
+}
+
 bool TaskItem::update()
 {
     if(nameItem.text().isEmpty())
@@ -33,12 +46,28 @@ bool TaskItem::update()
 
 bool TaskItem::updatePorts()
 {
+    std::cout << "TaskItem::updatePorts.." << std::endl;
+    std::cout << "number of properties: " << task->properties()->size() << std::endl;
     const RTT::DataFlowInterface *dfi = task->ports();
     std::vector<std::string> portNames = dfi->getPortNames();
+    if (portNames.size() > 0)
+    {
+        std::ostringstream oss;
+        std::copy(portNames.begin(), portNames.end()-1,
+            std::ostream_iterator<std::string>(oss, ","));
+        oss << portNames.back();
+        std::cout << "update ports " << oss.str() << std::endl;
+    }
+    else
+    {
+        std::cout << "no port names for task " << task->getName() << std::endl;
+        std::cout << "number of ports: " << dfi->getPorts().size() << std::endl;
+    }
 
     for(RTT::base::PortInterface *pi : dfi->getPorts())
     {
         const std::string portName(pi->getName());
+        std::cout << "update port " << portName << std::endl;
         RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
         auto it = ports.find(portName);
         PortItem *item = nullptr;
@@ -52,20 +81,20 @@ bool TaskItem::updatePorts()
             else
             {
                 item = new PortItem(pi->getName());
-                ports.insert(std::make_pair(portName, item));
                 inputPorts.appendRow(item->getRow());
             }
+            
             ports.insert(std::make_pair(portName, item));
         }
         else
-        {
+        {   
             item = it->second;
         }
 
-        if(outIf)
+        if (outIf)
         {
-            OutputPortItem *outIt = static_cast<OutputPortItem *> (item);
-            outIt->updataValue();
+            std::cout << "update port " << portName << std::endl;
+            (static_cast<OutputPortItem *>(item))->updataValue();
         }
     }
 

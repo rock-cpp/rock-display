@@ -31,12 +31,15 @@ void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
         item = it->second;
     }
 
-    if(!item->update())
+    if (unregisteredTasks.find(taskName) != unregisteredTasks.end())
     {
-        //make it gray, disconnect
-        //item.setEnabled(false);
+        item->clearPorts();
+        item->updateTaskContext(task);
+        unregisteredTasks.erase(taskName);
+        std::cout << "cleared all ports.." << std::endl;
     }
-    else
+
+    if(item->update())
     {
         emit dataChanged(item->updateLeft(), item->updateRight());
     }
@@ -44,6 +47,7 @@ void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
 
 void TaskModel::queryTasks()
 {
+    std::cout << "queryTasks.." << std::endl;
     if(!nameService->isConnected())
     {
         if(!nameService->connect())
@@ -84,5 +88,36 @@ void TaskModel::queryTasks()
         }
 
         updateTask(task);
+    }
+
+    std::map<std::string, TaskItem*>::iterator taskIt = nameToData.begin();
+    for (; taskIt != nameToData.end(); taskIt++)
+    {
+        bool enabled = true;
+        if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end())
+        {
+            unregisteredTasks[taskIt->first] = taskIt->second;
+            enabled = false;
+        }
+
+        taskIt->second->getInputPorts().setEnabled(enabled);
+        taskIt->second->getOutputPorts().setEnabled(enabled);
+        for (QStandardItem *it: taskIt->second->getRow())
+        {
+            it->setEnabled(enabled);
+        }
+
+        for (std::pair<std::string, PortItem *> portItem: taskIt->second->getPorts())
+        {
+            QList<QStandardItem *>::iterator it = portItem.second->getRow().begin();
+            while (it != portItem.second->getRow().end())
+            {
+                if (*it)
+                {
+                    (*it)->setEnabled(enabled);
+                }
+                it++;
+            }
+        }
     }
 }
