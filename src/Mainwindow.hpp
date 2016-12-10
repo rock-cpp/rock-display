@@ -13,7 +13,9 @@ namespace Ui {
 }
 
 namespace RTT {
-    class TaskContext;
+    namespace corba {
+        class TaskContextProxy;
+    }
 }
 
 class MainWindow : public QMainWindow
@@ -37,7 +39,7 @@ private:
     Ui::MainWindow *ui;
     QTreeView *view;
     TaskModel *model;
-    RTT::TaskContext *task;
+    RTT::corba::TaskContextProxy *task;
     vizkit3d::Vizkit3DWidget widget3d;
     Vizkit3dPluginRepository *pluginRepo;
 };

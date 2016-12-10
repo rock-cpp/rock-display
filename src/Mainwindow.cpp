@@ -1,4 +1,4 @@
-#include <rtt/TaskContext.hpp>
+#include <rtt/transports/corba/TaskContextProxy.hpp>
 #include "Mainwindow.hpp"
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"

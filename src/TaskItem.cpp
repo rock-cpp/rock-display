@@ -1,7 +1,10 @@
-#include <rtt/TaskContext.hpp>
+#include <rtt/transports/corba/TaskContextProxy.hpp>
 #include "TaskItem.hpp"
 
-TaskItem::TaskItem(RTT::TaskContext* _task) : task(_task), nameItem(ItemType::TASK), statusItem(ItemType::TASK)
+TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
+    : task(_task),
+      nameItem(ItemType::TASK),
+      statusItem(ItemType::TASK)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -116,7 +119,7 @@ QModelIndex TaskItem::updateRight()
     return statusItem.index();
 }
 
-RTT::TaskContext* TaskItem::getTaskContext()
+RTT::corba::TaskContextProxy* TaskItem::getTaskContext()
 {
     return task;
 }

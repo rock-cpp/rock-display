@@ -6,7 +6,10 @@
 
 namespace RTT
 {
-    class TaskContext;
+    namespace corba
+    {
+        class TaskContextProxy;
+    }
 }
 
 class TaskItem
@@ -18,16 +21,16 @@ private:
     QStandardItem inputPorts;
     QStandardItem outputPorts;
     std::map<std::string, PortItem *> ports;
-    RTT::TaskContext *task;
+    RTT::corba::TaskContextProxy *task;
 
 public:
-    TaskItem(RTT::TaskContext* _task);
+    TaskItem(RTT::corba::TaskContextProxy* _task);
     void updateState();
     bool updatePorts();
 
     bool update();
 
-    RTT::TaskContext* getTaskContext();
+    RTT::corba::TaskContextProxy* getTaskContext();
 
     QList<QStandardItem *> getRow();
 
