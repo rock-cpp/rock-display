@@ -22,12 +22,13 @@ private:
     QStandardItem outputPorts;
     std::map<std::string, PortItem *> ports;
     RTT::corba::TaskContextProxy *task;
-
+    
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
     void updateState();
     bool updatePorts();
-    bool clearPorts();
+    
+    bool refreshPorts;
 
     bool update();
     

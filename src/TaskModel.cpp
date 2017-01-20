@@ -12,8 +12,8 @@ TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent), nameService(n
 
 void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
 {
-    std::cout << "update task " << task->getName() << std::endl;
-    std::cout << "number of ports " << task->ports()->getPortNames().size() << std::endl;
+//     std::cout << "update task " << task->getName() << std::endl;
+//     std::cout << "number of ports " << task->ports()->getPortNames().size() << std::endl;
     std::string taskName = task->getName();
 
     auto it = nameToData.find(taskName);
@@ -21,7 +21,7 @@ void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
 
     if(it == nameToData.end())
     {
-        std::cout << "add task.." << std::endl;
+//         std::cout << "add task.." << std::endl;
         item = new TaskItem(task);
         nameToData.insert(std::make_pair(taskName, item));
         appendRow(item->getRow());
@@ -33,10 +33,10 @@ void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
 
     if (unregisteredTasks.find(taskName) != unregisteredTasks.end())
     {
-        item->clearPorts();
+        item->refreshPorts = true;
         item->updateTaskContext(task);
         unregisteredTasks.erase(taskName);
-        std::cout << "cleared all ports.." << std::endl;
+//         std::cout << "cleared all ports.." << std::endl;
     }
 
     if(item->update())
@@ -47,7 +47,7 @@ void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
 
 void TaskModel::queryTasks()
 {
-    std::cout << "queryTasks.." << std::endl;
+//     std::cout << "queryTasks.." << std::endl;
     if(!nameService->isConnected())
     {
         if(!nameService->connect())
@@ -56,7 +56,7 @@ void TaskModel::queryTasks()
             return;
         }
     }
-    std::cout << "get registered tasks.." << std::endl;
+//     std::cout << "get registered tasks.." << std::endl;
     // if there are leftovers getRegisteredTasks() does not return
     // restart omniorb and remove old files solved this..
     std::vector<std::string> tasks;
@@ -69,7 +69,7 @@ void TaskModel::queryTasks()
         std::cout << "could not get regsitered tasks.." << std::endl;
         return;
     }
-    std::cout << "got " <<  tasks.size() << " registered tasks" << std::endl;
+//     std::cout << "got " <<  tasks.size() << " registered tasks" << std::endl;
 
     for(const std::string &tname : tasks)
     {
@@ -77,10 +77,11 @@ void TaskModel::queryTasks()
         std::map<std::string, TaskItem*>::iterator taskIt = nameToData.find(tname);
         if (taskIt == nameToData.end() || unregisteredTasks.find(tname) != unregisteredTasks.end())
         {
-            std::cout << "get task context: " << tname << std::endl;
+//             std::cout << "get task context: " << tname << std::endl;
             task = RTT::corba::TaskContextProxy::Create(tname);
-            std::cout << "get task context for: " << task->getName() << std::endl;
-            std::cout << "number of task ports: " << task->ports()->getPorts().size() << std::endl;
+	    std::cout << "task: " << task << std::endl;
+//             std::cout << "get task context for: " << task->getName() << std::endl;
+//             std::cout << "number of task ports: " << task->ports()->getPorts().size() << std::endl;
         }
         else
         {
@@ -105,19 +106,6 @@ void TaskModel::queryTasks()
         for (QStandardItem *it: taskIt->second->getRow())
         {
             it->setEnabled(enabled);
-        }
-
-        for (std::pair<std::string, PortItem *> portItem: taskIt->second->getPorts())
-        {
-            QList<QStandardItem *>::iterator it = portItem.second->getRow().begin();
-            while (it != portItem.second->getRow().end())
-            {
-                if (*it)
-                {
-                    (*it)->setEnabled(enabled);
-                }
-                it++;
-            }
         }
     }
 }

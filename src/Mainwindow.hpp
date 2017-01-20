@@ -7,6 +7,7 @@
 #include "TaskModel.hpp"
 #include "Vizkit3dPluginRepository.hpp"
 #include <vizkit3d/Vizkit3DWidget.hpp>
+#include <thread>
 
 namespace Ui {
     class MainWindow;
@@ -25,6 +26,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    
+    vizkit3d::Vizkit3DWidget widget3d;
 
 public slots:
     void prepareMenu(const QPoint &pos);
@@ -40,6 +43,6 @@ private:
     QTreeView *view;
     TaskModel *model;
     RTT::corba::TaskContextProxy *task;
-    vizkit3d::Vizkit3DWidget widget3d;
     Vizkit3dPluginRepository *pluginRepo;
+    std::thread *modelUpdater;
 };

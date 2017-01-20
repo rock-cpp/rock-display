@@ -11,6 +11,7 @@
 
 #include <orocos_cpp/TypeRegistry.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
+#include <thread>
 
 orocos_cpp::TypeRegistry typeReg;
 
@@ -43,22 +44,13 @@ int main(int argc, char** argv)
     RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
-
-    vizkit3d::Vizkit3DWidget vizkit3dWidget;
-    QStringList *plugins = vizkit3dWidget.getAvailablePlugins();
-
-    for(QString &p : *plugins)
+    
+    while (true)
     {
-        std::cout << "Plugin : " << p.toStdString() << std::endl;
+        w.update();
+        w.repaint();
+        w.widget3d.update();
+        app.processEvents();
+        usleep(100);
     }
-
-    Vizkit3dPluginRepository repo(*plugins);
-
-    QTimer timer;
-    timer.setInterval(100);
-
-    QObject::connect(&timer, SIGNAL(timeout()), &w, SLOT(queryTasks()));
-    timer.start();
-
-    return app.exec();
 }

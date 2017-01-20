@@ -36,7 +36,6 @@ class OutputPortItem : public PortItem
     std::vector<VizHandle> activeVizualizer;
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
-    std::vector<PluginHandle> activePlugins;
     
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port);

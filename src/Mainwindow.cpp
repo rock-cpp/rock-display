@@ -5,6 +5,8 @@
 #include "TypedItem.hpp"
 #include <QCursor>
 
+#include <base/commands/Motion2D.hpp>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -22,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     auto *list = widget3d.getAvailablePlugins();
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
+    
+    modelUpdater = new std::thread([&] { while (true) { this->queryTasks(); usleep(100); }; });
 }
 
 MainWindow::~MainWindow()
@@ -32,6 +36,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::prepareMenu(const QPoint & pos)
 {
+//     std::cout << "prepare menu.." << std::endl;
     QModelIndex mi = view->indexAt(pos);
     QStandardItem *item = model->itemFromIndex(mi);
     QMenu menu(this);
@@ -59,10 +64,10 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::OUTPUTPORT:
             {
                 OutputPortItem *outPort = static_cast<OutputPortItem *>( ti->getData());
-                std::cout << "Type of port is " << outPort->getType() << std::endl;
+//                 std::cout << "Type of port is " << outPort->getType() << std::endl;
                 const auto &handles = pluginRepo->getPluginsForType(outPort->getType());
 
-                std::cout << "Got " << handles.size() << " handles " << std::endl;
+//                 std::cout << "Got " << handles.size() << " handles " << std::endl;
 
                 for (const PluginHandle &handle : handles)
                 {
@@ -98,6 +103,8 @@ void MainWindow::handleOutputPort(QObject *obj)
     VizHandle nh = pluginRepo->getNewVizHandle(ph);
     widget3d.addPlugin(nh.plugin);
     widget3d.show();
+    
+    std::cout << "nh: " << nh.plugin << std::endl;
 
     it->addPlugin(nh);
 }

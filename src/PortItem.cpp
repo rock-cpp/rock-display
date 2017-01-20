@@ -6,6 +6,8 @@
 #include "PortItem.hpp"
 #include "ConfigItem.hpp"
 #include <lib_config/TypelibConfiguration.hpp>
+#include <base/commands/Motion2D.hpp>
+#include <base/samples/RigidBodyState.hpp>
 
 class PortHandle
 {
@@ -62,6 +64,7 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     valueItem->setData(this);
     
     updateOutputPortInterface(port);
+    valueItem->setText(handle->type->getName().c_str());
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
@@ -92,7 +95,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
 
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
     
-    valueItem->setText(type->getTypeName().c_str());
+    
 }
 
 bool OutputPortItem::updataValue()
@@ -130,8 +133,12 @@ bool OutputPortItem::updataValue()
 
         for(const VizHandle &vizHandle : activeVizualizer)
         {
-            QGenericArgument data("data", handle->sample->getRawConstPointer());
+	  QGenericArgument data("int", handle->sample->getRawConstPointer());
+            
+	    std::cout << "sample: " << handle->sample->getTypeName() << std::endl;
+	    std::cout << "vizHandle.plugin: " << vizHandle.plugin << std::endl;
             vizHandle.method.invoke(vizHandle.plugin, data);
+	    std::cout << "update viz data.." << std::endl;
         }
         
         return true;

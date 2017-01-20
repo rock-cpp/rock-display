@@ -54,7 +54,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 {
                     handle.typeName = parameterList[0].data();
                     handle.method = method;
-//                     std::cout << "Into typeMap " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
+                    //std::cout << "Into typeMap " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
                     typeMap[handle.typeName] = handle;
                 }
             }
