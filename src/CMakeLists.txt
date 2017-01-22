@@ -1,8 +1,8 @@
 rock_library(rock-display
 SOURCES
     TaskModel.cpp
-    TaskItem.cpp
     PortItem.cpp
+    TaskItem.cpp
     TypedItem.cpp
     Mainwindow.cpp
     Vizkit3dPluginRepository.cpp
@@ -23,17 +23,6 @@ DEPS_PKGCONFIG
 )
 
 rock_executable(rock-display_bin Main.cpp
-DEPS
-    rock-display
-DEPS_PKGCONFIG
-    orocos_cpp
-    QtCore
-    QtGui
-UI
-    task_inspector_window.ui
-)
-
-rock_executable(rock-display_test Test.cpp
 DEPS
     rock-display
 DEPS_PKGCONFIG
