@@ -11,11 +11,14 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     outputPorts.setText("OutputPorts");
     nameItem.appendRow(&inputPorts);
     nameItem.appendRow(&outputPorts);
+    nameItem.setData(this);
+    statusItem.setData(this);
 }
 
 bool TaskItem::update()
 {
-    if(nameItem.text().isEmpty())
+    bool needsUpdate = false;
+    if(needsUpdate = nameItem.text().isEmpty())
     {
         try {
             nameItem.setText(task->getName().c_str());
@@ -25,37 +28,22 @@ bool TaskItem::update()
             return false;
         }
     }
+    
+    needsUpdate |= updateState();
+    needsUpdate |= updatePorts();
 
-    updateState();
-    updatePorts();
-
-    return true;
+    return needsUpdate;
 }
 
 bool TaskItem::updatePorts()
 {
-//     std::cout << "TaskItem::updatePorts.." << std::endl;
-//     std::cout << "number of properties: " << task->properties()->size() << std::endl;
     const RTT::DataFlowInterface *dfi = task->ports();
     std::vector<std::string> portNames = dfi->getPortNames();
-    if (portNames.size() > 0)
-    {
-        std::ostringstream oss;
-        std::copy(portNames.begin(), portNames.end()-1,
-            std::ostream_iterator<std::string>(oss, ","));
-        oss << portNames.back();
-//         std::cout << "update ports " << oss.str() << std::endl;
-    }
-    else
-    {
-//         std::cout << "no port names for task " << task->getName() << std::endl;
-//         std::cout << "number of ports: " << dfi->getPorts().size() << std::endl;
-    }
+    bool needsUpdate = false;
 
     for(RTT::base::PortInterface *pi : dfi->getPorts())
     {
         const std::string portName(pi->getName());
-//         std::cout << "update port " << portName << std::endl;
         RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
         auto it = ports.find(portName);
         PortItem *item = nullptr;
@@ -65,6 +53,7 @@ bool TaskItem::updatePorts()
             {
                 item = new OutputPortItem(outIf);
                 outputPorts.appendRow(item->getRow());
+                std::cout << "update output ports.." << std::endl;
             }
             else
             {
@@ -73,6 +62,7 @@ bool TaskItem::updatePorts()
             }
             
             ports.insert(std::make_pair(portName, item));
+            needsUpdate = true;
         }
         else
         {   
@@ -81,22 +71,21 @@ bool TaskItem::updatePorts()
 
         if (outIf)
         {
-//             std::cout << "update port " << portName << std::endl;
             OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
             if (refreshPorts)
             {
                 outPortItem->updateOutputPortInterface(outIf);
             }
             
-            outPortItem->updataValue();
+            needsUpdate |= outPortItem->updataValue();
         }
     }
     
     refreshPorts = false;
-    return true;
+    return needsUpdate;
 }
 
-void TaskItem::updateState()
+bool TaskItem::updateState()
 {
     QString stateString;
     RTT::base::TaskCore::TaskState state = task->getTaskState();
@@ -124,8 +113,14 @@ void TaskItem::updateState()
             stateString = "Stopped";
             break;
     }
-    statusItem.setText(stateString);
+    
+    if (statusItem.text() != stateString)
+    {
+        statusItem.setText(stateString);
+        return true;
+    }
 
+    return false;
 }
 
 QList< QStandardItem* > TaskItem::getRow()

@@ -32,11 +32,14 @@ public:
 public slots:
     void prepareMenu(const QPoint &pos);
     void handleOutputPort(QObject *obj);
-    void queryTasks();
     void activateTask();
     void startTask();
     void stopTask();
     void configureTask();
+    void updateTaskItems();
+    void onExpanded(const QModelIndex &index);
+    void onCollapsed(const QModelIndex &index);
+    void setItemExpanded(const QModelIndex &index, bool expanded=false);
 
 private:
     Ui::MainWindow *ui;

@@ -22,11 +22,17 @@ protected:
     std::shared_ptr<ItemBase> item;
     TypedItem *nameItem;
     TypedItem *valueItem;
+    bool expanded;
 
 public:
     PortItem(const std::string &name);
     virtual ~PortItem() {};
     QList<QStandardItem *> getRow();
+    
+    void setExpanded(bool expanded)
+    {
+        this->expanded = expanded;
+    }
 };
 
 class PortHandle;
@@ -45,5 +51,5 @@ public:
     const std::string &getType();
     RTT::base::PortInterface* getPort();
     
-    void addPlugin(const VizHandle &handle);
+    void addPlugin(VizHandle &handle);
 };

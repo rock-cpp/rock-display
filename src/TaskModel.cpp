@@ -4,61 +4,34 @@
 #include "TaskItem.hpp"
 #include <rtt/transports/corba/TaskContextProxy.hpp>
 
-TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent), nameService(new orocos_cpp::CorbaNameService())
+TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent)
 {
     setColumnCount(2);
     setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
+    
+    notifier = new Notifier(this);
+    qRegisterMetaType<std::string>("std::string");
+    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
+                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
+    connect(notifier, SIGNAL(finished()), notifier, SLOT(deleteLater()));
 }
 
-void TaskModel::updateTask(RTT::corba::TaskContextProxy* task)
+Notifier::Notifier(QObject* parent): QThread(parent), nameService(new orocos_cpp::CorbaNameService())
 {
-//     std::cout << "update task " << task->getName() << std::endl;
-//     std::cout << "number of ports " << task->ports()->getPortNames().size() << std::endl;
-    std::string taskName = task->getName();
-
-    auto it = nameToData.find(taskName);
-    TaskItem *item = nullptr;
-
-    if(it == nameToData.end())
-    {
-//         std::cout << "add task.." << std::endl;
-        item = new TaskItem(task);
-        nameToData.insert(std::make_pair(taskName, item));
-        appendRow(item->getRow());
-    }
-    else
-    {
-        item = it->second;
-    }
-
-    if (unregisteredTasks.find(taskName) != unregisteredTasks.end())
-    {
-        item->refreshPorts = true;
-        item->updateTaskContext(task);
-        unregisteredTasks.erase(taskName);
-//         std::cout << "cleared all ports.." << std::endl;
-    }
-
-    if(item->update())
-    {
-        emit dataChanged(item->updateLeft(), item->updateRight());
-    }
+    
 }
 
-void TaskModel::queryTasks()
+void Notifier::queryTasks()
 {
-//     std::cout << "queryTasks.." << std::endl;
     if(!nameService->isConnected())
     {
         if(!nameService->connect())
         {
-            std::cout << "Could not connect to Nameserver " << std::endl;
+            std::cout << "could not connect to nameserver.." << std::endl;
             return;
         }
     }
-//     std::cout << "get registered tasks.." << std::endl;
-    // if there are leftovers getRegisteredTasks() does not return
-    // restart omniorb and remove old files solved this..
+    
     std::vector<std::string> tasks;
     try
     {
@@ -66,46 +39,107 @@ void TaskModel::queryTasks()
     }
     catch(...)
     {
-        std::cout << "could not get regsitered tasks.." << std::endl;
+        std::cout << "could not get registered tasks.." << std::endl;
         return;
     }
-//     std::cout << "got " <<  tasks.size() << " registered tasks" << std::endl;
 
+    std::map<std::string, RTT::corba::TaskContextProxy *>::iterator taskIt;
     for(const std::string &tname : tasks)
     {
         RTT::corba::TaskContextProxy *task = nullptr;
-        std::map<std::string, TaskItem*>::iterator taskIt = nameToData.find(tname);
-        if (taskIt == nameToData.end() || unregisteredTasks.find(tname) != unregisteredTasks.end())
+        taskIt = nameToRegisteredTask.find(tname);
+        std::vector<std::string>::iterator diconnectedTaskIt = std::find(disconnectedTasks.begin(), disconnectedTasks.end(), tname);
+        if (taskIt == nameToRegisteredTask.end())
         {
-//             std::cout << "get task context: " << tname << std::endl;
             task = RTT::corba::TaskContextProxy::Create(tname);
-	    std::cout << "task: " << task << std::endl;
-//             std::cout << "get task context for: " << task->getName() << std::endl;
-//             std::cout << "number of task ports: " << task->ports()->getPorts().size() << std::endl;
+            std::cout << "create task context.." << task << std::endl;
+            nameToRegisteredTask[tname] = task;
+            emit updateTask(task, tname, false);
         }
-        else
+        else if (diconnectedTaskIt != disconnectedTasks.end())
         {
-            task = taskIt->second->getTaskContext();
+            disconnectedTasks.erase(diconnectedTaskIt);
+            task = RTT::corba::TaskContextProxy::Create(tname);
+            nameToRegisteredTask[tname] = task;
+            emit updateTask(task, tname, true);
         }
-
-        updateTask(task);
     }
 
-    std::map<std::string, TaskItem*>::iterator taskIt = nameToData.begin();
-    for (; taskIt != nameToData.end(); taskIt++)
+    taskIt = nameToRegisteredTask.begin();
+    for (; taskIt != nameToRegisteredTask.end(); taskIt++)
     {
-        bool enabled = true;
         if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end())
         {
-            unregisteredTasks[taskIt->first] = taskIt->second;
-            enabled = false;
+            disconnectedTasks.push_back(taskIt->first);
+            emit updateTask(nullptr, taskIt->first, false);
         }
+    }
+}
 
-        taskIt->second->getInputPorts().setEnabled(enabled);
-        taskIt->second->getOutputPorts().setEnabled(enabled);
-        for (QStandardItem *it: taskIt->second->getRow())
+void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)
+{
+    TaskItem *item = nullptr;
+    
+    nameToItemMutex.lock();
+    std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
+    if (itemIt == nameToItem.end())
+    {
+        std::cout << "new task item " << task << std::endl;
+        item = new TaskItem(task);
+        nameToItem.insert(std::make_pair(taskName, item));
+        appendRow(item->getRow());
+    }
+    else
+    {     
+        item = itemIt->second;
+    }
+    nameToItemMutex.unlock();
+    
+    if (!task || reconnect)
+    {
+        bool enabled = false;
+        if (reconnect)
+        {
+            enabled = true;
+        }
+        
+        item->getInputPorts().setEnabled(enabled);
+        item->getOutputPorts().setEnabled(enabled);
+        for (QStandardItem *it: item->getRow())
         {
             it->setEnabled(enabled);
         }
     }
+    
+    if (!task)
+    {
+        return;
+    }
+    
+    if (reconnect)
+    {
+        item->refreshPorts = true;
+        item->updateTaskContext(task);
+    }
+    
+    std::cout << "update task item.." << item << std::endl;
+    updateTaskItem(item);
+}
+
+void TaskModel::updateTaskItem(TaskItem *item)
+{
+    if (item->update())
+    {
+        emit dataChanged(item->updateLeft(), item->updateRight());
+    }
+}
+
+void TaskModel::updateTaskItems()
+{
+    nameToItemMutex.lock();
+    for (std::map<std::string, TaskItem *>::iterator itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    {
+        updateTaskItem(itemIter->second);
+    }
+    nameToItemMutex.unlock();
 }

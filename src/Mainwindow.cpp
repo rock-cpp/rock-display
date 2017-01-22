@@ -16,7 +16,9 @@ MainWindow::MainWindow(QWidget *parent) :
     view = ui->treeView;
     view->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(prepareMenu(QPoint)));
-
+    connect(view, SIGNAL(expanded(QModelIndex)), this, SLOT(onExpanded(QModelIndex)));
+    connect(view, SIGNAL(collapsed(QModelIndex)), this, SLOT(onCollapsed(QModelIndex)));
+    
     model = new TaskModel(this);
 
     view->setModel(model);
@@ -25,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
     
-    modelUpdater = new std::thread([&] { while (true) { this->queryTasks(); usleep(100); }; });
+    model->notifier->start();
 }
 
 MainWindow::~MainWindow()
@@ -34,9 +36,37 @@ MainWindow::~MainWindow()
     delete pluginRepo;
 }
 
+void MainWindow::onExpanded(const QModelIndex& index)
+{
+    this->setItemExpanded(index, true);
+}
+
+void MainWindow::onCollapsed(const QModelIndex& index)
+{
+    this->setItemExpanded(index, false);
+}
+
+void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
+{
+    QStandardItem *item = model->itemFromIndex(index);
+    
+    if (TypedItem *ti = dynamic_cast<TypedItem*>(item))
+    {
+        if (ti->type() == ItemType::TASK)
+        {
+            std::cout << "ItemType::TASK" << std::endl;
+            TaskItem *titem = static_cast<TaskItem*>(ti->getData());
+            
+            for (std::map<std::string, PortItem *>::iterator portIt = titem->getPorts().begin(); portIt != titem->getPorts().end(); portIt++)
+            {
+                portIt->second->setExpanded(expanded);
+            }
+        }
+    }
+}
+
 void MainWindow::prepareMenu(const QPoint & pos)
 {
-//     std::cout << "prepare menu.." << std::endl;
     QModelIndex mi = view->indexAt(pos);
     QStandardItem *item = model->itemFromIndex(mi);
     QMenu menu(this);
@@ -46,7 +76,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
         switch (ti->type()) {
             case ItemType::TASK:
             {
-                TaskItem *titem = dynamic_cast<TaskItem*>(ti);
+                TaskItem *titem = static_cast<TaskItem*>(ti->getData());
 
                 task = titem->getTaskContext();
 
@@ -64,10 +94,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::OUTPUTPORT:
             {
                 OutputPortItem *outPort = static_cast<OutputPortItem *>( ti->getData());
-//                 std::cout << "Type of port is " << outPort->getType() << std::endl;
                 const auto &handles = pluginRepo->getPluginsForType(outPort->getType());
-
-//                 std::cout << "Got " << handles.size() << " handles " << std::endl;
 
                 for (const PluginHandle &handle : handles)
                 {
@@ -109,11 +136,6 @@ void MainWindow::handleOutputPort(QObject *obj)
     it->addPlugin(nh);
 }
 
-void MainWindow::queryTasks()
-{
-    model->queryTasks();
-}
-
 void MainWindow::activateTask()
 {
     task->activate();
@@ -132,4 +154,9 @@ void MainWindow::stopTask()
 void MainWindow::configureTask()
 {
     task->configure();
+}
+
+void MainWindow::updateTaskItems()
+{
+    model->updateTaskItems();
 }

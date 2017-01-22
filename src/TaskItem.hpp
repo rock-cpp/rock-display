@@ -13,7 +13,8 @@ namespace RTT
 }
 
 class TaskItem
-{
+{   
+    
 private:
     TypedItem nameItem;
     TypedItem statusItem;
@@ -25,7 +26,7 @@ private:
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
-    void updateState();
+    bool updateState();
     bool updatePorts();
     
     bool refreshPorts;

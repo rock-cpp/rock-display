@@ -47,10 +47,10 @@ int main(int argc, char** argv)
     
     while (true)
     {
+        w.updateTaskItems();
         w.update();
         w.repaint();
         w.widget3d.update();
         app.processEvents();
-        usleep(100);
     }
 }

@@ -84,7 +84,6 @@ VizHandle Vizkit3dPluginRepository::getNewVizHandle(const PluginHandle& handle)
     return newHandle;
 }
 
-
 #include <boost/regex.hpp>
 const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type)
 {
