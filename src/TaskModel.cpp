@@ -68,7 +68,8 @@ void Notifier::queryTasks()
     taskIt = nameToRegisteredTask.begin();
     for (; taskIt != nameToRegisteredTask.end(); taskIt++)
     {
-        if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end())
+        if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end() 
+            && std::find(disconnectedTasks.begin(), disconnectedTasks.end(), taskIt->first) == disconnectedTasks.end())
         {
             disconnectedTasks.push_back(taskIt->first);
             emit updateTask(nullptr, taskIt->first, false);
@@ -93,7 +94,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     {     
         item = itemIt->second;
     }
-    nameToItemMutex.unlock();
     
     if (!task || reconnect)
     {
@@ -113,6 +113,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     
     if (!task)
     {
+        nameToItemMutex.unlock();
         return;
     }
     
@@ -124,6 +125,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     
     std::cout << "update task item.." << item << std::endl;
     updateTaskItem(item);
+    nameToItemMutex.unlock();
 }
 
 void TaskModel::updateTaskItem(TaskItem *item)
