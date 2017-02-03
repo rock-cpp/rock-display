@@ -45,12 +45,11 @@ int main(int argc, char** argv)
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
     
-    while (true)
-    {
-        w.updateTaskItems();
-        w.update();
-        w.repaint();
-        w.widget3d.update();
-        app.processEvents();
-    }
+    QTimer timer;
+    timer.setInterval(100);
+    
+    QObject::connect(&timer, SIGNAL(timeout()), &w, SLOT(updateTaskItems()));
+    timer.start();
+    
+    return app.exec();
 }
