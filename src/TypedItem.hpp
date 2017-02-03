@@ -12,6 +12,7 @@ private:
 public:
     explicit TypedItem(int type);
     TypedItem();
+    virtual ~TypedItem();
     void setType(int newType);
     
     void setData(void *data);

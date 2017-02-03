@@ -18,11 +18,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(prepareMenu(QPoint)));
     connect(view, SIGNAL(expanded(QModelIndex)), this, SLOT(onExpanded(QModelIndex)));
     connect(view, SIGNAL(collapsed(QModelIndex)), this, SLOT(onCollapsed(QModelIndex)));
+    
     view->setSortingEnabled(true);
     
     model = new TaskModel(this);
 
     view->setModel(model);
+    connect(this, SIGNAL(stopNotifier()), model->notifier, SLOT(stopNotifier()));
 
     auto *list = widget3d.getAvailablePlugins();
     pluginRepo = new Vizkit3dPluginRepository(*list);
@@ -33,6 +35,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    emit stopNotifier();
+    model->notifier->quit();
+
+    if (model->notifier->wait())
+    {
+        model->notifier->terminate();
+        model->notifier->wait();
+    }
+    
+    delete model->notifier;
+    delete model;
     delete ui;
     delete pluginRepo;
 }
@@ -55,7 +68,6 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     {
         if (ti->type() == ItemType::TASK)
         {
-            std::cout << "ItemType::TASK" << std::endl;
             TaskItem *titem = static_cast<TaskItem*>(ti->getData());
             
             for (std::map<std::string, PortItem *>::iterator portIt = titem->getPorts().begin(); portIt != titem->getPorts().end(); portIt++)

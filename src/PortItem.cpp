@@ -49,12 +49,21 @@ PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::I
 
     nameItem->setData(this);
     valueItem->setData(this);
-    
+}
+
+PortItem::~PortItem()
+{
+    delete nameItem;
+    delete valueItem;
 }
 
 QList<QStandardItem* > PortItem::getRow()
 {
     return {nameItem, valueItem};
+}
+
+OutputPortItem::~OutputPortItem()
+{
 }
 
 OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)

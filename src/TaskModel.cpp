@@ -13,12 +13,20 @@ TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent)
     qRegisterMetaType<std::string>("std::string");
     connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
                       SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
-    connect(notifier, SIGNAL(finished()), notifier, SLOT(deleteLater()));
+    connect(notifier, SIGNAL(finished()), this, SLOT(deleteLater()));
 }
 
-Notifier::Notifier(QObject* parent): QThread(parent), nameService(new orocos_cpp::CorbaNameService())
+Notifier::Notifier(QObject* parent)
+    : QThread(parent),
+      nameService(new orocos_cpp::CorbaNameService()),
+      isRunning(false)
 {
     
+}
+
+void Notifier::stopNotifier()
+{
+    isRunning = false;
 }
 
 void Notifier::queryTasks()
@@ -85,7 +93,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
     if (itemIt == nameToItem.end())
     {
-        std::cout << "new task item " << task << std::endl;
         item = new TaskItem(task);
         nameToItem.insert(std::make_pair(taskName, item));
         appendRow(item->getRow());
@@ -123,7 +130,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
         item->updateTaskContext(task);
     }
     
-    std::cout << "update task item.." << item << std::endl;
     updateTaskItem(item);
     nameToItemMutex.unlock();
 }
@@ -144,4 +150,12 @@ void TaskModel::updateTaskItems()
         updateTaskItem(itemIter->second);
     }
     nameToItemMutex.unlock();
+}
+
+TaskModel::~TaskModel()
+{
+    for (std::map<std::string, TaskItem *>::iterator itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    {
+        delete itemIter->second;
+    }
 }

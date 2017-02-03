@@ -15,6 +15,10 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     statusItem.setData(this);
 }
 
+TaskItem::~TaskItem()
+{
+}
+
 bool TaskItem::update()
 {
     bool needsUpdate = false;
@@ -53,7 +57,6 @@ bool TaskItem::updatePorts()
             {
                 item = new OutputPortItem(outIf);
                 outputPorts.appendRow(item->getRow());
-                std::cout << "update output ports.." << std::endl;
             }
             else
             {

@@ -40,6 +40,9 @@ public slots:
     void onExpanded(const QModelIndex &index);
     void onCollapsed(const QModelIndex &index);
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
+    
+signals:
+    void stopNotifier();
 
 private:
     Ui::MainWindow *ui;

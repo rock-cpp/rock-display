@@ -26,7 +26,7 @@ protected:
 
 public:
     PortItem(const std::string &name);
-    virtual ~PortItem() {};
+    virtual ~PortItem();
     QList<QStandardItem *> getRow();
     
     void setExpanded(bool expanded)
@@ -45,6 +45,7 @@ class OutputPortItem : public PortItem
     
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port);
+    virtual ~OutputPortItem();
     bool updataValue();
     
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);

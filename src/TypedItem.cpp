@@ -1,4 +1,5 @@
 #include "TypedItem.hpp"
+#include <iostream>
 
 TypedItem::TypedItem(int type) : QStandardItem(), _type(type), userData(nullptr)
 {
@@ -33,4 +34,8 @@ int TypedItem::type()
         return QStandardItem::type();
 
     return _type;
+}
+
+TypedItem::~TypedItem()
+{
 }

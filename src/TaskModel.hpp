@@ -23,10 +23,13 @@ class Notifier : public QThread {
     std::map<std::string, RTT::corba::TaskContextProxy *> nameToRegisteredTask;
     std::vector<std::string > disconnectedTasks;
     orocos_cpp::NameService *nameService;
+    bool isRunning;
     
     void run()
     {
-        while(true)
+        isRunning = true;
+        
+        while(isRunning)
         {
             queryTasks();
             usleep(10000);
@@ -40,6 +43,9 @@ public:
     
     signals:
         void updateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
+        
+public slots:
+    void stopNotifier();
 };
 
 class TaskModel : public QStandardItemModel
@@ -55,6 +61,7 @@ class TaskModel : public QStandardItemModel
     
 public:
     explicit TaskModel(QObject* parent = 0);
+    virtual ~TaskModel();
     void updateTaskItems();
     Notifier *notifier;
     
