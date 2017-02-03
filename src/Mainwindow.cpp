@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(prepareMenu(QPoint)));
     connect(view, SIGNAL(expanded(QModelIndex)), this, SLOT(onExpanded(QModelIndex)));
     connect(view, SIGNAL(collapsed(QModelIndex)), this, SLOT(onCollapsed(QModelIndex)));
+    view->setSortingEnabled(true);
     
     model = new TaskModel(this);
 
