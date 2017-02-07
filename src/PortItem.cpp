@@ -9,6 +9,7 @@
 #include <base/commands/Motion2D.hpp>
 #include <base/samples/RigidBodyState.hpp>
 #include <QMetaType>
+#include "Mainwindow.hpp"
 
 class PortHandle
 {
@@ -79,6 +80,7 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
 {
+    std::cout << "updateOutputPortInterface.." << std::endl;
     reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
     if(!reader)
     {
@@ -113,28 +115,26 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
 
 bool OutputPortItem::updataValue()
 {    
-    if(!handle)
+    if (!handle)
     {
         return false;
     }
     
-    if (activeVizualizer.empty() && !expanded)
+    if (!expanded)
     {
         return false;
     }
     
-    if(reader->read(handle->sample) == RTT::NewData)
+    if (reader->read(handle->sample) == RTT::NewData)
     {
         handle->transport->refreshTypelibSample(handle->transportHandle);
         Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
-        
-        libConfig::TypelibConfiguration tc;
-        std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(val);
-        if(!item)
+       
+        if (!item)
         {
-            item = getItem(conf);
-            item->setType(OUTPUTPORT, this);
+            item = getItem(val);
             QStandardItem *parent = nameItem->parent();
+            
             int pos = nameItem->row();
             item->getRow().first()->setText(nameItem->text());
             parent->removeRow(pos);
@@ -146,24 +146,13 @@ bool OutputPortItem::updataValue()
         }
         else
         {
-            item->update(conf);
-        }
-
-        for(VizHandle vizHandle : activeVizualizer)
-        {
-            QGenericArgument data("void *", handle->sample->getRawConstPointer());
-            vizHandle.method.invoke(vizHandle.plugin, data);
+            item->update(val);
         }
         
         return true;
     }
     
     return false;
-}
-
-void OutputPortItem::addPlugin(VizHandle& handle)
-{
-    activeVizualizer.push_back(handle);
 }
 
 const std::string& OutputPortItem::getType()

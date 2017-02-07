@@ -104,10 +104,18 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
             }
                 break;
-            case ItemType::OUTPUTPORT:
+                
+            case ItemType::CONFIGITEM:
             {
-                OutputPortItem *outPort = static_cast<OutputPortItem *>( ti->getData());
-                const auto &handles = pluginRepo->getPluginsForType(outPort->getType());
+                ItemBase *titem = static_cast<ItemBase*>(ti->getData());
+                std::string name = titem->getRow().first()->text().toStdString();
+                std::string cxxTypeName = titem->getRow().last()->text().toStdString();
+                int start_pos = 0;
+                if ((start_pos = cxxTypeName.find("_m", start_pos)) != std::string::npos) {
+                    cxxTypeName.replace(start_pos, 2, "");
+                }
+
+                const auto &handles = pluginRepo->getPluginsForType(cxxTypeName);
 
                 for (const PluginHandle &handle : handles)
                 {
@@ -116,7 +124,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
 
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 
-                    signalMapper->setMapping(act, new DataContainer(handle, outPort));
+                    signalMapper->setMapping(act, new DataContainer(handle, titem));
 
                     connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
                 }
@@ -124,20 +132,18 @@ void MainWindow::prepareMenu(const QPoint & pos)
             }
                 break;
             default:
-                printf("Falscher Typ %d\n", ti->type());
+                printf("wrong type %d\n", ti->type());
         }
 
         QPoint pt(pos);
         menu.exec(QCursor::pos());
-    } else {
-        printf("Cast kaputt... Type: %d\n", item->type()); //TODO remove after testing
     }
 }
 
 void MainWindow::handleOutputPort(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
-    OutputPortItem *it = d->getOutputPortItem();
+    ItemBase *it = d->getItem();
     PluginHandle ph = d->getPluginHandle();
 
     VizHandle nh = pluginRepo->getNewVizHandle(ph);

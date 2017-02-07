@@ -1,7 +1,21 @@
 #include "ConfigItem.hpp"
+#include <rtt/plugin/PluginLoader.hpp>
+#include <rtt/types/TypeInfoRepository.hpp>
+#include <orocos_cpp_base/OrocosHelpers.hpp>
+#include <boost/lexical_cast.hpp>
+#include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <rtt/base/InputPortInterface.hpp>
+#include <rtt/base/OutputPortInterface.hpp>
+#include <rtt/types/TypeInfo.hpp>
+#include <lib_config/TypelibConfiguration.hpp>
+#include <base/Trajectory.hpp>
+#include "Types.hpp"
+
 
 ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem())
 {
+    name->setType(ItemType::CONFIGITEM);
+    value->setType(ItemType::CONFIGITEM);
 }
 
 ItemBase::~ItemBase()
@@ -9,17 +23,11 @@ ItemBase::~ItemBase()
 
 }
 
-void ItemBase::setType(int newType, void* data)
+Array::Array(Typelib::Value& valueIn)
+    : ItemBase()
 {
-    name->setType(newType);
-    name->setData(data);
-    value->setType(newType);
-    value->setData(data);
-}
-
-Array::Array(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
-{
-    value->setText(valueIn->getCxxTypeName().c_str());
+    const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
+    value->setText(array.getName().c_str());
     update(valueIn);
 }
 
@@ -28,35 +36,45 @@ Array::~Array()
 
 }
 
-void Array::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
+void Array::update(Typelib::Value& valueIn)
 {
-    libConfig::ArrayConfigValue *aVal = static_cast<libConfig::ArrayConfigValue *>(valueIn.get());
-    auto values(aVal->getValues());
-
-    if(values.size() < childs.size())
+    const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
+    
+    void *data = valueIn.getData();
+    
+    const Typelib::Type &indirect(array.getIndirection());
+    
+    name->setData(this);
+    value->setData(this);
+    
+    if(array.getDimension() < childs.size())
     {
-        name->removeRows(childs.size(), values.size());
-        childs.resize(values.size());
+        name->removeRows(childs.size(), array.getDimension());
+        childs.resize(array.getDimension());
     }
-
-    for(size_t i = 0 ; i < childs.size(); i++)
+    
+    for(size_t i = 0; i < childs.size(); i++)
     {
-        childs[i]->update(values[i]);
+        Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
+        childs[i]->update(arrayV);
     }
-
-
-    for(size_t i = childs.size(); i < values.size(); i++)
+    
+    for(size_t i = childs.size(); i < array.getDimension(); i++)
     {
-        std::shared_ptr<ItemBase> newVal = getItem(values[i]);
+        Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
+        std::shared_ptr<ItemBase> newVal = getItem(arrayV);
         newVal->setName(QString::number(i));
         childs.push_back(newVal);
         name->appendRow(newVal->getRow());
     }
 }
 
-Simple::Simple(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
+Simple::Simple(Typelib::Value& valueIn)
+    : ItemBase()
 {
-    name->setText(valueIn->getName().c_str());
+    libConfig::TypelibConfiguration tc;
+    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
+    name->setText(conf->getName().c_str());
     update(valueIn);
 }
 
@@ -65,16 +83,24 @@ Simple::~Simple()
 
 }
 
-void Simple::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
+void Simple::update(Typelib::Value& valueIn)
 {
-    libConfig::SimpleConfigValue *sVal = static_cast<libConfig::SimpleConfigValue *>(valueIn.get());
+    libConfig::TypelibConfiguration tc;
+    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
+    
+    libConfig::SimpleConfigValue *sVal = static_cast<libConfig::SimpleConfigValue *>(conf.get());
     value->setText(sVal->getValue().c_str());
+    name->setData(this);
+    value->setData(this);
 }
 
-Complex::Complex(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
+Complex::Complex(Typelib::Value& valueIn)
+    : ItemBase()
 {
     update(valueIn);
-    value->setText(valueIn->getCxxTypeName().c_str());
+    libConfig::TypelibConfiguration tc;
+    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
+    value->setText(conf->getCxxTypeName().c_str());
 }
 
 Complex::~Complex()
@@ -82,42 +108,104 @@ Complex::~Complex()
 
 }
 
-void Complex::update(const std::shared_ptr< libConfig::ConfigValue >& valueIn)
+void Complex::update(Typelib::Value& valueIn)
 {
-    libConfig::ComplexConfigValue *cVal = static_cast<libConfig::ComplexConfigValue *>(valueIn.get());
-
-    size_t i = 0;
-    for(auto val : cVal->getValues())
+    const Typelib::Type &type(valueIn.getType());
+    name->setData(this);
+    value->setData(this);
+    
+    for (VizHandle vizHandle : activeVizualizer)
     {
-        if(childs.size() <= i)
+//         std::cout << "vizHandle update.." << std::endl; 
+        QGenericArgument data("void *", valueIn.getData());
+        vizHandle.method.invoke(vizHandle.plugin, data);
+    }
+    
+    
+    if (type.getCategory() == Typelib::Type::Compound)
+    {
+        const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(valueIn.getType());
+     
+        uint8_t *data = static_cast<uint8_t *>(valueIn.getData());
+        
+        size_t i = 0;
+        for(const Typelib::Field &field: comp.getFields())
         {
-            std::shared_ptr<ItemBase> newVal = getItem(val.second);
-            newVal->setName(val.first.c_str());
+            Typelib::Value fieldV(data + field.getOffset(), field.getType());
+            
+            if(childs.size() <= i)
+            {
+                std::shared_ptr<ItemBase> newVal = getItem(fieldV);
+                newVal->setName(field.getName().c_str());
+                childs.push_back(newVal);
+                name->appendRow(newVal->getRow());
+                i++;
+                continue;
+            }
+
+            childs[i]->update(fieldV);           
+            i++;
+        }
+    }
+    else
+    {
+        const Typelib::Container &cont = static_cast<const Typelib::Container &>(valueIn.getType());
+        const size_t size = cont.getElementCount(valueIn.getData());
+        
+        if(cont.kind() == "/std/string")
+        {
+            const std::string *content = static_cast<const std::string *>(valueIn.getData());
+            value->setText(content->c_str());
+            return;
+        }
+        
+        //std::vector
+        if (size < childs.size())
+        {
+            name->removeRows(childs.size(), size);
+            childs.resize(size);
+        }
+        
+        for(size_t i = 0; i < childs.size(); i++)
+        {
+            Typelib::Value elem = cont.getElement(valueIn.getData(), i);
+            childs[i]->update(elem);
+        }
+        
+        for(size_t i = childs.size(); i < size; i++)
+        {
+            Typelib::Value elem = cont.getElement(valueIn.getData(), i);
+            std::shared_ptr<ItemBase> newVal = getItem(elem);
+            newVal->setName(QString::number(i));
             childs.push_back(newVal);
             name->appendRow(newVal->getRow());
-            i++;
-            continue;
         }
-
-        childs[i]->update(val.second);
-        i++;
     }
 }
 
-std::shared_ptr< ItemBase > getItem(const std::shared_ptr< libConfig::ConfigValue >& value)
-{
-    switch(value->getType())
+std::shared_ptr< ItemBase > getItem(Typelib::Value& value)
+{   
+    const Typelib::Type &type(value.getType());
+    
+    switch(type.getCategory())
     {
-        case libConfig::ConfigValue::ARRAY:
-            return std::shared_ptr<ItemBase>( new Array(value));
+        case Typelib::Type::Array:
+            return std::shared_ptr<ItemBase>(new Array(value));
             break;
-        case libConfig::ConfigValue::SIMPLE:
-            return std::shared_ptr<ItemBase>( new Simple(value));
+        case Typelib::Type::Enum:
+        case Typelib::Type::Numeric:
+            return std::shared_ptr<ItemBase>(new Simple(value));
             break;
-        case libConfig::ConfigValue::COMPLEX:
-            return std::shared_ptr<ItemBase>( new Complex(value));
+        case Typelib::Type::Compound:
+        case Typelib::Type::Container:
+            return std::shared_ptr<ItemBase>(new Complex(value));
             break;
     }
 
     throw std::runtime_error("Internal Error");
+}
+
+void ItemBase::addPlugin(VizHandle& handle)
+{
+    activeVizualizer.push_back(handle);
 }

@@ -6,8 +6,8 @@ SOURCES
     TypedItem.cpp
     Mainwindow.cpp
     Vizkit3dPluginRepository.cpp
-MOC
     ConfigItem.cpp
+MOC
     TaskModel.hpp
     Mainwindow.hpp
     Types.hpp

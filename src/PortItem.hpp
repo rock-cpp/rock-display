@@ -39,7 +39,6 @@ class PortHandle;
 
 class OutputPortItem : public PortItem
 {
-    std::vector<VizHandle> activeVizualizer;
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
     
@@ -51,6 +50,4 @@ public:
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();
     RTT::base::PortInterface* getPort();
-    
-    void addPlugin(VizHandle &handle);
 };

@@ -28,6 +28,10 @@ public:
     ~MainWindow();
     
     vizkit3d::Vizkit3DWidget widget3d;
+    Vizkit3dPluginRepository *getPluginRepo()
+    {
+        return pluginRepo;
+    }
 
 public slots:
     void prepareMenu(const QPoint &pos);

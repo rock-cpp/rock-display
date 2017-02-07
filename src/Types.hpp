@@ -4,19 +4,19 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include "PortItem.hpp"
 
-enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT = 1003};
+enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT = 1003, CONFIGITEM = 1004};
 
-class OutputPortItem;
+class ItemBase;
 
 class DataContainer : public QObject {
     Q_OBJECT
 
     private:
         PluginHandle _handle;
-        OutputPortItem *_opi;
+        ItemBase *_opi;
 
     public:
-        DataContainer(PluginHandle handle, OutputPortItem *opi) : _handle(handle), _opi(opi)
+        DataContainer(PluginHandle handle, ItemBase *opi) : _handle(handle), _opi(opi)
         {
 
         }
@@ -31,7 +31,7 @@ class DataContainer : public QObject {
             return _handle;
         }
 
-        OutputPortItem* getOutputPortItem()
+        ItemBase* getItem()
         {
             return _opi;
         }

@@ -2,58 +2,84 @@
 
 #include <lib_config/Configuration.hpp>
 #include "TypedItem.hpp"
+#include <typelib/value.hh>
+
+class PortHandle;
+class OutputPortItem;
+class VizHandle;
+
+namespace RTT
+{
+    namespace types
+    {
+        class TypeInfo;
+    }
+    
+    namespace base
+    {
+        class OutputPortInterface;
+        class InputPortInterface;
+        class PortInterface;
+    }
+}
 
 class ItemBase
-{
-protected:
+{   
+public:
     TypedItem *name;
     TypedItem *value;
+    
+    std::vector<VizHandle> activeVizualizer;
+    
+    void addPlugin(VizHandle &handle);
 
-public:
     ItemBase();
     
-    virtual void update(const std::shared_ptr< libConfig::ConfigValue >& value) = 0;
+    virtual void update(Typelib::Value& valueIn) = 0;
     virtual ~ItemBase();
     void setName(const QString &newName)
     {
         name->setText(newName);
     }
     
-    void setType(int newType, void *data);
-    
     QList<QStandardItem *> getRow()
     {
         return {name, value};
     }
+    
+    void setType(int newType)
+    {
+        this->name->setType(newType);
+        this->value->setType(newType);
+    }
 };
 
-std::shared_ptr<ItemBase> getItem(const std::shared_ptr< libConfig::ConfigValue >& value);
+std::shared_ptr<ItemBase> getItem(Typelib::Value& value);
 
 class Array : public ItemBase
 {
     std::vector<std::shared_ptr<ItemBase> > childs;
+    
 public:
-    Array(const std::shared_ptr< libConfig::ConfigValue >& valueIn);
+    Array(Typelib::Value& valueIn);
     virtual ~Array();
-    virtual void update(const std::shared_ptr< libConfig::ConfigValue >& valueIn);
+    virtual void update(Typelib::Value& valueIn);
 };
 
 class Simple : public ItemBase
 {
 public:
-    Simple(const std::shared_ptr< libConfig::ConfigValue >& valueIn);    
+    Simple(Typelib::Value& valueIn);    
     virtual ~Simple();
-    virtual void update(const std::shared_ptr< libConfig::ConfigValue >& valueIn);
+    virtual void update(Typelib::Value& valueIn);
 };
 
 class Complex : public ItemBase
 {
     std::vector<std::shared_ptr<ItemBase> > childs;
+    
 public:
-    Complex(const std::shared_ptr< libConfig::ConfigValue >& valueIn);
+    Complex(Typelib::Value& valueIn);
     virtual ~Complex();
-    virtual void update(const std::shared_ptr< libConfig::ConfigValue >& value);
+    virtual void update(Typelib::Value& valueIn);
 };
-
-
-
