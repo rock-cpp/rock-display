@@ -34,5 +34,6 @@ public:
     VizHandle getNewVizHandle(const PluginHandle &handle);
     
     const std::vector<PluginHandle> &getPluginsForType(const std::string &type);
+    
+    const std::vector<PluginHandle> getAllAvailablePlugins();
 };
-

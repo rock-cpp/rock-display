@@ -30,7 +30,30 @@ MainWindow::MainWindow(QWidget *parent) :
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
     
+    std::vector<PluginHandle> allAvailablePlugins = pluginRepo->getAllAvailablePlugins();
+    for (const PluginHandle &handle: allAvailablePlugins)
+    {
+        QSignalMapper* signalMapper = new QSignalMapper (this) ;
+        QAction *act = ui->menuWidgets->addAction(handle.pluginName.c_str());
+
+        connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
+
+        signalMapper->setMapping(act, new DataContainer(handle, nullptr));
+
+        connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(openPlugin(QObject*)));
+    }
+    
     model->notifier->start();
+}
+
+void MainWindow::openPlugin(QObject *obj)
+{
+    DataContainer *d = static_cast<DataContainer*>(obj);
+    PluginHandle ph = d->getPluginHandle();
+
+    VizHandle nh = pluginRepo->getNewVizHandle(ph);
+    widget3d.addPlugin(nh.plugin);
+    widget3d.show();
 }
 
 MainWindow::~MainWindow()
@@ -109,13 +132,13 @@ void MainWindow::prepareMenu(const QPoint & pos)
             {
                 ItemBase *titem = static_cast<ItemBase*>(ti->getData());
                 std::string name = titem->getRow().first()->text().toStdString();
-                std::string cxxTypeName = titem->getRow().last()->text().toStdString();
+                std::string typeName = titem->getRow().last()->text().toStdString();
                 int start_pos = 0;
-                if ((start_pos = cxxTypeName.find("_m", start_pos)) != std::string::npos) {
-                    cxxTypeName.replace(start_pos, 2, "");
+                if ((start_pos = typeName.find("_m", start_pos)) != std::string::npos) {
+                    typeName.replace(start_pos, 2, "");
                 }
 
-                const auto &handles = pluginRepo->getPluginsForType(cxxTypeName);
+                const auto &handles = pluginRepo->getPluginsForType(typeName);
 
                 for (const PluginHandle &handle : handles)
                 {

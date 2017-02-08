@@ -98,9 +98,7 @@ Complex::Complex(Typelib::Value& valueIn)
     : ItemBase()
 {
     update(valueIn);
-    libConfig::TypelibConfiguration tc;
-    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
-    value->setText(conf->getCxxTypeName().c_str());
+    value->setText(valueIn.getType().getName().c_str());
 }
 
 Complex::~Complex()
@@ -116,7 +114,6 @@ void Complex::update(Typelib::Value& valueIn)
     
     for (VizHandle vizHandle : activeVizualizer)
     {
-//         std::cout << "vizHandle update.." << std::endl; 
         QGenericArgument data("void *", valueIn.getData());
         vizHandle.method.invoke(vizHandle.plugin, data);
     }

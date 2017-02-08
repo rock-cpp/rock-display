@@ -87,6 +87,7 @@ void Notifier::queryTasks()
 
 void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)
 {
+    std::cout << "TaskModel::onUpdateTask.." << std::endl;
     TaskItem *item = nullptr;
     
     nameToItemMutex.lock();

@@ -32,7 +32,7 @@ class Notifier : public QThread {
         while(isRunning)
         {
             queryTasks();
-            usleep(10000);
+            usleep(20000);
         }
     }
         
