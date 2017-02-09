@@ -19,6 +19,24 @@ namespace RTT {
     }
 }
 
+class AddNameServiceDialog : public QDialog
+{
+    Q_OBJECT
+    
+public:
+    AddNameServiceDialog(QWidget* parent = 0);
+    
+private:
+    QLineEdit *nameServiceIP;
+    void addNameService();
+    
+public slots:
+    virtual void accept();
+    
+signals:
+    void requestNameServiceAdd(const std::string &nameServiceIP);
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -32,6 +50,8 @@ public:
     {
         return pluginRepo;
     }
+    
+    QThread *notifierThread;
 
 public slots:
     void prepareMenu(const QPoint &pos);
@@ -45,10 +65,11 @@ public slots:
     void onExpanded(const QModelIndex &index);
     void onCollapsed(const QModelIndex &index);
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
+    void addNameService();
     
 signals:
     void stopNotifier();
-
+    
 private:
     Ui::MainWindow *ui;
     QTreeView *view;
@@ -56,4 +77,5 @@ private:
     RTT::corba::TaskContextProxy *task;
     Vizkit3dPluginRepository *pluginRepo;
     std::thread *modelUpdater;
+    AddNameServiceDialog *nameServiceDialog;
 };

@@ -9,19 +9,18 @@ TaskModel::TaskModel(QObject* parent): QStandardItemModel(parent)
     setColumnCount(2);
     setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
     
-    notifier = new Notifier(this);
+    notifier = new Notifier();
     qRegisterMetaType<std::string>("std::string");
     connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
                       SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
-    connect(notifier, SIGNAL(finished()), this, SLOT(deleteLater()));
 }
 
 Notifier::Notifier(QObject* parent)
-    : QThread(parent),
-      nameService(new orocos_cpp::CorbaNameService()),
+    : QObject(parent),
       isRunning(false)
 {
-    
+    qRegisterMetaType<std::string>("std::string");
+    nameServices.push_back(new orocos_cpp::CorbaNameService());
 }
 
 void Notifier::stopNotifier()
@@ -29,10 +28,27 @@ void Notifier::stopNotifier()
     isRunning = false;
 }
 
+void Notifier::addNameService(const std::string &nameServiceIP)
+{
+    nameServicesMutex.lock();
+    std::cout << "add nameservice for ip " << nameServiceIP << ".." << std::endl;
+    nameServices.push_back(new orocos_cpp::CorbaNameService(nameServiceIP));
+    nameServicesMutex.unlock();
+}
+
 void Notifier::queryTasks()
+{
+    for (orocos_cpp::NameService *nameService: nameServices)
+    {
+        queryTasks(nameService);
+    }
+}
+
+void Notifier::queryTasks(orocos_cpp::NameService *nameService)
 {
     if(!nameService->isConnected())
     {
+        std::cout << "try to connect to " << nameService << std::endl;
         if(!nameService->connect())
         {
             std::cout << "could not connect to nameserver.." << std::endl;
@@ -87,7 +103,6 @@ void Notifier::queryTasks()
 
 void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)
 {
-    std::cout << "TaskModel::onUpdateTask.." << std::endl;
     TaskItem *item = nullptr;
     
     nameToItemMutex.lock();

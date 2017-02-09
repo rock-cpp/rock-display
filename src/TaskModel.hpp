@@ -17,35 +17,43 @@ namespace orocos_cpp
     class NameService;
 }
 
-class Notifier : public QThread {
+class Notifier : public QObject
+{
     Q_OBJECT
     
     std::map<std::string, RTT::corba::TaskContextProxy *> nameToRegisteredTask;
     std::vector<std::string > disconnectedTasks;
-    orocos_cpp::NameService *nameService;
+    std::vector<orocos_cpp::NameService *> nameServices;
     bool isRunning;
-    
-    void run()
-    {
-        isRunning = true;
-        
-        while(isRunning)
-        {
-            queryTasks();
-            usleep(20000);
-        }
-    }
+    std::mutex nameServicesMutex;
         
     void queryTasks();
+    void queryTasks(orocos_cpp::NameService *nameService);
   
 public:
     explicit Notifier(QObject* parent = 0);
     
     signals:
         void updateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
+        void finished();
         
 public slots:
     void stopNotifier();
+    void addNameService(const std::string &nameServiceIP);
+    void run()
+    {
+        isRunning = true;
+        
+        while (isRunning)
+        {
+            nameServicesMutex.lock();
+            queryTasks();
+            nameServicesMutex.unlock();
+            usleep(20000);
+        }
+        
+        emit finished();
+    }
 };
 
 class TaskModel : public QStandardItemModel

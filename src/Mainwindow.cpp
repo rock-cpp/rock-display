@@ -23,8 +23,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     model = new TaskModel(this);
 
+    qRegisterMetaType<std::string>("std::string");
     view->setModel(model);
-    connect(this, SIGNAL(stopNotifier()), model->notifier, SLOT(stopNotifier()));
 
     auto *list = widget3d.getAvailablePlugins();
     pluginRepo = new Vizkit3dPluginRepository(*list);
@@ -43,7 +43,65 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(openPlugin(QObject*)));
     }
     
-    model->notifier->start();
+    connect(ui->actionAdd_name_service, SIGNAL(triggered()), this, SLOT(addNameService()));
+    
+    notifierThread = new QThread();
+    
+    nameServiceDialog = new AddNameServiceDialog();
+    connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model->notifier, SLOT(addNameService(const std::string &)), Qt::DirectConnection);
+    connect(this, SIGNAL(stopNotifier()), model->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
+    
+    connect(notifierThread, SIGNAL(started()), model->notifier, SLOT(run()));
+    connect(model->notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
+    connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
+    
+    model->notifier->moveToThread(notifierThread);
+    notifierThread->start();
+}
+
+AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
+{
+    nameServiceIP = new QLineEdit();
+    
+    QPushButton *addBtn = new QPushButton(tr("Add"));
+    addBtn->setDefault(true);
+    
+    QPushButton *cancelBtn = new QPushButton(tr("Cancel"));
+    
+    QDialogButtonBox *btnBox = new QDialogButtonBox(Qt::Horizontal);
+    btnBox->addButton(addBtn, QDialogButtonBox::AcceptRole);
+    btnBox->addButton(cancelBtn, QDialogButtonBox::RejectRole);
+
+    connect(btnBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(btnBox, SIGNAL(rejected()), this, SLOT(reject()));
+    
+    QVBoxLayout *lt = new QVBoxLayout;
+    lt->addWidget(nameServiceIP);
+    lt->addWidget(btnBox);
+
+    setLayout(lt);
+}
+
+void AddNameServiceDialog::addNameService()
+{
+    std::string nameServiceIPStr = nameServiceIP->text().toStdString();
+    
+    if (!nameServiceIPStr.empty())
+    {
+        emit requestNameServiceAdd(nameServiceIPStr);
+    }
+}
+
+void AddNameServiceDialog::accept()
+{
+    QDialog::accept();
+    addNameService();
+}
+
+void MainWindow::addNameService()
+{
+    nameServiceDialog->show();
+    nameServiceDialog->exec();
 }
 
 void MainWindow::openPlugin(QObject *obj)
@@ -59,12 +117,12 @@ void MainWindow::openPlugin(QObject *obj)
 MainWindow::~MainWindow()
 {
     emit stopNotifier();
-    model->notifier->quit();
+    notifierThread->quit();
 
-    if (model->notifier->wait())
+    if (notifierThread->wait())
     {
-        model->notifier->terminate();
-        model->notifier->wait();
+        notifierThread->terminate();
+        notifierThread->wait();
     }
     
     delete model->notifier;
@@ -133,7 +191,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 ItemBase *titem = static_cast<ItemBase*>(ti->getData());
                 std::string name = titem->getRow().first()->text().toStdString();
                 std::string typeName = titem->getRow().last()->text().toStdString();
-                int start_pos = 0;
+                uint start_pos = 0;
                 if ((start_pos = typeName.find("_m", start_pos)) != std::string::npos) {
                     typeName.replace(start_pos, 2, "");
                 }
@@ -172,8 +230,6 @@ void MainWindow::handleOutputPort(QObject *obj)
     VizHandle nh = pluginRepo->getNewVizHandle(ph);
     widget3d.addPlugin(nh.plugin);
     widget3d.show();
-    
-    std::cout << "nh: " << nh.plugin << std::endl;
 
     it->addPlugin(nh);
 }
