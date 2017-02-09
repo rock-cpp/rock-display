@@ -15,6 +15,28 @@
 
 orocos_cpp::TypeRegistry typeReg;
 
+class RockDisplay : public QApplication
+{
+public:
+    RockDisplay(int& argc, char** argv, int = ApplicationFlags)
+        : QApplication(argc, argv)
+    {   
+    }
+    
+    bool notify(QObject *receiver, QEvent *event)
+    {
+        try
+        {
+            return QApplication::notify(receiver, event);
+        }
+        catch (std::exception& e)
+        {
+            std::cout << "excpetion in QApplication::notify: " << e.what() << std::endl;
+            return false;
+        }
+    }
+};
+
 bool loadTypkekit(const std::string &typeName)
 {
     std::cout << "Type " << typeName << " requested " << std::endl;
@@ -36,7 +58,7 @@ int main(int argc, char** argv)
     typeReg.loadTypelist();
     RTT::corba::ApplicationServer::InitOrb(argc, argv);
 
-    QApplication app(argc, argv);
+    RockDisplay app(argc, argv);
 
     MainWindow w;
     w.show();

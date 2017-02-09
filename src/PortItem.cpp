@@ -80,7 +80,6 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
 {
-    std::cout << "updateOutputPortInterface.." << std::endl;
     reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
     if(!reader)
     {
