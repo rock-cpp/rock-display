@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     QTimer timer;
     timer.setInterval(100);
     
-    QObject::connect(&timer, SIGNAL(timeout()), &w, SLOT(updateTaskItems()));
+    QObject::connect(&timer, SIGNAL(timeout()), &w, SLOT(updateTasks()));
     timer.start();
     
     return app.exec();

@@ -21,7 +21,11 @@ MainWindow::MainWindow(QWidget *parent) :
     
     view->setSortingEnabled(true);
     
-    model = new TaskModel(this);
+    model = new NameServiceModel(this);
+    connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
+    
+    TaskModel *initialTasks = new TaskModel();
+    model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");
     view->setModel(model);
@@ -45,18 +49,10 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(ui->actionAdd_name_service, SIGNAL(triggered()), this, SLOT(addNameService()));
     
-    notifierThread = new QThread();
     
     nameServiceDialog = new AddNameServiceDialog();
-    connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model->notifier, SLOT(addNameService(const std::string &)), Qt::DirectConnection);
-    connect(this, SIGNAL(stopNotifier()), model->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
-    
-    connect(notifierThread, SIGNAL(started()), model->notifier, SLOT(run()));
-    connect(model->notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
-    connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
-    
-    model->notifier->moveToThread(notifierThread);
-    notifierThread->start();
+    connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model, SLOT(addNameService(const std::string &)));
+    initialTasks->notifierThread->start();
 }
 
 AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
@@ -117,15 +113,9 @@ void MainWindow::openPlugin(QObject *obj)
 MainWindow::~MainWindow()
 {
     emit stopNotifier();
-    notifierThread->quit();
-
-    if (notifierThread->wait())
-    {
-        notifierThread->terminate();
-        notifierThread->wait();
-    }
     
-    delete model->notifier;
+    model->waitForTerminate();
+
     delete model;
     delete ui;
     delete pluginRepo;
@@ -256,7 +246,7 @@ void MainWindow::configureTask()
     task->configure();
 }
 
-void MainWindow::updateTaskItems()
+void MainWindow::updateTasks()
 {
-    model->updateTaskItems();
+    model->updateTasks();
 }

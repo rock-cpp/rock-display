@@ -50,8 +50,6 @@ public:
     {
         return pluginRepo;
     }
-    
-    QThread *notifierThread;
 
 public slots:
     void prepareMenu(const QPoint &pos);
@@ -61,7 +59,7 @@ public slots:
     void startTask();
     void stopTask();
     void configureTask();
-    void updateTaskItems();
+    void updateTasks();
     void onExpanded(const QModelIndex &index);
     void onCollapsed(const QModelIndex &index);
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
@@ -73,9 +71,8 @@ signals:
 private:
     Ui::MainWindow *ui;
     QTreeView *view;
-    TaskModel *model;
+    NameServiceModel *model;
     RTT::corba::TaskContextProxy *task;
     Vizkit3dPluginRepository *pluginRepo;
-    std::thread *modelUpdater;
     AddNameServiceDialog *nameServiceDialog;
 };
