@@ -191,8 +191,10 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 ItemBase *titem = static_cast<ItemBase*>(ti->getData());
                 std::string name = titem->getRow().first()->text().toStdString();
                 std::string typeName = titem->getRow().last()->text().toStdString();
-                uint start_pos = 0;
-                if ((start_pos = typeName.find("_m", start_pos)) != std::string::npos) {
+                std::size_t start_pos = 0;
+                start_pos = typeName.find("_m", start_pos);
+                if (start_pos != std::string::npos)
+                {
                     typeName.replace(start_pos, 2, "");
                 }
 
