@@ -29,9 +29,9 @@ public:
     TypedItem *name;
     TypedItem *value;
     
-    std::vector<VizHandle> activeVizualizer;
+    std::map<std::string, VizHandle> activeVizualizer;
     
-    void addPlugin(VizHandle &handle);
+    void addPlugin(std::pair<std::string, VizHandle> handle);
 
     ItemBase();
     

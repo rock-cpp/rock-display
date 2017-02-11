@@ -21,8 +21,8 @@ TaskItem::~TaskItem()
 
 bool TaskItem::update()
 {
-    bool needsUpdate = false;
-    if(needsUpdate = nameItem.text().isEmpty())
+    bool needsUpdate = nameItem.text().isEmpty();
+    if (needsUpdate)
     {
         try {
             nameItem.setText(task->getName().c_str());

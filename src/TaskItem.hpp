@@ -16,13 +16,13 @@ class TaskItem
 {   
     
 private:
+    RTT::corba::TaskContextProxy *task;
     TypedItem nameItem;
     TypedItem statusItem;
 
     QStandardItem inputPorts;
     QStandardItem outputPorts;
     std::map<std::string, PortItem *> ports;
-    RTT::corba::TaskContextProxy *task;
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);

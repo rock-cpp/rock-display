@@ -112,10 +112,10 @@ void Complex::update(Typelib::Value& valueIn)
     name->setData(this);
     value->setData(this);
     
-    for (VizHandle vizHandle : activeVizualizer)
+    for (auto vizHandle : activeVizualizer)
     {
         QGenericArgument data("void *", valueIn.getData());
-        vizHandle.method.invoke(vizHandle.plugin, data);
+        vizHandle.second.method.invoke(vizHandle.second.plugin, data);
     }
     
     
@@ -197,12 +197,17 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value)
         case Typelib::Type::Container:
             return std::shared_ptr<ItemBase>(new Complex(value));
             break;
+        case Typelib::Type::NullType:
+        case Typelib::Type::Pointer:
+        case Typelib::Type::Opaque:
+        case Typelib::Type::NumberOfValidCategories:
+            break;
     }
 
     throw std::runtime_error("Internal Error");
 }
 
-void ItemBase::addPlugin(VizHandle& handle)
+void ItemBase::addPlugin(std::pair<std::string, VizHandle> handle)
 {
-    activeVizualizer.push_back(handle);
+    activeVizualizer[handle.first] = handle.second;
 }

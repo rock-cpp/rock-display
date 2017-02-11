@@ -50,6 +50,11 @@ public:
     {
         return pluginRepo;
     }
+    
+    void sigIntHandler(int sig)
+    {
+        cleanup();
+    }
 
 public slots:
     void prepareMenu(const QPoint &pos);
@@ -64,6 +69,7 @@ public slots:
     void onCollapsed(const QModelIndex &index);
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
     void addNameService();
+    void removeAllPlugins();
     
 signals:
     void stopNotifier();
@@ -75,4 +81,8 @@ private:
     RTT::corba::TaskContextProxy *task;
     Vizkit3dPluginRepository *pluginRepo;
     AddNameServiceDialog *nameServiceDialog;
+    void cleanup();
+    std::vector<std::pair<QObject *, ItemBase *>> activePlugins;
+    void removePlugin(QObject *plugin, ItemBase *item);
+    void addPlugin(PluginHandle &ph, ItemBase *item);
 };

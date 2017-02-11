@@ -42,7 +42,8 @@ TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
     connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()));
     connect(notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
     connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
-    connect(notifier, SIGNAL(updateStatus(const std::string&)), this, SLOT(updateStatus(const std::string &)), Qt::DirectConnection);
+    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::DirectConnection);
+    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::DirectConnection);
     
     notifier->moveToThread(notifierThread);
 }
@@ -50,7 +51,9 @@ TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
 Notifier::Notifier(QObject* parent)
     : QObject(parent),
       isRunning(false),
-      connect_trials(0)
+      connect_trials(0),
+      isConnected(false),
+      numTasks(0)
 {
 }
 
@@ -71,6 +74,9 @@ void Notifier::setNameService(const std::string &nameServiceIP)
     {
         nameService = new orocos_cpp::CorbaNameService(nameServiceIP);
     }
+    
+    isConnected = nameService->isConnected();
+    
 }
 
 void Notifier::queryTasks()
@@ -80,12 +86,12 @@ void Notifier::queryTasks()
         if(!nameService->connect())
         {
             connect_trials++;
-            emit updateStatus(std::string(std::string("connecting (") + std::to_string(connect_trials) + std::string(")")));
-            std::cout << "could not connect to nameserver.." << std::endl;
+            emit updateNameServiceStatus(std::string(std::string("connecting (") + std::to_string(connect_trials) + std::string(")")));
+            //std::cout << "could not connect to nameserver.." << std::endl;
             
             if (connect_trials > max_connect_trials)
             {
-                emit updateStatus(std::string(std::string("could not connect in ") + std::to_string(max_connect_trials) + std::string(" trials..")));
+                emit updateNameServiceStatus(std::string(std::string("could not connect in ") + std::to_string(max_connect_trials) + std::string(" trials..")));
                 connect_trials = 0;
                 isRunning = false;
             }
@@ -94,7 +100,7 @@ void Notifier::queryTasks()
         else
         {
             connect_trials = 0;
-            emit updateStatus("connected!");
+            emit updateNameServiceStatus("connected!");
         }
     }
     
@@ -102,10 +108,18 @@ void Notifier::queryTasks()
     try
     {
         tasks = nameService->getRegisteredTasks();
+        int numTasksCurrent = tasks.size();
+        
+        if (numTasksCurrent != numTasks)
+        {
+            numTasks = numTasksCurrent;
+            emit updateTasksStatus(std::string(std::string("Tasks [") + std::to_string(numTasks) + std::string("]")));
+        }
     }
     catch(...)
     {
-        std::cout << "could not get registered tasks.." << std::endl;
+        emit updateNameServiceStatus(std::string("connected: could not get registered tasks.."));
+        //std::cout << "could not get registered tasks.." << std::endl;
         return;
     }
 
@@ -118,8 +132,9 @@ void Notifier::queryTasks()
         if (taskIt == nameToRegisteredTask.end())
         {
             task = RTT::corba::TaskContextProxy::Create(tname);
-            std::cout << "create task context.." << task << std::endl;
+            //std::cout << "create task context.." << task << std::endl;
             nameToRegisteredTask[tname] = task;
+            emit updateNameServiceStatus(std::string(std::string("connected: created TaskContextProxy for ") + tname + std::string("..")));
             emit updateTask(task, tname, false);
         }
         else if (diconnectedTaskIt != disconnectedTasks.end())
@@ -127,6 +142,7 @@ void Notifier::queryTasks()
             disconnectedTasks.erase(diconnectedTaskIt);
             task = RTT::corba::TaskContextProxy::Create(tname);
             nameToRegisteredTask[tname] = task;
+            emit updateNameServiceStatus(std::string(std::string("connected: task ") + tname + std::string(" reconnected..")));
             emit updateTask(task, tname, true);
         }
     }
@@ -138,6 +154,7 @@ void Notifier::queryTasks()
             && std::find(disconnectedTasks.begin(), disconnectedTasks.end(), taskIt->first) == disconnectedTasks.end())
         {
             disconnectedTasks.push_back(taskIt->first);
+            emit updateNameServiceStatus(std::string(std::string("connected: task ") + taskIt->first + std::string(" disconnected..")));
             emit updateTask(nullptr, taskIt->first, false);
         }
     }
@@ -202,9 +219,14 @@ void NameServiceModel::waitForTerminate()
     }
 }
 
-void TaskModel::updateStatus(const std::__cxx11::string& status)
+void TaskModel::updateNameServiceStatus(const std::__cxx11::string& status)
 {
     this->statusItem.setText(status.c_str());
+}
+
+void TaskModel::updateTasksStatus(const std::__cxx11::string& status)
+{
+    this->tasks.setText(status.c_str());
 }
 
 void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)

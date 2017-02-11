@@ -1,6 +1,7 @@
 #include <iostream>
 #include <rtt/transports/corba/ApplicationServer.hpp>
 #include <rtt/types/TypeInfoRepository.hpp>
+#include <signal.h>
 
 #include "TaskModel.hpp"
 #include "Mainwindow.hpp"
@@ -14,6 +15,7 @@
 #include <thread>
 
 orocos_cpp::TypeRegistry typeReg;
+MainWindow *w;
 
 class RockDisplay : public QApplication
 {
@@ -53,6 +55,13 @@ bool loadTypkekit(const std::string &typeName)
     return false;
 }
 
+void handleSigInt(int v)
+{
+    delete w;
+    QApplication::quit();
+    exit(0);
+}
+
 int main(int argc, char** argv)
 {
     typeReg.loadTypelist();
@@ -60,8 +69,8 @@ int main(int argc, char** argv)
 
     RockDisplay app(argc, argv);
 
-    MainWindow w;
-    w.show();
+    w = new MainWindow();
+    w->show();
 
     RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
     boost::function<bool (const std::string &)> f(&loadTypkekit);
@@ -70,8 +79,15 @@ int main(int argc, char** argv)
     QTimer timer;
     timer.setInterval(100);
     
-    QObject::connect(&timer, SIGNAL(timeout()), &w, SLOT(updateTasks()));
+    QObject::connect(&timer, SIGNAL(timeout()), w, SLOT(updateTasks()));
     timer.start();
+    
+    struct sigaction mainWindowSigIntHandler;
+    mainWindowSigIntHandler.sa_handler = handleSigInt;
+    sigemptyset(&mainWindowSigIntHandler.sa_mask);
+    mainWindowSigIntHandler.sa_flags = 0;
+    sigaction(SIGTERM, &mainWindowSigIntHandler, NULL);
+    sigaction(SIGINT, &mainWindowSigIntHandler, NULL);
     
     return app.exec();
 }

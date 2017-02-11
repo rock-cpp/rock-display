@@ -28,6 +28,8 @@ class Notifier : public QObject
     void queryTasks();
     int connect_trials;
     const int max_connect_trials = 10;
+    bool isConnected;
+    int numTasks;
   
 public:
     explicit Notifier(QObject* parent = 0);
@@ -35,7 +37,8 @@ public:
     signals:
         void updateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
         void finished();
-        void updateStatus(const std::string &status);
+        void updateNameServiceStatus(const std::string &status);
+        void updateTasksStatus(const std::string &status);
         
 public slots:
     void stopNotifier();
@@ -95,7 +98,8 @@ signals:
     
 public slots:
     void onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
-    void updateStatus(const std::string &status);
+    void updateNameServiceStatus(const std::string &status);
+    void updateTasksStatus(const std::string &status);
 };
 
 class NameServiceModel : public QStandardItemModel

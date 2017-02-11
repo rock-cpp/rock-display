@@ -5,8 +5,6 @@
 #include "TypedItem.hpp"
 #include <QCursor>
 
-#include <base/commands/Motion2D.hpp>
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -18,6 +16,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(prepareMenu(QPoint)));
     connect(view, SIGNAL(expanded(QModelIndex)), this, SLOT(onExpanded(QModelIndex)));
     connect(view, SIGNAL(collapsed(QModelIndex)), this, SLOT(onCollapsed(QModelIndex)));
+    
+    QMenu *pluginManager = new QMenu("Manage Visualizers");
+    QAction *removeAllPluginsAction = pluginManager->addAction("remove all active visualizers");
+    connect(removeAllPluginsAction, SIGNAL(triggered()), this, SLOT(removeAllPlugins()));
+    
+    ui->menubar->addMenu(pluginManager);
     
     view->setSortingEnabled(true);
     
@@ -94,6 +98,15 @@ void AddNameServiceDialog::accept()
     addNameService();
 }
 
+void MainWindow::removeAllPlugins()
+{
+    while (!activePlugins.empty())
+    {
+        auto &plugin = activePlugins.front();
+        removePlugin(plugin.first, plugin.second);
+    }
+}
+
 void MainWindow::addNameService()
 {
     nameServiceDialog->show();
@@ -104,13 +117,10 @@ void MainWindow::openPlugin(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
     PluginHandle ph = d->getPluginHandle();
-
-    VizHandle nh = pluginRepo->getNewVizHandle(ph);
-    widget3d.addPlugin(nh.plugin);
-    widget3d.show();
+    addPlugin(ph, nullptr);
 }
 
-MainWindow::~MainWindow()
+void MainWindow::cleanup()
 {
     emit stopNotifier();
     
@@ -119,6 +129,11 @@ MainWindow::~MainWindow()
     delete model;
     delete ui;
     delete pluginRepo;
+}
+
+MainWindow::~MainWindow()
+{
+    cleanup();
 }
 
 void MainWindow::onExpanded(const QModelIndex& index)
@@ -192,20 +207,27 @@ void MainWindow::prepareMenu(const QPoint & pos)
 
                 for (const PluginHandle &handle : handles)
                 {
-                    QSignalMapper* signalMapper = new QSignalMapper (this) ;
-                    QAction *act = menu.addAction(handle.pluginName.c_str());
+                    QSignalMapper* signalMapper = new QSignalMapper(this);
+                    QAction *act = nullptr;
+                    
+                    if (titem->activeVizualizer.find(handle.pluginName) != titem->activeVizualizer.end())
+                    {
+                        act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
+                    }
+                    else
+                    {
+                        act = menu.addAction(handle.pluginName.c_str());
+                    }
 
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
-
                     signalMapper->setMapping(act, new DataContainer(handle, titem));
 
                     connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
                 }
-
             }
                 break;
             default:
-                printf("wrong type %d\n", ti->type());
+                return;
         }
 
         QPoint pt(pos);
@@ -213,17 +235,60 @@ void MainWindow::prepareMenu(const QPoint & pos)
     }
 }
 
+void MainWindow::removePlugin(QObject *plugin, ItemBase *item)
+{
+    widget3d.removePlugin(plugin);
+    
+    if (item)
+    {
+        for (std::map<std::string, VizHandle>::iterator it = item->activeVizualizer.begin(); it != item->activeVizualizer.end() ; it++)
+        {
+            if (it->second.plugin == plugin)
+            {
+                item->activeVizualizer.erase(it);
+                break;
+            }
+        }
+    }
+    
+    for (std::vector<std::pair<QObject *, ItemBase *>>::iterator it = activePlugins.begin(); it != activePlugins.end(); it++)
+    {   
+        if (it->first == plugin)
+        {
+            activePlugins.erase(it);
+            break;
+        }
+    }
+}
+
+void MainWindow::addPlugin(PluginHandle &ph, ItemBase* item)
+{
+    VizHandle nh = pluginRepo->getNewVizHandle(ph);
+    widget3d.addPlugin(nh.plugin);
+    activePlugins.push_back(std::make_pair(nh.plugin, item));
+    
+    if (item)
+    {
+        item->addPlugin(std::make_pair(ph.pluginName, nh));
+    }
+    
+    widget3d.show();
+}
+
 void MainWindow::handleOutputPort(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
     ItemBase *it = d->getItem();
     PluginHandle ph = d->getPluginHandle();
+    
+    std::map<std::string, VizHandle>::iterator iter = it->activeVizualizer.find(ph.pluginName);
+    if (iter != it->activeVizualizer.end())
+    {
+        removePlugin(iter->second.plugin, it);
+        return;
+    }
 
-    VizHandle nh = pluginRepo->getNewVizHandle(ph);
-    widget3d.addPlugin(nh.plugin);
-    widget3d.show();
-
-    it->addPlugin(nh);
+    addPlugin(ph, it);
 }
 
 void MainWindow::activateTask()
