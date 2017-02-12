@@ -24,6 +24,7 @@ private:
     QStandardItem outputPorts;
     QStandardItem properties;
     std::map<std::string, PortItem *> ports;
+    std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);

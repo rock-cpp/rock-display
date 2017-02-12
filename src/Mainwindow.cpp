@@ -194,6 +194,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::CONFIGITEM:
             {
                 ItemBase *titem = static_cast<ItemBase*>(ti->getData());
+                
                 std::string name = titem->getRow().first()->text().toStdString();
                 std::string typeName = titem->getRow().last()->text().toStdString();
                 std::size_t start_pos = 0;

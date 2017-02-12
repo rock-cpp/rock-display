@@ -115,11 +115,9 @@ bool TaskItem::updatePorts()
             
             Typelib::Value val(transport->getTypelibSample(transportHandle), *(typelibType));
             
-            libConfig::TypelibConfiguration tc;
-            std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(val);
-            std::string value = conf->getCxxTypeName();
-            
             std::shared_ptr<ItemBase> item = getItem(val);
+            
+            propertyMap[property->getName()] = item;
             
             item->setName(property->getName().c_str());
             item->setType(ItemType::PROPERTY);
