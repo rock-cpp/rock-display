@@ -11,6 +11,7 @@
 #include <QMetaType>
 #include "Mainwindow.hpp"
 
+
 class PortHandle
 {
 public:

@@ -22,6 +22,7 @@ private:
 
     QStandardItem inputPorts;
     QStandardItem outputPorts;
+    QStandardItem properties;
     std::map<std::string, PortItem *> ports;
     
 public:

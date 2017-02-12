@@ -4,7 +4,7 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include "PortItem.hpp"
 
-enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT = 1003, CONFIGITEM = 1004, NAMESERVICE = 1005};
+enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT = 1003, CONFIGITEM = 1004, NAMESERVICE = 1005, PROPERTY = 1006};
 
 class ItemBase;
 
