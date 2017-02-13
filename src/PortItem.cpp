@@ -120,7 +120,7 @@ bool OutputPortItem::updataValue()
         return false;
     }
     
-    if (!expanded)
+    if (item && !expanded && !item->hasActiveVisualizers())
     {
         return false;
     }

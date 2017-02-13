@@ -23,6 +23,16 @@ ItemBase::~ItemBase()
 
 }
 
+bool ItemBase::hasActiveVisualizers()
+{
+    if (!activeVizualizer.empty())
+    {
+        return true;
+    }
+    
+    return false;
+}
+
 Array::Array(Typelib::Value& valueIn)
     : ItemBase()
 {
@@ -34,6 +44,24 @@ Array::Array(Typelib::Value& valueIn)
 Array::~Array()
 {
 
+}
+
+bool Array::hasActiveVisualizers()
+{
+    if (ItemBase::hasActiveVisualizers())
+    {
+        return true;
+    }
+    
+    for (auto child: childs)
+    {
+        if (child->hasActiveVisualizers())
+        {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 void Array::update(Typelib::Value& valueIn)
@@ -106,6 +134,24 @@ Complex::~Complex()
 
 }
 
+bool Complex::hasActiveVisualizers()
+{
+    if (ItemBase::hasActiveVisualizers())
+    {
+        return true;
+    }
+    
+    for (auto child: childs)
+    {
+        if (child->hasActiveVisualizers())
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 void Complex::update(Typelib::Value& valueIn)
 {
     const Typelib::Type &type(valueIn.getType());
@@ -126,11 +172,11 @@ void Complex::update(Typelib::Value& valueIn)
         uint8_t *data = static_cast<uint8_t *>(valueIn.getData());
         
         size_t i = 0;
-        for(const Typelib::Field &field: comp.getFields())
+        for (const Typelib::Field &field: comp.getFields())
         {
             Typelib::Value fieldV(data + field.getOffset(), field.getType());
             
-            if(childs.size() <= i)
+            if (childs.size() <= i)
             {
                 std::shared_ptr<ItemBase> newVal = getItem(fieldV);
                 newVal->setName(field.getName().c_str());
@@ -157,10 +203,22 @@ void Complex::update(Typelib::Value& valueIn)
         }
         
         //std::vector
-        if (size < childs.size())
+        int numElemsShown = size;
+        if (numElemsShown > maxVectorElemsShown)
         {
-            name->removeRows(childs.size(), size);
-            childs.resize(size);
+            numElemsShown = maxVectorElemsShown;
+            value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsShown)
+                + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
+        }
+        else
+        {
+            value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+        }
+        
+        if (numElemsShown < childs.size())
+        {
+            name->removeRows(childs.size(), numElemsShown);
+            childs.resize(numElemsShown);
         }
         
         for(size_t i = 0; i < childs.size(); i++)
@@ -169,7 +227,7 @@ void Complex::update(Typelib::Value& valueIn)
             childs[i]->update(elem);
         }
         
-        for(size_t i = childs.size(); i < size; i++)
+        for(size_t i = childs.size(); i < numElemsShown; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             std::shared_ptr<ItemBase> newVal = getItem(elem);

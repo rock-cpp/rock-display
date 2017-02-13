@@ -29,6 +29,8 @@ public:
     TypedItem *name;
     TypedItem *value;
     
+    virtual bool hasActiveVisualizers();
+    
     std::map<std::string, VizHandle> activeVizualizer;
     
     void addPlugin(std::pair<std::string, VizHandle> handle);
@@ -64,6 +66,7 @@ public:
     Array(Typelib::Value& valueIn);
     virtual ~Array();
     virtual void update(Typelib::Value& valueIn);
+    virtual bool hasActiveVisualizers();
 };
 
 class Simple : public ItemBase
@@ -77,9 +80,11 @@ public:
 class Complex : public ItemBase
 {
     std::vector<std::shared_ptr<ItemBase> > childs;
+    const int maxVectorElemsShown = 500;
     
 public:
     Complex(Typelib::Value& valueIn);
     virtual ~Complex();
     virtual void update(Typelib::Value& valueIn);
+    virtual bool hasActiveVisualizers();
 };

@@ -154,7 +154,7 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     {
         if (ti->type() == ItemType::TASK)
         {
-            TaskItem *titem = static_cast<TaskItem*>(ti->getData());
+            TaskItem *titem = static_cast<TaskItem *>(ti->getData());
             
             for (std::map<std::string, PortItem *>::iterator portIt = titem->getPorts().begin(); portIt != titem->getPorts().end(); portIt++)
             {
