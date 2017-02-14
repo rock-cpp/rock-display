@@ -219,12 +219,12 @@ void NameServiceModel::waitForTerminate()
     }
 }
 
-void TaskModel::updateNameServiceStatus(const std::__cxx11::string& status)
+void TaskModel::updateNameServiceStatus(const std::string& status)
 {
     this->statusItem.setText(status.c_str());
 }
 
-void TaskModel::updateTasksStatus(const std::__cxx11::string& status)
+void TaskModel::updateTasksStatus(const std::string& status)
 {
     this->tasks.setText(status.c_str());
 }
@@ -278,7 +278,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     nameToItemMutex.unlock();
 }
 
-void NameServiceModel::addNameService(const std::__cxx11::string& nameServiceIP)
+void NameServiceModel::addNameService(const std::string& nameServiceIP)
 {
     if (nameServiceIP.empty())
     {
