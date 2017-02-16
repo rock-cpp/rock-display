@@ -76,7 +76,11 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     valueItem->setData(this);
     
     updateOutputPortInterface(port);
-    valueItem->setText(handle->type->getName().c_str());
+    
+    if (handle)
+    {
+        valueItem->setText(handle->type->getName().c_str());
+    }
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
