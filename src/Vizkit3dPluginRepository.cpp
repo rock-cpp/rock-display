@@ -56,8 +56,9 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                     handle.method = method;
                     //std::cout << "Into typeMap " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
                     typeMap[handle.typeName] = handle;
+                    std::cout << "signature for " << handle.typeName << " is: " << handle.method.signature() << std::endl;
                 }
-            }
+            }      
             
             
             delete plugin;
@@ -91,7 +92,10 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
         return empty;
 
     std::string dottedType = type.substr(1, type.size());
+    dottedType = boost::regex_replace(dottedType, boost::regex("_m"), "");
+    dottedType = boost::regex_replace(dottedType, boost::regex("</"), "<");
     dottedType = boost::regex_replace(dottedType, boost::regex("/"), "::");
+    dottedType = boost::regex_replace(dottedType, boost::regex("\\s\\[.*\\]"), "");
     
     //std::cout << "dottet type '" << dottedType << "'" << std::endl;
  

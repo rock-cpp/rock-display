@@ -3,6 +3,7 @@
 #include <orocos_cpp/CorbaNameService.hpp>
 #include "TaskItem.hpp"
 #include <rtt/transports/corba/TaskContextProxy.hpp>
+#include <boost/thread.hpp>
 
 TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
     : QObject(parent),
@@ -87,7 +88,6 @@ void Notifier::queryTasks()
         {
             connect_trials++;
             emit updateNameServiceStatus(std::string(std::string("connecting (") + std::to_string(connect_trials) + std::string(")")));
-            //std::cout << "could not connect to nameserver.." << std::endl;
             
             if (connect_trials > max_connect_trials)
             {
@@ -107,7 +107,23 @@ void Notifier::queryTasks()
     std::vector<std::string> tasks;
     try
     {
-        tasks = nameService->getRegisteredTasks();
+        boost::thread apiCaller([&]()
+        { 
+            try
+            {
+                tasks = nameService->getRegisteredTasks();
+            }
+            catch (CosNaming::NamingContext::NotFound& ex)
+            {
+                emit updateNameServiceStatus(std::string("CORBA: failed to get registered tasks.."));
+            }
+        } );
+        if (!apiCaller.timed_join(boost::posix_time::milliseconds(500)))
+        {
+            emit updateNameServiceStatus(std::string("orocos_cpp::NameService::getRegisteredTasks() did not return in 500ms.."));
+            return;
+        }
+        
         int numTasksCurrent = tasks.size();
         
         if (numTasksCurrent != numTasks)
@@ -119,7 +135,6 @@ void Notifier::queryTasks()
     catch(...)
     {
         emit updateNameServiceStatus(std::string("connected: could not get registered tasks.."));
-        //std::cout << "could not get registered tasks.." << std::endl;
         return;
     }
 
@@ -132,7 +147,6 @@ void Notifier::queryTasks()
         if (taskIt == nameToRegisteredTask.end())
         {
             task = RTT::corba::TaskContextProxy::Create(tname);
-            //std::cout << "create task context.." << task << std::endl;
             nameToRegisteredTask[tname] = task;
             emit updateNameServiceStatus(std::string(std::string("connected: created TaskContextProxy for ") + tname + std::string("..")));
             emit updateTask(task, tname, false);

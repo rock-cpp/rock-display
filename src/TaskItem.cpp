@@ -7,7 +7,8 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     : task(_task),
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
-      refreshPorts(false)
+      refreshPorts(false),
+      stateLbl("Stopped")
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -17,6 +18,7 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     nameItem.appendRow(&properties);
     nameItem.setData(this);
     statusItem.setData(this);
+    statusItem.setText("");
 }
 
 TaskItem::~TaskItem()
@@ -25,11 +27,12 @@ TaskItem::~TaskItem()
 
 bool TaskItem::update()
 {
-    bool needsUpdate = nameItem.text().isEmpty();
-    if (needsUpdate)
+    bool needsUpdate = false;
+    if (nameItem.text().isEmpty())
     {
         try {
             nameItem.setText(task->getName().c_str());
+            needsUpdate = true;
         }
         catch (...)
         {
@@ -46,10 +49,14 @@ bool TaskItem::update()
 bool TaskItem::updatePorts()
 {
     const RTT::DataFlowInterface *dfi = task->ports();
-    std::vector<std::string> portNames = dfi->getPortNames();
     bool needsUpdate = false;
+    
+    if (dfi->getPorts().empty() && outputPorts.rowCount() == 0)
+    {
+        statusItem.setText("CORBA error..");
+    }
 
-    for(RTT::base::PortInterface *pi : dfi->getPorts())
+    for (RTT::base::PortInterface *pi : dfi->getPorts())
     {
         const std::string portName(pi->getName());
         RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
@@ -132,7 +139,7 @@ bool TaskItem::updatePorts()
 
 bool TaskItem::updateState()
 {
-    QString stateString;
+    std::string stateString = "";
     RTT::base::TaskCore::TaskState state = task->getTaskState();
     switch(state)
     {
@@ -159,9 +166,9 @@ bool TaskItem::updateState()
             break;
     }
     
-    if (statusItem.text() != stateString)
+    if (statusItem.text().toStdString() != stateString)
     {
-        statusItem.setText(stateString);
+        statusItem.setText(stateString.c_str());
         return true;
     }
 

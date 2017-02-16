@@ -82,7 +82,7 @@ private:
     Vizkit3dPluginRepository *pluginRepo;
     AddNameServiceDialog *nameServiceDialog;
     void cleanup();
-    std::vector<std::pair<QObject *, ItemBase *>> activePlugins;
-    void removePlugin(QObject *plugin, ItemBase *item);
-    void addPlugin(PluginHandle &ph, ItemBase *item);
+    std::vector<std::pair<QObject *, TypedItem *>> activePlugins;
+    void removePlugin(QObject *plugin, TypedItem *ti);
+    void addPlugin(PluginHandle &ph, TypedItem *ti);
 };

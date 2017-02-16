@@ -133,6 +133,15 @@ bool OutputPortItem::updataValue()
         if (!item)
         {
             item = getItem(val);
+            
+            std::map<std::string, VizHandle>::iterator vizIter;
+            while (!waitingVizualizer.empty())
+            {
+                vizIter = waitingVizualizer.begin();
+                item->activeVizualizer[vizIter->first] = vizIter->second;
+                waitingVizualizer.erase(vizIter);
+            }
+            
             QStandardItem *parent = nameItem->parent();
             
             int pos = nameItem->row();
@@ -144,10 +153,8 @@ bool OutputPortItem::updataValue()
             nameItem = nullptr;
             valueItem = nullptr;
         }
-        else
-        {
-            item->update(val);
-        }
+        
+        item->update(val);
         
         return true;
     }
@@ -162,4 +169,9 @@ const std::string& OutputPortItem::getType()
         throw std::runtime_error("Internal error, not typeInfo available");
     }
     return reader->getTypeInfo()->getTypeName();
+}
+
+void PortItem::addPlugin(std::pair< std::string, VizHandle > handle)
+{
+    waitingVizualizer[handle.first] = handle.second;
 }

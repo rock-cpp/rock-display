@@ -192,16 +192,21 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 break;
                 
             case ItemType::CONFIGITEM:
+            case ItemType::OUTPUTPORT:
             {
-                ItemBase *titem = static_cast<ItemBase*>(ti->getData());
+                std::string typeName = "";
+                ItemBase *titem = nullptr;
+                OutputPortItem *outport = nullptr;
                 
-                std::string name = titem->getRow().first()->text().toStdString();
-                std::string typeName = titem->getRow().last()->text().toStdString();
-                std::size_t start_pos = 0;
-                start_pos = typeName.find("_m", start_pos);
-                if (start_pos != std::string::npos)
+                if (ti->type() == ItemType::CONFIGITEM)
                 {
-                    typeName.replace(start_pos, 2, "");
+                    titem = static_cast<ItemBase*>(ti->getData());
+                    typeName = titem->getRow().last()->text().toStdString();
+                }
+                else
+                {
+                    outport = static_cast<OutputPortItem*>(ti->getData());
+                    typeName = outport->getType();
                 }
 
                 const auto &handles = pluginRepo->getPluginsForType(typeName);
@@ -211,17 +216,31 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     QSignalMapper* signalMapper = new QSignalMapper(this);
                     QAction *act = nullptr;
                     
-                    if (titem->activeVizualizer.find(handle.pluginName) != titem->activeVizualizer.end())
+                    if (ti->type() == ItemType::CONFIGITEM)
                     {
-                        act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
+                        if (titem->activeVizualizer.find(handle.pluginName) != titem->activeVizualizer.end())
+                        {
+                            act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
+                        }
+                        else
+                        {
+                            act = menu.addAction(handle.pluginName.c_str());
+                        }
                     }
                     else
                     {
-                        act = menu.addAction(handle.pluginName.c_str());
+                        if (outport->waitingVizualizer.find(handle.pluginName) != outport->waitingVizualizer.end())
+                        {
+                            act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
+                        }
+                        else
+                        {
+                            act = menu.addAction(handle.pluginName.c_str());
+                        }
                     }
 
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
-                    signalMapper->setMapping(act, new DataContainer(handle, titem));
+                    signalMapper->setMapping(act, new DataContainer(handle, ti));
 
                     connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
                 }
@@ -236,23 +255,76 @@ void MainWindow::prepareMenu(const QPoint & pos)
     }
 }
 
-void MainWindow::removePlugin(QObject *plugin, ItemBase *item)
+void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
+{
+    VizHandle nh = pluginRepo->getNewVizHandle(ph);
+    widget3d.addPlugin(nh.plugin);
+    activePlugins.push_back(std::make_pair(nh.plugin, ti));
+    
+    if (ti)
+    {
+        if (ti->type() == ItemType::CONFIGITEM)
+        {
+            ItemBase *item = static_cast<ItemBase *>(ti->getData());
+            item->addPlugin(std::make_pair(ph.pluginName, nh));
+        }
+        else if (ti->type() == ItemType::OUTPUTPORT)
+        {
+            OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
+            outputPort->addPlugin(std::make_pair(ph.pluginName, nh));
+        }
+    }
+    
+    widget3d.show();
+}
+
+void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
 {
     widget3d.removePlugin(plugin);
     
-    if (item)
+    if (ti)
     {
-        for (std::map<std::string, VizHandle>::iterator it = item->activeVizualizer.begin(); it != item->activeVizualizer.end() ; it++)
+        if (ti->type() == ItemType::CONFIGITEM)
         {
-            if (it->second.plugin == plugin)
+            ItemBase *item = static_cast<ItemBase *>(ti->getData());
+            for (std::map<std::string, VizHandle>::iterator it = item->activeVizualizer.begin(); it != item->activeVizualizer.end(); it++)
             {
-                item->activeVizualizer.erase(it);
-                break;
+                if (it->second.plugin == plugin)
+                {
+                    item->activeVizualizer.erase(it);
+                    break;
+                }
+            }
+        }
+        else if (ti->type() == ItemType::OUTPUTPORT)
+        {
+            OutputPortItem *outport = static_cast<OutputPortItem *>(ti->getData());
+            bool found = false;
+            for (std::map<std::string, VizHandle>::iterator it = outport->waitingVizualizer.begin(); it != outport->waitingVizualizer.end(); it++)
+            {
+                if (it->second.plugin == plugin)
+                {
+                    outport->waitingVizualizer.erase(it);
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found)
+            {
+                for (std::map<std::string, VizHandle>::iterator it = outport->getItemBase()->activeVizualizer.begin(); it != outport->getItemBase()->activeVizualizer.end(); it++)
+                {
+                    if (it->second.plugin == plugin)
+                    {
+                        outport->getItemBase()->activeVizualizer.erase(it);
+                        break;
+                    }
+                }
             }
         }
     }
     
-    for (std::vector<std::pair<QObject *, ItemBase *>>::iterator it = activePlugins.begin(); it != activePlugins.end(); it++)
+    for (std::vector<std::pair<QObject *, TypedItem *>>::iterator it = activePlugins.begin(); it != activePlugins.end(); it++)
     {   
         if (it->first == plugin)
         {
@@ -262,34 +334,36 @@ void MainWindow::removePlugin(QObject *plugin, ItemBase *item)
     }
 }
 
-void MainWindow::addPlugin(PluginHandle &ph, ItemBase* item)
-{
-    VizHandle nh = pluginRepo->getNewVizHandle(ph);
-    widget3d.addPlugin(nh.plugin);
-    activePlugins.push_back(std::make_pair(nh.plugin, item));
-    
-    if (item)
-    {
-        item->addPlugin(std::make_pair(ph.pluginName, nh));
-    }
-    
-    widget3d.show();
-}
-
 void MainWindow::handleOutputPort(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
-    ItemBase *it = d->getItem();
+    TypedItem *ti = d->getItem();
     PluginHandle ph = d->getPluginHandle();
     
-    std::map<std::string, VizHandle>::iterator iter = it->activeVizualizer.find(ph.pluginName);
-    if (iter != it->activeVizualizer.end())
+    if (ti->type() == ItemType::CONFIGITEM)
     {
-        removePlugin(iter->second.plugin, it);
-        return;
+        ItemBase *item = static_cast<ItemBase *>(ti->getData());
+        std::map<std::string, VizHandle>::iterator iter = item->activeVizualizer.find(ph.pluginName);
+        if (iter != item->activeVizualizer.end())
+        {
+            removePlugin(iter->second.plugin, ti);
+            return;
+        }
+        
+        addPlugin(ph, ti);
     }
-
-    addPlugin(ph, it);
+    else if (ti->type() == ItemType::OUTPUTPORT)
+    {
+        OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
+        std::map<std::string, VizHandle>::iterator iter = outputPort->waitingVizualizer.find(ph.pluginName);
+        if (iter != outputPort->waitingVizualizer.end())
+        {
+            removePlugin(iter->second.plugin, ti);
+            return;
+        }
+        
+        addPlugin(ph, ti);
+    }
 }
 
 void MainWindow::activateTask()

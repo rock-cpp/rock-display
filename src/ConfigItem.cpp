@@ -159,7 +159,7 @@ void Complex::update(Typelib::Value& valueIn)
     value->setData(this);
     
     for (auto vizHandle : activeVizualizer)
-    {
+    {   
         QGenericArgument data("void *", valueIn.getData());
         vizHandle.second.method.invoke(vizHandle.second.plugin, data);
     }

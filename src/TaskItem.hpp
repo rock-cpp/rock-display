@@ -26,6 +26,8 @@ private:
     std::map<std::string, PortItem *> ports;
     std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
     
+    std::string stateLbl;
+    
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
     virtual ~TaskItem();
@@ -35,6 +37,10 @@ public:
     bool refreshPorts;
 
     bool update();
+    std::string getStatusLbl()
+    {
+        return stateLbl;
+    }
     
     void updateTaskContext(RTT::corba::TaskContextProxy* _task)
     {

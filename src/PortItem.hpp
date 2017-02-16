@@ -25,9 +25,16 @@ protected:
     bool expanded;
 
 public:
+    std::map<std::string, VizHandle> waitingVizualizer;
+    void addPlugin(std::pair<std::string, VizHandle> handle);
     PortItem(const std::string &name);
     virtual ~PortItem();
     QList<QStandardItem *> getRow();
+    
+    std::shared_ptr<ItemBase> getItemBase()
+    {
+        return item;
+    }
     
     void setExpanded(bool expanded)
     {
