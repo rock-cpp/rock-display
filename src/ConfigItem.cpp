@@ -74,7 +74,8 @@ void Array::update(Typelib::Value& valueIn)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    for (size_t i = 0; i < childs.size(); i++)
+    std::size_t upperBound = std::min(childs.size(), array.getDimension());
+    for (size_t i = 0; i < upperBound; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childs[i]->update(arrayV);
@@ -316,7 +317,7 @@ void Complex::update(Typelib::Value& valueIn)
         }
         
         //std::vector
-        int numElemsShown = size;
+        std::size_t numElemsShown = size;
         if (numElemsShown > maxVectorElemsShown)
         {
             numElemsShown = maxVectorElemsShown;
@@ -328,7 +329,8 @@ void Complex::update(Typelib::Value& valueIn)
             value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
         }
         
-        for(size_t i = 0; i < childs.size(); i++)
+        std::size_t upperBound = std::min(childs.size(), numElemsShown);
+        for(size_t i = 0; i < upperBound; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childs[i]->update(elem);
