@@ -74,13 +74,6 @@ void Array::update(Typelib::Value& valueIn)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-//     if (array.getDimension() < childs.size())
-//     {
-//         name->removeRows(array.getDimension()-1, childs.size() - array.getDimension());
-//         std::cout << "Array::update(): remove rows.." << std::endl;
-//         childs.resize(array.getDimension());
-//     }
-    
     for (size_t i = 0; i < childs.size(); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
@@ -113,7 +106,23 @@ template <class T>
 std::string getValue(const Typelib::Value& value)
 {
     T *val = static_cast<T *>(value.getData());
-    return  boost::lexical_cast<std::string>(*val);
+    std::string valueS = "";
+    
+    if (!val)
+    {
+        return valueS;
+    }
+    
+    try
+    {
+        valueS = boost::lexical_cast<std::string>(*val);
+    }
+    catch (...)
+    {
+        
+    }
+    
+    return valueS;
 }
 
 void Simple::update(Typelib::Value& valueIn)
