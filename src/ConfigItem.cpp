@@ -299,23 +299,19 @@ void Complex::update(Typelib::Value& valueIn)
         
         if(cont.kind() == "/std/string")
         {
-            const std::string *content = static_cast<const std::string *>(valueIn.getData());
-            if (!content)
-            {
-                return;
-            }
+            const std::string content = *static_cast<const std::string *>(valueIn.getData());
             
             if (codec)
             {
                 QTextCodec::ConverterState state;
-                const QString text = codec->toUnicode(content->c_str(), content->size(), &state);
+                const QString text = codec->toUnicode(content.c_str(), content.size(), &state);
                 if (state.invalidChars > 0)
                 {
                     return;
                 }
             }
             
-            value->setText(content->c_str());
+            value->setText(content.c_str());
             return;
         }
         
