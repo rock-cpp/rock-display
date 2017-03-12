@@ -74,11 +74,12 @@ void Array::update(Typelib::Value& valueIn)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    if (array.getDimension() < childs.size())
-    {
-        name->removeRows(childs.size(), array.getDimension());
-        childs.resize(array.getDimension());
-    }
+//     if (array.getDimension() < childs.size())
+//     {
+//         name->removeRows(array.getDimension()-1, childs.size() - array.getDimension());
+//         std::cout << "Array::update(): remove rows.." << std::endl;
+//         childs.resize(array.getDimension());
+//     }
     
     for (size_t i = 0; i < childs.size(); i++)
     {
@@ -117,9 +118,8 @@ std::string getValue(const Typelib::Value& value)
 
 void Simple::update(Typelib::Value& valueIn)
 {
-    if (!value->index().isValid())
+    if (!value->parent() || !value->model() || value->model()->rowCount() <= 0 || value->row() < 0 || !value->index().isValid())
     {
-        std::cout << "index for simple item not valid.." << std::endl;
         return;
     }
     
@@ -296,12 +296,6 @@ void Complex::update(Typelib::Value& valueIn)
         else
         {
             value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
-        }
-        
-        if (numElemsShown < childs.size())
-        {
-            name->removeRows(childs.size(), numElemsShown);
-            childs.resize(numElemsShown);
         }
         
         for(size_t i = 0; i < childs.size(); i++)
