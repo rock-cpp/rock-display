@@ -203,6 +203,14 @@ void Simple::update(Typelib::Value& valueIn)
     
     if (valueS != oldValue)
     {
+        QTextCodec::ConverterState state;
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+        const QString text = codec->toUnicode(valueS.c_str(), valueS.size(), &state);
+        if (state.invalidChars > 0)
+        {
+            return;
+        }
+        
         value->setText(valueS.c_str());
     }
 }
@@ -281,6 +289,19 @@ void Complex::update(Typelib::Value& valueIn)
         if(cont.kind() == "/std/string")
         {
             const std::string *content = static_cast<const std::string *>(valueIn.getData());
+            if (!content)
+            {
+                return;
+            }
+            
+            QTextCodec::ConverterState state;
+            QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+            const QString text = codec->toUnicode(content->c_str(), content->size(), &state);
+            if (state.invalidChars > 0)
+            {
+                return;
+            }
+            
             value->setText(content->c_str());
             return;
         }
