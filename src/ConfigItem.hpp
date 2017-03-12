@@ -29,6 +29,8 @@ public:
     TypedItem *name;
     TypedItem *value;
     
+    QTextCodec *codec;
+    
     virtual bool hasActiveVisualizers();
     
     std::map<std::string, VizHandle> activeVizualizer;

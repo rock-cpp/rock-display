@@ -12,7 +12,7 @@
 #include "Types.hpp"
 
 
-ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem())
+ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8"))
 {
     name->setType(ItemType::CONFIGITEM);
     value->setType(ItemType::CONFIGITEM);
@@ -212,12 +212,14 @@ void Simple::update(Typelib::Value& valueIn)
     
     if (valueS != oldValue)
     {
-        QTextCodec::ConverterState state;
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        const QString text = codec->toUnicode(valueS.c_str(), valueS.size(), &state);
-        if (state.invalidChars > 0)
+        if (codec)
         {
-            return;
+            QTextCodec::ConverterState state;
+            const QString text = codec->toUnicode(valueS.c_str(), valueS.size(), &state);
+            if (state.invalidChars > 0)
+            {
+                return;
+            }
         }
         
         value->setText(valueS.c_str());
@@ -303,12 +305,14 @@ void Complex::update(Typelib::Value& valueIn)
                 return;
             }
             
-            QTextCodec::ConverterState state;
-            QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-            const QString text = codec->toUnicode(content->c_str(), content->size(), &state);
-            if (state.invalidChars > 0)
+            if (codec)
             {
-                return;
+                QTextCodec::ConverterState state;
+                const QString text = codec->toUnicode(content->c_str(), content->size(), &state);
+                if (state.invalidChars > 0)
+                {
+                    return;
+                }
             }
             
             value->setText(content->c_str());
