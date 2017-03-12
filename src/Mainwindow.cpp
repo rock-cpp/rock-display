@@ -5,6 +5,7 @@
 #include "TypedItem.hpp"
 #include <QCursor>
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)

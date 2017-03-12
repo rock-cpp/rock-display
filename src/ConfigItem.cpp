@@ -16,6 +16,8 @@ ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem())
 {
     name->setType(ItemType::CONFIGITEM);
     value->setType(ItemType::CONFIGITEM);
+    name->setData(this);
+    value->setData(this);
 }
 
 ItemBase::~ItemBase()
@@ -72,22 +74,19 @@ void Array::update(Typelib::Value& valueIn)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    name->setData(this);
-    value->setData(this);
-    
-    if(array.getDimension() < childs.size())
+    if (array.getDimension() < childs.size())
     {
         name->removeRows(childs.size(), array.getDimension());
         childs.resize(array.getDimension());
     }
     
-    for(size_t i = 0; i < childs.size(); i++)
+    for (size_t i = 0; i < childs.size(); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childs[i]->update(arrayV);
     }
     
-    for(size_t i = childs.size(); i < array.getDimension(); i++)
+    for (size_t i = childs.size(); i < array.getDimension(); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         std::shared_ptr<ItemBase> newVal = getItem(arrayV);
@@ -100,9 +99,7 @@ void Array::update(Typelib::Value& valueIn)
 Simple::Simple(Typelib::Value& valueIn)
     : ItemBase()
 {
-    libConfig::TypelibConfiguration tc;
-    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
-    name->setText(conf->getName().c_str());
+    name->setText(valueIn.getType().getName().c_str());   
     update(valueIn);
 }
 
@@ -111,15 +108,103 @@ Simple::~Simple()
 
 }
 
+template <class T>
+std::string getValue(const Typelib::Value& value)
+{
+    T *val = static_cast<T *>(value.getData());
+    return  boost::lexical_cast<std::string>(*val);
+}
+
 void Simple::update(Typelib::Value& valueIn)
 {
-    libConfig::TypelibConfiguration tc;
-    std::shared_ptr<libConfig::ConfigValue> conf = tc.getFromValue(valueIn);
+    if (!value->index().isValid())
+    {
+        std::cout << "index for simple item not valid.." << std::endl;
+        return;
+    }
     
-    libConfig::SimpleConfigValue *sVal = static_cast<libConfig::SimpleConfigValue *>(conf.get());
-    value->setText(sVal->getValue().c_str());
-    name->setData(this);
-    value->setData(this);
+    const Typelib::Type &type(valueIn.getType());
+    std::string valueS = value->text().toStdString();
+    std::string oldValue = valueS;
+    
+    if (type.getCategory() == Typelib::Type::Enum)
+    {
+        const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>(valueIn.getType());
+        Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(valueIn.getData()));
+        valueS = enumT.get(*intVal);
+    }
+    else if (type.getCategory() == Typelib::Type::Numeric)
+    {
+        const Typelib::Numeric &numeric(static_cast<const Typelib::Numeric &>(valueIn.getType()));
+        switch(numeric.getNumericCategory())
+        {
+            case Typelib::Numeric::Float:
+                if(numeric.getSize() == sizeof(float))
+                {
+                    valueS = getValue<float>(valueIn);               
+                }
+                else
+                {
+                    valueS = getValue<double>(valueIn);               
+                }
+                break;
+            case Typelib::Numeric::SInt:
+                switch(numeric.getSize())
+                {
+                    case sizeof(int8_t):
+                        valueS = getValue<int8_t>(valueIn);               
+                        break;
+                    case sizeof(int16_t):
+                        valueS = getValue<int16_t>(valueIn);               
+                        break;
+                    case sizeof(int32_t):
+                        valueS = getValue<int32_t>(valueIn);               
+                        break;
+                    case sizeof(int64_t):
+                        valueS = getValue<int64_t>(valueIn);               
+                        break;
+                    default:
+                        std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                        return;
+                }
+                break;
+            case Typelib::Numeric::UInt:
+            {
+                switch(numeric.getSize())
+                {
+                    case sizeof(uint8_t):
+                        valueS = getValue<uint8_t>(valueIn);               
+                        break;
+                    case sizeof(uint16_t):
+                        valueS = getValue<uint16_t>(valueIn);               
+                        break;
+                    case sizeof(uint32_t):
+                        valueS = getValue<uint32_t>(valueIn);               
+                        break;
+                    case sizeof(uint64_t):
+                        valueS = getValue<uint64_t>(valueIn);               
+                        break;
+                    default:
+                        std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                        return;
+                }
+            }
+                break;
+            case Typelib::Numeric::NumberOfValidCategories:
+                std::cout << "Internal Error: Got invalid Category" << std::endl;
+                return;
+        }
+    }
+    else
+    {
+        std::cout << "got unsupported type.." << std::endl;
+        return;
+    }
+    
+    if (valueS != oldValue)
+    {
+        value->setText(valueS.c_str());
+    }
 }
 
 Complex::Complex(Typelib::Value& valueIn)
@@ -155,8 +240,6 @@ bool Complex::hasActiveVisualizers()
 void Complex::update(Typelib::Value& valueIn)
 {
     const Typelib::Type &type(valueIn.getType());
-    name->setData(this);
-    value->setData(this);
     
     for (auto vizHandle : activeVizualizer)
     {   

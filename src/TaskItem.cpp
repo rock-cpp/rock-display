@@ -51,7 +51,7 @@ bool TaskItem::updatePorts()
     const RTT::DataFlowInterface *dfi = task->ports();
     bool needsUpdate = false;
     
-    if (dfi->getPorts().empty() && outputPorts.rowCount() == 0)
+    if (dfi->getPorts().empty() && inputPorts.rowCount() == 0 && outputPorts.rowCount() == 0)
     {
         statusItem.setText("CORBA error..");
     }
@@ -62,9 +62,9 @@ bool TaskItem::updatePorts()
         RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
         auto it = ports.find(portName);
         PortItem *item = nullptr;
-        if(it == ports.end())
+        if (it == ports.end())
         {
-            if(outIf)
+            if (outIf)
             {
                 item = new OutputPortItem(outIf);
                 outputPorts.appendRow(item->getRow());

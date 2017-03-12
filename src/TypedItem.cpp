@@ -4,11 +4,13 @@
 TypedItem::TypedItem(int type) : QStandardItem(), _type(type), userData(nullptr)
 {
     setEditable(false);
+    setText("");
 }
 
 TypedItem::TypedItem() : _type(-1), userData(nullptr)
 {
     setEditable(false);
+    setText("");
 }
 
 void TypedItem::setData(void* data)

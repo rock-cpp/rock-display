@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     QTimer timer;
     timer.setInterval(100);
     
-    QObject::connect(&timer, SIGNAL(timeout()), w, SLOT(updateTasks()));
+    QObject::connect(&timer, SIGNAL(timeout()), w, SLOT(updateTasks()), Qt::QueuedConnection);
     timer.start();
     
     struct sigaction mainWindowSigIntHandler;
