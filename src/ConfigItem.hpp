@@ -3,6 +3,7 @@
 #include <lib_config/Configuration.hpp>
 #include "TypedItem.hpp"
 #include <typelib/value.hh>
+#include <QTextCodec>
 
 class PortHandle;
 class OutputPortItem;
@@ -24,23 +25,25 @@ namespace RTT
 }
 
 class ItemBase
-{   
-public:
+{
+protected:
     TypedItem *name;
     TypedItem *value;
-    
     QTextCodec *codec;
+    
+    QTextCodec::ConverterState state;
+    
+public:
+    ItemBase();
+    virtual ~ItemBase();
     
     virtual bool hasActiveVisualizers();
     
     std::map<std::string, VizHandle> activeVizualizer;
     
     void addPlugin(std::pair<std::string, VizHandle> handle);
-
-    ItemBase();
     
     virtual void update(Typelib::Value& valueIn) = 0;
-    virtual ~ItemBase();
     void setName(const QString &newName)
     {
         name->setText(newName);
@@ -67,6 +70,7 @@ class Array : public ItemBase
 public:
     Array(Typelib::Value& valueIn);
     virtual ~Array();
+    
     virtual void update(Typelib::Value& valueIn);
     virtual bool hasActiveVisualizers();
 };
@@ -76,17 +80,19 @@ class Simple : public ItemBase
 public:
     Simple(Typelib::Value& valueIn);    
     virtual ~Simple();
+    
     virtual void update(Typelib::Value& valueIn);
 };
 
 class Complex : public ItemBase
 {
     std::vector<std::shared_ptr<ItemBase> > childs;
-    const int maxVectorElemsShown = 500;
+    const std::size_t maxVectorElemsShown = 500;
     
 public:
     Complex(Typelib::Value& valueIn);
     virtual ~Complex();
+    
     virtual void update(Typelib::Value& valueIn);
     virtual bool hasActiveVisualizers();
 };

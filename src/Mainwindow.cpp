@@ -276,6 +276,8 @@ void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
         }
     }
     
+    view->expandAll();
+    
     widget3d.show();
 }
 

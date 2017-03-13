@@ -102,7 +102,7 @@ bool TaskItem::updatePorts()
         orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
         RTT::base::DataSourceBase::shared_ptr sample;
         
-        for (int i=0; i<taskProperties->size(); i++)
+        for (std::size_t i=0; i<taskProperties->size(); i++)
         {
             RTT::base::PropertyBase *property = taskProperties->getItem(i);
             

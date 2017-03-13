@@ -19,14 +19,13 @@ private:
     RTT::corba::TaskContextProxy *task;
     TypedItem nameItem;
     TypedItem statusItem;
-
+    bool refreshPorts;
+    std::string stateLbl;
     QStandardItem inputPorts;
     QStandardItem outputPorts;
     QStandardItem properties;
     std::map<std::string, PortItem *> ports;
     std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
-    
-    std::string stateLbl;
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
@@ -34,7 +33,10 @@ public:
     bool updateState();
     bool updatePorts();
     
-    bool refreshPorts;
+    void setRefreshPorts(bool refresh=true)
+    {
+        this->refreshPorts = refresh;
+    }
 
     bool update();
     std::string getStatusLbl()

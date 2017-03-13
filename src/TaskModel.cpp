@@ -284,7 +284,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     
     if (reconnect)
     {
-        item->refreshPorts = true;
+        item->setRefreshPorts();
         item->updateTaskContext(task);
     }
     
