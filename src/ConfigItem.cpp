@@ -12,7 +12,7 @@
 #include "Types.hpp"
 
 
-ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8"))
+ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8")), expanded(false)
 {
     name->setType(ItemType::CONFIGITEM);
     value->setType(ItemType::CONFIGITEM);
@@ -35,6 +35,34 @@ bool ItemBase::hasActiveVisualizers()
     return false;
 }
 
+bool ItemBase::hasVizualizer(const std::string& name)
+{
+    return activeVizualizer.find(name) != activeVizualizer.end();
+}
+
+void ItemBase::removeVizualizer(QObject* plugin)
+{
+    for (std::map<std::string, VizHandle>::iterator it = activeVizualizer.begin(); it != activeVizualizer.end(); it++)
+    {
+        if (it->second.plugin == plugin)
+        {
+            activeVizualizer.erase(it);
+            return;
+        }
+    }
+}
+
+QObject* ItemBase::getVizualizer(const std::string& name)
+{
+    std::map<std::string, VizHandle>::iterator iter = activeVizualizer.find(name);
+    if (iter != activeVizualizer.end())
+    {
+        return iter->second.plugin;
+    }
+    
+    return nullptr;
+}
+
 Array::Array(Typelib::Value& valueIn)
     : ItemBase()
 {
@@ -55,7 +83,7 @@ bool Array::hasActiveVisualizers()
         return true;
     }
     
-    for (auto child: childs)
+    for (auto child: children)
     {
         if (child->hasActiveVisualizers())
         {
@@ -66,29 +94,35 @@ bool Array::hasActiveVisualizers()
     return false;
 }
 
-void Array::update(Typelib::Value& valueIn)
-{
+bool Array::update(Typelib::Value& valueIn, bool updateUI)
+{    
+    bool updateNecessary = this->isExpanded() && updateUI;
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     
     void *data = valueIn.getData();
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    std::size_t upperBound = std::min(childs.size(), array.getDimension());
+    std::size_t upperBound = std::min(children.size(), array.getDimension());
+    bool childRet = false;
     for (size_t i = 0; i < upperBound; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        childs[i]->update(arrayV);
+        childRet |= children[i]->update(arrayV, updateNecessary);
     }
+    updateNecessary &= childRet;
     
-    for (size_t i = childs.size(); i < array.getDimension(); i++)
+    for (size_t i = children.size(); i < array.getDimension(); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         std::shared_ptr<ItemBase> newVal = getItem(arrayV);
         newVal->setName(QString::number(i));
-        childs.push_back(newVal);
+        children.push_back(newVal);
         name->appendRow(newVal->getRow());
+        updateNecessary = true;
     }
+    
+    return updateNecessary;
 }
 
 Simple::Simple(Typelib::Value& valueIn)
@@ -126,11 +160,18 @@ std::string getValue(const Typelib::Value& value)
     return valueS;
 }
 
-void Simple::update(Typelib::Value& valueIn)
-{
+bool Simple::update(Typelib::Value& valueIn, bool updateUI)
+{    
+    bool updateNecessary = updateUI;
+    
+    if (!updateUI)
+    {
+        return updateNecessary;
+    }
+    
     if (!value->parent() || !value->model() || value->model()->rowCount() <= 0 || value->row() < 0 || !value->index().isValid())
     {
-        return;
+        return updateNecessary;
     }
     
     const Typelib::Type &type(valueIn.getType());
@@ -175,7 +216,7 @@ void Simple::update(Typelib::Value& valueIn)
                         break;
                     default:
                         std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
-                        return;
+                        return false;
                 }
                 break;
             case Typelib::Numeric::UInt:
@@ -196,19 +237,19 @@ void Simple::update(Typelib::Value& valueIn)
                         break;
                     default:
                         std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
-                        return;
+                        return false;
                 }
             }
                 break;
             case Typelib::Numeric::NumberOfValidCategories:
                 std::cout << "Internal Error: Got invalid Category" << std::endl;
-                return;
+                return false;
         }
     }
     else
     {
         std::cout << "got unsupported type.." << std::endl;
-        return;
+        return false;
     }
     
     if (valueS != oldValue)
@@ -219,12 +260,15 @@ void Simple::update(Typelib::Value& valueIn)
             
             if (state.invalidChars > 0)
             {
-                return;
+                return updateNecessary;
             }
+            
+            value->setText(text);
+            return true;
         }
-        
-        value->setText(valueS.c_str());
     }
+    
+    return false;
 }
 
 Complex::Complex(Typelib::Value& valueIn)
@@ -246,7 +290,7 @@ bool Complex::hasActiveVisualizers()
         return true;
     }
     
-    for (auto child: childs)
+    for (auto child: children)
     {
         if (child->hasActiveVisualizers())
         {
@@ -257,9 +301,9 @@ bool Complex::hasActiveVisualizers()
     return false;
 }
 
-void Complex::update(Typelib::Value& valueIn)
-{
-    const Typelib::Type &type(valueIn.getType());
+bool Complex::update(Typelib::Value& valueIn, bool updateUI)
+{   
+    bool updateNecessary = updateUI && this->isExpanded();
     
     for (auto vizHandle : activeVizualizer)
     {   
@@ -267,31 +311,34 @@ void Complex::update(Typelib::Value& valueIn)
         vizHandle.second.method.invoke(vizHandle.second.plugin, data);
     }
     
-    
+    const Typelib::Type &type(valueIn.getType());
     if (type.getCategory() == Typelib::Type::Compound)
     {
         const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(valueIn.getType());
      
         uint8_t *data = static_cast<uint8_t *>(valueIn.getData());
         
+        bool childRet = false;
         size_t i = 0;
         for (const Typelib::Field &field: comp.getFields())
         {
             Typelib::Value fieldV(data + field.getOffset(), field.getType());
             
-            if (childs.size() <= i)
+            if (children.size() <= i)
             {
                 std::shared_ptr<ItemBase> newVal = getItem(fieldV);
                 newVal->setName(field.getName().c_str());
-                childs.push_back(newVal);
+                children.push_back(newVal);
                 name->appendRow(newVal->getRow());
+                childRet = true;
                 i++;
                 continue;
             }
 
-            childs[i]->update(fieldV);           
+            childRet |= children[i]->update(fieldV, updateNecessary);           
             i++;
         }
+        updateNecessary &= childRet;
     }
     else
     {
@@ -300,6 +347,11 @@ void Complex::update(Typelib::Value& valueIn)
         
         if(cont.kind() == "/std/string")
         {
+            if (!updateNecessary)
+            {
+                return false;
+            }
+            
             const std::string content = *static_cast<const std::string *>(valueIn.getData());
             
             if (codec)
@@ -307,43 +359,58 @@ void Complex::update(Typelib::Value& valueIn)
                 const QString text = codec->toUnicode(content.c_str(), content.size(), &state);
                 if (state.invalidChars > 0)
                 {
-                    return;
+                    return updateNecessary;
                 }
+                
+                value->setText(text);
+                return true;
             }
             
-            value->setText(content.c_str());
-            return;
+            return updateNecessary;
         }
         
         //std::vector
         std::size_t numElemsShown = size;
+        bool childRet = false;
         if (numElemsShown > maxVectorElemsShown)
         {
             numElemsShown = maxVectorElemsShown;
-            value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsShown)
-                + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
+            if (updateNecessary)
+            {
+                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsShown)
+                    + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
+                childRet = true;
+            }
         }
         else
         {
-            value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+            if (updateNecessary)
+            {
+                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+                childRet = true;
+            }
         }
         
-        std::size_t upperBound = std::min(childs.size(), numElemsShown);
+        std::size_t upperBound = std::min(children.size(), numElemsShown);
         for(size_t i = 0; i < upperBound; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            childs[i]->update(elem);
+            childRet |= children[i]->update(elem, updateNecessary);
         }
+        updateNecessary &= childRet;
         
-        for(size_t i = childs.size(); i < numElemsShown; i++)
+        for(size_t i = children.size(); i < numElemsShown; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             std::shared_ptr<ItemBase> newVal = getItem(elem);
             newVal->setName(QString::number(i));
-            childs.push_back(newVal);
+            children.push_back(newVal);
             name->appendRow(newVal->getRow());
+            updateNecessary = true;
         }
     }
+    
+    return updateNecessary;
 }
 
 std::shared_ptr< ItemBase > getItem(Typelib::Value& value)

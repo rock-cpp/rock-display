@@ -288,7 +288,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
         item->updateTaskContext(task);
     }
     
-    std::cout << "update task.." << std::endl;
     updateTaskItem(item);
     nameToItemMutex.unlock();
 }

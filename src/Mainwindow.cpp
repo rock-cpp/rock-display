@@ -153,14 +153,10 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     
     if (TypedItem *ti = dynamic_cast<TypedItem*>(item))
     {
-        if (ti->type() == ItemType::TASK)
+        if (ti->type() == ItemType::CONFIGITEM)
         {
-            TaskItem *titem = static_cast<TaskItem *>(ti->getData());
-            
-            for (std::map<std::string, PortItem *>::iterator portIt = titem->getPorts().begin(); portIt != titem->getPorts().end(); portIt++)
-            {
-                portIt->second->setExpanded(expanded);
-            }
+            ItemBase *titem = static_cast<ItemBase *>(ti->getData());
+            titem->setExpanded(expanded);
         }
     }
 }
@@ -219,7 +215,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     
                     if (ti->type() == ItemType::CONFIGITEM)
                     {
-                        if (titem->activeVizualizer.find(handle.pluginName) != titem->activeVizualizer.end())
+                        if (titem->hasVizualizer(handle.pluginName))
                         {
                             act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
                         }
@@ -251,6 +247,8 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 return;
         }
 
+        
+        
         QPoint pt(pos);
         menu.exec(QCursor::pos());
     }
@@ -288,39 +286,14 @@ void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
         if (ti->type() == ItemType::CONFIGITEM)
         {
             ItemBase *item = static_cast<ItemBase *>(ti->getData());
-            for (std::map<std::string, VizHandle>::iterator it = item->activeVizualizer.begin(); it != item->activeVizualizer.end(); it++)
-            {
-                if (it->second.plugin == plugin)
-                {
-                    item->activeVizualizer.erase(it);
-                    break;
-                }
-            }
+            item->removeVizualizer(plugin);
         }
         else if (ti->type() == ItemType::OUTPUTPORT)
         {
             OutputPortItem *outport = static_cast<OutputPortItem *>(ti->getData());
-            bool found = false;
-            for (std::map<std::string, VizHandle>::iterator it = outport->waitingVizualizer.begin(); it != outport->waitingVizualizer.end(); it++)
+            if (!outport->removeVizualizer(plugin))
             {
-                if (it->second.plugin == plugin)
-                {
-                    outport->waitingVizualizer.erase(it);
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (!found)
-            {
-                for (std::map<std::string, VizHandle>::iterator it = outport->getItemBase()->activeVizualizer.begin(); it != outport->getItemBase()->activeVizualizer.end(); it++)
-                {
-                    if (it->second.plugin == plugin)
-                    {
-                        outport->getItemBase()->activeVizualizer.erase(it);
-                        break;
-                    }
-                }
+                outport->getItemBase()->removeVizualizer(plugin);
             }
         }
     }
@@ -340,31 +313,27 @@ void MainWindow::handleOutputPort(QObject *obj)
     DataContainer *d = static_cast<DataContainer*>(obj);
     TypedItem *ti = d->getItem();
     PluginHandle ph = d->getPluginHandle();
+    QObject *plugin = nullptr;
     
     if (ti->type() == ItemType::CONFIGITEM)
     {
         ItemBase *item = static_cast<ItemBase *>(ti->getData());
-        std::map<std::string, VizHandle>::iterator iter = item->activeVizualizer.find(ph.pluginName);
-        if (iter != item->activeVizualizer.end())
-        {
-            removePlugin(iter->second.plugin, ti);
-            return;
-        }
+        plugin = item->getVizualizer(ph.pluginName);
         
-        addPlugin(ph, ti);
     }
     else if (ti->type() == ItemType::OUTPUTPORT)
     {
         OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
-        std::map<std::string, VizHandle>::iterator iter = outputPort->waitingVizualizer.find(ph.pluginName);
-        if (iter != outputPort->waitingVizualizer.end())
-        {
-            removePlugin(iter->second.plugin, ti);
-            return;
-        }
-        
-        addPlugin(ph, ti);
+        plugin = outputPort->getVizualizer(ph.pluginName);
     }
+    
+    if (plugin)
+    {
+        removePlugin(plugin, ti);
+        return;
+    }
+    
+    addPlugin(ph, ti);
 }
 
 void MainWindow::activateTask()

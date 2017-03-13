@@ -45,7 +45,7 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT)), expanded(false)
+PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT))
 {
     nameItem->setText(name.c_str());
 
@@ -81,6 +81,31 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     {
         valueItem->setText(handle->type->getName().c_str());
     }
+}
+
+bool PortItem::removeVizualizer(QObject* plugin)
+{
+    for (std::map<std::string, VizHandle>::iterator it = waitingVizualizer.begin(); it != waitingVizualizer.end(); it++)
+    {
+        if (it->second.plugin == plugin)
+        {
+            waitingVizualizer.erase(it);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+QObject* PortItem::getVizualizer(const std::string& name)
+{
+    std::map<std::string, VizHandle>::iterator iter = waitingVizualizer.find(name);
+    if (iter != waitingVizualizer.end())
+    {
+        return iter->second.plugin;
+    }
+    
+    return nullptr;
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
@@ -124,7 +149,7 @@ bool OutputPortItem::updataValue()
         return false;
     }
     
-    if (item && !expanded && !item->hasActiveVisualizers())
+    if (item && !item->hasActiveVisualizers() && !item->isExpanded())
     {
         return false;
     }
@@ -156,11 +181,11 @@ bool OutputPortItem::updataValue()
             //note, the removeRow deletes these items
             nameItem = nullptr;
             valueItem = nullptr;
+            
+            return item->update(val, true);
         }
         
-        item->update(val);
-        
-        return true;
+        return item->update(val, item->isExpanded());
     }
     
     return false;

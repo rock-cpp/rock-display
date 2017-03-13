@@ -22,7 +22,6 @@ protected:
     std::shared_ptr<ItemBase> item;
     TypedItem *nameItem;
     TypedItem *valueItem;
-    bool expanded;
 
 public:
     std::map<std::string, VizHandle> waitingVizualizer;
@@ -36,10 +35,8 @@ public:
         return item;
     }
     
-    void setExpanded(bool expanded)
-    {
-        this->expanded = expanded;
-    }
+    bool removeVizualizer(QObject *plugin);
+    QObject *getVizualizer(const std::string &name);
 };
 
 class PortHandle;
