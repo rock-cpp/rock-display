@@ -114,7 +114,7 @@ public:
     void addTaskModel(TaskModel *task);
     
     void updateTasks();
-    void waitForTerminate();
+    void waitForTerminate(); 
     
 public slots:
     void update(const QModelIndex &i, const QModelIndex &j);

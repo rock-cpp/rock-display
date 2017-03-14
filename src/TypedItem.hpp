@@ -19,4 +19,6 @@ public:
     void *getData();
     
     virtual int type();
+    
+    virtual bool operator<(const QStandardItem &other) const;
 };

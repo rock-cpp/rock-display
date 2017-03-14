@@ -41,3 +41,21 @@ int TypedItem::type()
 TypedItem::~TypedItem()
 {
 }
+
+bool TypedItem::operator<(const QStandardItem& other) const
+{
+    QModelIndex index = other.index();
+    int depth = 0;
+    while (index.parent().isValid())
+    {
+        index = index.parent();
+        depth++;
+        
+        if (depth > 4)
+        {
+            return false;
+        }
+    }
+    
+    return QStandardItem::operator<(other);
+}
