@@ -34,6 +34,7 @@ protected:
     
     QTextCodec::ConverterState state;
     std::vector<std::shared_ptr<ItemBase> > children;
+    std::map<std::string, VizHandle> activeVizualizer;
     
 public:
     ItemBase();
@@ -41,12 +42,10 @@ public:
     
     virtual bool hasActiveVisualizers();
     
-    std::map<std::string, VizHandle> activeVizualizer;
-    
     void addPlugin(std::pair<std::string, VizHandle> handle);
-    bool hasVizualizer(const std::string &name);
-    QObject *getVizualizer(const std::string &name);
-    void removeVizualizer(QObject *plugin);
+    bool hasVisualizer(const std::string &name);
+    QObject *getVisualizer(const std::string &name);
+    void removeVisualizer(QObject *plugin);
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = true) = 0;
     void setName(const QString &newName)
@@ -85,6 +84,8 @@ std::shared_ptr<ItemBase> getItem(Typelib::Value& value);
 
 class Array : public ItemBase
 {   
+    const std::size_t maxArrayElemsDisplayed = 500;
+    
 public:
     Array(Typelib::Value& valueIn);
     virtual ~Array();
@@ -104,7 +105,7 @@ public:
 
 class Complex : public ItemBase
 {
-    const std::size_t maxVectorElemsShown = 500;
+    const std::size_t maxVectorElemsDisplayed = 500;
     
 public:
     Complex(Typelib::Value& valueIn);

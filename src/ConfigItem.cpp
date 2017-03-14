@@ -35,12 +35,12 @@ bool ItemBase::hasActiveVisualizers()
     return false;
 }
 
-bool ItemBase::hasVizualizer(const std::string& name)
+bool ItemBase::hasVisualizer(const std::string& name)
 {
     return activeVizualizer.find(name) != activeVizualizer.end();
 }
 
-void ItemBase::removeVizualizer(QObject* plugin)
+void ItemBase::removeVisualizer(QObject* plugin)
 {
     for (std::map<std::string, VizHandle>::iterator it = activeVizualizer.begin(); it != activeVizualizer.end(); it++)
     {
@@ -52,7 +52,7 @@ void ItemBase::removeVizualizer(QObject* plugin)
     }
 }
 
-QObject* ItemBase::getVizualizer(const std::string& name)
+QObject* ItemBase::getVisualizer(const std::string& name)
 {
     std::map<std::string, VizHandle>::iterator iter = activeVizualizer.find(name);
     if (iter != activeVizualizer.end())
@@ -103,26 +103,53 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    std::size_t upperBound = std::min(children.size(), array.getDimension());
+    int numElemsToDisplay = array.getDimension();
+    bool areMaxElemsDiplayed = false;
+    if (numElemsToDisplay > maxArrayElemsDisplayed)
+    {
+        numElemsToDisplay = maxArrayElemsDisplayed;
+        areMaxElemsDiplayed = true;
+    }
+    
+    int currentRows = name->rowCount();
+    if (currentRows < 0)
+    {
+        return false;
+    }
+    
+    bool numElemsDisplayedChanged = false;
+    if (numElemsToDisplay != currentRows)
+    {
+        numElemsDisplayedChanged = true;
+        if (children.size() > numElemsToDisplay)
+        {
+            children.resize(numElemsToDisplay);
+        }
+    }
+    
     bool childRet = false;
-    for (size_t i = 0; i < upperBound; i++)
+    for(int i = 0; i < children.size(); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childRet |= children[i]->update(arrayV, updateNecessary);
     }
     updateNecessary &= childRet;
     
-    for (size_t i = children.size(); i < array.getDimension(); i++)
+    for(int i = currentRows; i < numElemsToDisplay; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        std::shared_ptr<ItemBase> newVal = getItem(arrayV);
-        newVal->setName(QString::number(i));
-        children.push_back(newVal);
-        name->appendRow(newVal->getRow());
-        updateNecessary = true;
+        std::shared_ptr<ItemBase> child = getItem(arrayV);
+        child->setName(QString::number(i));
+        children.push_back(child);
+        name->appendRow(child->getRow());
     }
     
-    return updateNecessary;
+    if (currentRows > numElemsToDisplay)
+    {
+        name->setRowCount(numElemsToDisplay);
+    }
+    
+    return updateNecessary || numElemsDisplayedChanged;
 }
 
 Simple::Simple(Typelib::Value& valueIn)
@@ -370,44 +397,75 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI)
         }
         
         //std::vector
-        std::size_t numElemsShown = size;
-        bool childRet = false;
-        if (numElemsShown > maxVectorElemsShown)
+        int numElemsToDisplay = size;
+        bool areMaxElemsDiplayed = false;
+        // limit max elems displayed to maxVectorElemsDisplayed
+        if (numElemsToDisplay > maxVectorElemsDisplayed)
         {
-            numElemsShown = maxVectorElemsShown;
-            if (updateNecessary)
-            {
-                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsShown)
-                    + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
-                childRet = true;
-            }
+            numElemsToDisplay = maxVectorElemsDisplayed;
+            areMaxElemsDiplayed = true;
         }
-        else
+        
+        int currentRows = name->rowCount();
+        if (currentRows < 0)
         {
-            if (updateNecessary)
+            return false;
+        }
+        
+        // check if number of displayed items changed
+        bool numElemsDisplayedChanged = false;
+        if (numElemsToDisplay != currentRows)
+        {
+            numElemsDisplayedChanged = true;
+            if (children.size() > numElemsToDisplay)
             {
-                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
-                childRet = true;
+                // downsize child items
+                children.resize(numElemsToDisplay);
             }
         }
         
-        std::size_t upperBound = std::min(children.size(), numElemsShown);
-        for(size_t i = 0; i < upperBound; i++)
+        bool childRet = false;
+        // update old (displayed) items
+        // children size at this step is min(currentRows, numElemsToDisplay)
+        for(int i = 0; i < children.size(); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childRet |= children[i]->update(elem, updateNecessary);
         }
         updateNecessary &= childRet;
         
-        for(size_t i = children.size(); i < numElemsShown; i++)
+        // case new vector size is bigger
+        // append new rows
+        for(int i = currentRows; i < numElemsToDisplay; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            std::shared_ptr<ItemBase> newVal = getItem(elem);
-            newVal->setName(QString::number(i));
-            children.push_back(newVal);
-            name->appendRow(newVal->getRow());
-            updateNecessary = true;
+            std::shared_ptr<ItemBase> child = getItem(elem);
+            child->setName(QString::number(i));
+            children.push_back(child);
+            name->appendRow(child->getRow());
         }
+        
+        // case new vector size is smaller
+        // reduce row count
+        if (currentRows > numElemsToDisplay)
+        {
+            name->setRowCount(numElemsToDisplay);
+        }    
+        
+        if (numElemsDisplayedChanged)
+        {
+            if (areMaxElemsDiplayed)
+            {
+                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsToDisplay)
+                    + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
+            }
+            else
+            {
+                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+            }
+        }
+        
+        updateNecessary |= numElemsDisplayedChanged;
     }
     
     return updateNecessary;

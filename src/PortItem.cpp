@@ -9,7 +9,6 @@
 #include <base/commands/Motion2D.hpp>
 #include <base/samples/RigidBodyState.hpp>
 #include <QMetaType>
-#include "Mainwindow.hpp"
 
 
 class PortHandle
@@ -83,7 +82,7 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     }
 }
 
-bool PortItem::removeVizualizer(QObject* plugin)
+bool PortItem::removeVisualizer(QObject* plugin)
 {
     for (std::map<std::string, VizHandle>::iterator it = waitingVizualizer.begin(); it != waitingVizualizer.end(); it++)
     {
@@ -97,7 +96,7 @@ bool PortItem::removeVizualizer(QObject* plugin)
     return false;
 }
 
-QObject* PortItem::getVizualizer(const std::string& name)
+QObject* PortItem::getVisualizer(const std::string& name)
 {
     std::map<std::string, VizHandle>::iterator iter = waitingVizualizer.find(name);
     if (iter != waitingVizualizer.end())
@@ -106,6 +105,11 @@ QObject* PortItem::getVizualizer(const std::string& name)
     }
     
     return nullptr;
+}
+
+bool PortItem::hasVisualizer(const std::string& name)
+{
+    return waitingVizualizer.find(name) != waitingVizualizer.end();
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
@@ -167,7 +171,7 @@ bool OutputPortItem::updataValue()
             while (!waitingVizualizer.empty())
             {
                 vizIter = waitingVizualizer.begin();
-                item->activeVizualizer[vizIter->first] = vizIter->second;
+                item->addPlugin(*vizIter);
                 waitingVizualizer.erase(vizIter);
             }
             

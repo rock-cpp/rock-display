@@ -215,7 +215,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     
                     if (ti->type() == ItemType::CONFIGITEM)
                     {
-                        if (titem->hasVizualizer(handle.pluginName))
+                        if (titem->hasVisualizer(handle.pluginName))
                         {
                             act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
                         }
@@ -226,7 +226,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     }
                     else
                     {
-                        if (outport->waitingVizualizer.find(handle.pluginName) != outport->waitingVizualizer.end())
+                        if (outport->hasVisualizer(handle.pluginName))
                         {
                             act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
                         }
@@ -286,14 +286,14 @@ void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
         if (ti->type() == ItemType::CONFIGITEM)
         {
             ItemBase *item = static_cast<ItemBase *>(ti->getData());
-            item->removeVizualizer(plugin);
+            item->removeVisualizer(plugin);
         }
         else if (ti->type() == ItemType::OUTPUTPORT)
         {
             OutputPortItem *outport = static_cast<OutputPortItem *>(ti->getData());
-            if (!outport->removeVizualizer(plugin))
+            if (!outport->removeVisualizer(plugin))
             {
-                outport->getItemBase()->removeVizualizer(plugin);
+                outport->getItemBase()->removeVisualizer(plugin);
             }
         }
     }
@@ -318,13 +318,13 @@ void MainWindow::handleOutputPort(QObject *obj)
     if (ti->type() == ItemType::CONFIGITEM)
     {
         ItemBase *item = static_cast<ItemBase *>(ti->getData());
-        plugin = item->getVizualizer(ph.pluginName);
+        plugin = item->getVisualizer(ph.pluginName);
         
     }
     else if (ti->type() == ItemType::OUTPUTPORT)
     {
         OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
-        plugin = outputPort->getVizualizer(ph.pluginName);
+        plugin = outputPort->getVisualizer(ph.pluginName);
     }
     
     if (plugin)

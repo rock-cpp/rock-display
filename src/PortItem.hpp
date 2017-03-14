@@ -22,9 +22,9 @@ protected:
     std::shared_ptr<ItemBase> item;
     TypedItem *nameItem;
     TypedItem *valueItem;
+    std::map<std::string, VizHandle> waitingVizualizer;
 
 public:
-    std::map<std::string, VizHandle> waitingVizualizer;
     void addPlugin(std::pair<std::string, VizHandle> handle);
     PortItem(const std::string &name);
     virtual ~PortItem();
@@ -35,8 +35,9 @@ public:
         return item;
     }
     
-    bool removeVizualizer(QObject *plugin);
-    QObject *getVizualizer(const std::string &name);
+    bool hasVisualizer(const std::string &name);
+    bool removeVisualizer(QObject *plugin);
+    QObject *getVisualizer(const std::string &name);
 };
 
 class PortHandle;
