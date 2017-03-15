@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     model = new NameServiceModel(this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     
-    TaskModel *initialTasks = new TaskModel();
+    TaskModel *initialTasks = new TaskModel(this);
     model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");
@@ -58,6 +58,9 @@ MainWindow::MainWindow(QWidget *parent) :
     nameServiceDialog = new AddNameServiceDialog();
     connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model, SLOT(addNameService(const std::string &)));
     initialTasks->notifierThread->start();
+    
+    view->expand(initialTasks->getRow().first()->index());
+    view->expand(initialTasks->getTasks().index());
 }
 
 AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
