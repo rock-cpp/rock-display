@@ -20,12 +20,12 @@ private:
     TypedItem nameItem;
     TypedItem statusItem;
     bool refreshPorts;
-    std::string stateLbl;
     TypedItem inputPorts;
     TypedItem outputPorts;
     TypedItem properties;
     std::map<std::string, PortItem *> ports;
     std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
+    bool stateChanged;
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
@@ -40,10 +40,6 @@ public:
     }
 
     bool update();
-    std::string getStatusLbl()
-    {
-        return stateLbl;
-    }
     
     void updateTaskContext(RTT::corba::TaskContextProxy* _task)
     {

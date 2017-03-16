@@ -46,7 +46,7 @@ public:
     QObject *getVisualizer(const std::string &name);
     void removeVisualizer(QObject *plugin);
     
-    virtual bool update(Typelib::Value& valueIn, bool updateUI = true) = 0;
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
     void setName(const QString &newName)
     {
         name->setText(newName);
@@ -84,7 +84,7 @@ public:
     Array(Typelib::Value& valueIn);
     virtual ~Array();
     
-    virtual bool update(Typelib::Value& valueIn, bool updateUI = false);
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
     virtual bool hasActiveVisualizers();
 };
 
@@ -94,7 +94,7 @@ public:
     Simple(Typelib::Value& valueIn);    
     virtual ~Simple();
     
-    virtual bool update(Typelib::Value& valueIn, bool updateUI = false);
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
 };
 
 class Complex : public ItemBase
@@ -105,6 +105,6 @@ public:
     Complex(Typelib::Value& valueIn);
     virtual ~Complex();
     
-    virtual bool update(Typelib::Value& valueIn, bool updateUI = false);
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
     virtual bool hasActiveVisualizers();
 };

@@ -68,7 +68,7 @@ Array::Array(Typelib::Value& valueIn)
 {
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     value->setText(array.getName().c_str());
-    update(valueIn);
+    update(valueIn, true, true);
 }
 
 Array::~Array()
@@ -94,9 +94,9 @@ bool Array::hasActiveVisualizers()
     return false;
 }
 
-bool Array::update(Typelib::Value& valueIn, bool updateUI)
+bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = this->name->isExpanded() && updateUI;
+    bool updateNecessary = (this->name->isExpanded() && updateUI) | forceUpdate;
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     
     void *data = valueIn.getData();
@@ -154,7 +154,7 @@ Simple::Simple(Typelib::Value& valueIn)
     : ItemBase()
 {
     name->setText(valueIn.getType().getName().c_str());   
-    update(valueIn);
+    update(valueIn, true, true);
 }
 
 Simple::~Simple()
@@ -185,9 +185,9 @@ std::string getValue(const Typelib::Value& value)
     return valueS;
 }
 
-bool Simple::update(Typelib::Value& valueIn, bool updateUI)
+bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = updateUI;
+    bool updateNecessary = updateUI || forceUpdate;
     
     if (!updateUI)
     {
@@ -294,7 +294,7 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI)
 Complex::Complex(Typelib::Value& valueIn)
     : ItemBase()
 {
-    update(valueIn);
+    update(valueIn, true, true);
     value->setText(valueIn.getType().getName().c_str());
 }
 
@@ -321,9 +321,9 @@ bool Complex::hasActiveVisualizers()
     return false;
 }
 
-bool Complex::update(Typelib::Value& valueIn, bool updateUI)
+bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {   
-    bool updateNecessary = updateUI && this->name->isExpanded();
+    bool updateNecessary = (updateUI && this->name->isExpanded()) || forceUpdate;
     
     for (auto vizHandle : activeVizualizer)
     {   

@@ -8,7 +8,7 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
       refreshPorts(false),
-      stateLbl("Stopped")
+      stateChanged(false)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -42,8 +42,9 @@ bool TaskItem::update()
     
     if (ports.empty() || propertyMap.empty() || nameItem.isExpanded())
     {    
-        needsUpdate |= updateState();
         needsUpdate |= updatePorts();
+        stateChanged = updateState();
+        needsUpdate |= stateChanged;
         needsUpdate |= updateProperties();
     }
 
@@ -104,10 +105,10 @@ bool TaskItem::updatePorts()
 }
 
 bool TaskItem::updateProperties()
-{
+{   
     bool needsUpdate = false;
     
-    if (propertyMap.empty() || properties.isExpanded())
+    if (propertyMap.empty() || stateChanged)
     {
         RTT::PropertyBag *taskProperties = task->properties();
         orogen_transports::TypelibMarshallerBase *transport;
@@ -152,7 +153,7 @@ bool TaskItem::updateProperties()
             else
             {
                 item = propertyMap[property->getName()];
-                needsUpdate |= item->update(val, true);
+                needsUpdate |= item->update(val);
             }
         }
     }
