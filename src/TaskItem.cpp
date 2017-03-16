@@ -26,7 +26,7 @@ TaskItem::~TaskItem()
 }
 
 bool TaskItem::update()
-{
+{   
     bool needsUpdate = false;
     if (nameItem.text().isEmpty())
     {
@@ -40,9 +40,12 @@ bool TaskItem::update()
         }
     }
     
-    needsUpdate |= updateState();
-    needsUpdate |= updatePorts();
-    needsUpdate |= updateProperties();
+    if (ports.empty() || propertyMap.empty() || nameItem.isExpanded())
+    {    
+        needsUpdate |= updateState();
+        needsUpdate |= updatePorts();
+        needsUpdate |= updateProperties();
+    }
 
     return needsUpdate;
 }
