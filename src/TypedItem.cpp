@@ -1,7 +1,7 @@
 #include "TypedItem.hpp"
 #include <iostream>
 
-TypedItem::TypedItem(int type) : QStandardItem(nullptr), _type(type), userData(nullptr)
+TypedItem::TypedItem(int type) : QStandardItem(nullptr), _type(type), userData(nullptr), expanded(false)
 {
     setEditable(false);
     setText("");

@@ -42,60 +42,69 @@ bool TaskItem::update()
     
     needsUpdate |= updateState();
     needsUpdate |= updatePorts();
+    needsUpdate |= updateProperties();
 
     return needsUpdate;
 }
 
 bool TaskItem::updatePorts()
 {
-    const RTT::DataFlowInterface *dfi = task->ports();
     bool needsUpdate = false;
     
-    if (dfi->getPorts().empty() && inputPorts.rowCount() == 0 && outputPorts.rowCount() == 0)
+    if (ports.empty() || outputPorts.isExpanded())
     {
-        statusItem.setText("CORBA error..");
-    }
+        const RTT::DataFlowInterface *dfi = task->ports();
 
-    for (RTT::base::PortInterface *pi : dfi->getPorts())
-    {
-        const std::string portName(pi->getName());
-        RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
-        auto it = ports.find(portName);
-        PortItem *item = nullptr;
-        if (it == ports.end())
+        for (RTT::base::PortInterface *pi : dfi->getPorts())
         {
-            if (outIf)
+            const std::string portName(pi->getName());
+            RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
+            auto it = ports.find(portName);
+            PortItem *item = nullptr;
+            if (it == ports.end())
             {
-                item = new OutputPortItem(outIf);
-                outputPorts.appendRow(item->getRow());
+                if (outIf)
+                {
+                    item = new OutputPortItem(outIf);
+                    outputPorts.appendRow(item->getRow());
+                }
+                else
+                {
+                    item = new PortItem(pi->getName());
+                    inputPorts.appendRow(item->getRow());
+                }
+                
+                ports.insert(std::make_pair(portName, item));
+                needsUpdate = true;
             }
             else
-            {
-                item = new PortItem(pi->getName());
-                inputPorts.appendRow(item->getRow());
+            {   
+                item = it->second;
             }
-            
-            ports.insert(std::make_pair(portName, item));
-            needsUpdate = true;
-        }
-        else
-        {   
-            item = it->second;
-        }
 
-        if (outIf)
-        {
-            OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
-            if (refreshPorts)
+            if (outIf)
             {
-                outPortItem->updateOutputPortInterface(outIf);
+                OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
+                if (refreshPorts)
+                {
+                    outPortItem->updateOutputPortInterface(outIf);
+                }
+                
+                needsUpdate |= outPortItem->updataValue();
             }
-            
-            needsUpdate |= outPortItem->updataValue();
         }
+        
+        refreshPorts = false;
     }
     
-    if (properties.rowCount() == 0)
+    return needsUpdate;
+}
+
+bool TaskItem::updateProperties()
+{
+    bool needsUpdate = false;
+    
+    if (propertyMap.empty() || properties.isExpanded())
     {
         RTT::PropertyBag *taskProperties = task->properties();
         orogen_transports::TypelibMarshallerBase *transport;
@@ -122,18 +131,29 @@ bool TaskItem::updatePorts()
             
             Typelib::Value val(transport->getTypelibSample(transportHandle), *(typelibType));
             
-            std::shared_ptr<ItemBase> item = getItem(val);
+            std::shared_ptr<ItemBase> item = nullptr;
             
-            propertyMap[property->getName()] = item;
-            
-            item->setName(property->getName().c_str());
-            item->setType(ItemType::PROPERTY);
-            
-            properties.appendRow(item->getRow());
+            auto it = propertyMap.find(property->getName());
+            if (it == propertyMap.end())
+            {
+                item = getItem(val);
+                
+                propertyMap[property->getName()] = item;
+                
+                item->setName(property->getName().c_str());
+                item->setType(ItemType::PROPERTY);
+                
+                properties.appendRow(item->getRow());
+                needsUpdate = true;
+            }
+            else
+            {
+                item = propertyMap[property->getName()];
+                needsUpdate |= item->update(val, true);
+            }
         }
     }
     
-    refreshPorts = false;
     return needsUpdate;
 }
 

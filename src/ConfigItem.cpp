@@ -12,7 +12,7 @@
 #include "Types.hpp"
 
 
-ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8")), expanded(false)
+ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8"))
 {
     name->setType(ItemType::CONFIGITEM);
     value->setType(ItemType::CONFIGITEM);
@@ -96,7 +96,7 @@ bool Array::hasActiveVisualizers()
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI)
 {    
-    bool updateNecessary = this->isExpanded() && updateUI;
+    bool updateNecessary = this->name->isExpanded() && updateUI;
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     
     void *data = valueIn.getData();
@@ -193,12 +193,7 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI)
     
     if (!updateUI)
     {
-        return updateNecessary;
-    }
-    
-    if (!value->parent() || !value->model() || value->model()->rowCount() <= 0 || value->row() < 0 || !value->index().isValid())
-    {
-        return updateNecessary;
+        return false;
     }
     
     const Typelib::Type &type(valueIn.getType());
@@ -330,7 +325,7 @@ bool Complex::hasActiveVisualizers()
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI)
 {   
-    bool updateNecessary = updateUI && this->isExpanded();
+    bool updateNecessary = updateUI && this->name->isExpanded();
     
     for (auto vizHandle : activeVizualizer)
     {   
@@ -373,12 +368,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI)
         const size_t size = cont.getElementCount(valueIn.getData());
         
         if(cont.kind() == "/std/string")
-        {
-            if (!updateNecessary)
-            {
-                return false;
-            }
-            
+        {   
             const std::string content = *static_cast<const std::string *>(valueIn.getData());
             
             if (codec)
@@ -389,8 +379,11 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI)
                     return updateNecessary;
                 }
                 
-                value->setText(text);
-                return true;
+                if (value->text().toStdString() != text.toStdString())
+                {
+                    value->setText(text);
+                    return true;
+                }
             }
             
             return updateNecessary;

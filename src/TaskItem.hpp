@@ -21,9 +21,9 @@ private:
     TypedItem statusItem;
     bool refreshPorts;
     std::string stateLbl;
-    QStandardItem inputPorts;
-    QStandardItem outputPorts;
-    QStandardItem properties;
+    TypedItem inputPorts;
+    TypedItem outputPorts;
+    TypedItem properties;
     std::map<std::string, PortItem *> ports;
     std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
     
@@ -32,6 +32,7 @@ public:
     virtual ~TaskItem();
     bool updateState();
     bool updatePorts();
+    bool updateProperties();
     
     void setRefreshPorts(bool refresh=true)
     {

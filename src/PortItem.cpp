@@ -153,7 +153,7 @@ bool OutputPortItem::updataValue()
         return false;
     }
     
-    if (item && !item->hasActiveVisualizers() && !item->isExpanded())
+    if (item && !dynamic_cast<Simple *>(item.get()) && !item->hasActiveVisualizers() && !item->getName()->isExpanded())
     {
         return false;
     }
@@ -189,7 +189,7 @@ bool OutputPortItem::updataValue()
             return item->update(val, true);
         }
         
-        return item->update(val, item->isExpanded());
+        return item->update(val, item->getName()->isExpanded());
     }
     
     return false;

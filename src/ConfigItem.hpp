@@ -30,7 +30,6 @@ protected:
     TypedItem *name;
     TypedItem *value;
     QTextCodec *codec;
-    bool expanded;
     
     QTextCodec::ConverterState state;
     std::vector<std::shared_ptr<ItemBase> > children;
@@ -64,19 +63,14 @@ public:
         this->value->setType(newType);
     }
     
-    void setExpanded(bool expanded)
-    {
-        this->expanded = expanded;
-    }
-    
-    bool isExpanded()
-    {
-        return this->expanded;
-    }
-    
     std::vector<std::shared_ptr<ItemBase> > getChildren()
     {
         return this->children;
+    }
+    
+    TypedItem *getName()
+    {
+        return this->name;
     }
 };
 

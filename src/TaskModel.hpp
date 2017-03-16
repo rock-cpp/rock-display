@@ -28,7 +28,6 @@ class Notifier : public QObject
     void queryTasks();
     int connect_trials;
     const int max_connect_trials = 10;
-    bool isConnected;
     int numTasks;
   
 public:
@@ -42,7 +41,7 @@ public:
         
 public slots:
     void stopNotifier();
-    void setNameService(const std::string &nameServiceIP);
+    void initializeNameService(const std::string &nameServiceIP);
     orocos_cpp::NameService *getNameService()
     {
         return nameService;

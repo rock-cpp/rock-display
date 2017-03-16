@@ -156,11 +156,7 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     
     if (TypedItem *ti = dynamic_cast<TypedItem*>(item))
     {
-        if (ti->type() == ItemType::CONFIGITEM)
-        {
-            ItemBase *titem = static_cast<ItemBase *>(ti->getData());
-            titem->setExpanded(expanded);
-        }
+        ti->setExpanded(expanded);
     }
 }
 
@@ -249,9 +245,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             default:
                 return;
         }
-
-        
-        
+      
         QPoint pt(pos);
         menu.exec(QCursor::pos());
     }

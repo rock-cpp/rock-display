@@ -5,55 +5,10 @@
 #include <rtt/transports/corba/TaskContextProxy.hpp>
 #include <boost/thread.hpp>
 
-TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
-    : QObject(parent),
-      nameItem(ItemType::NAMESERVICE),
-      statusItem(ItemType::NAMESERVICE)
-{   
-    tasks.setText("Tasks");;
-    nameItem.appendRow(&tasks);
-    nameItem.setData(this);
-    statusItem.setData(this);
-    
-    if (nameServiceIP.empty())
-    {
-        nameItem.setText("localhost");
-    }
-    else
-    {
-        nameItem.setText(nameServiceIP.c_str());
-    }
-    
-    statusItem.setText("connecting..");
-    
-    notifier = new Notifier();
-    notifier->setNameService(nameServiceIP);
-    
-    if (notifier->getNameService() && notifier->getNameService()->isConnected())
-    {
-        statusItem.setText("connected!");
-    }
-    
-    qRegisterMetaType<std::string>("std::string");
-    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
-                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
-    
-    notifierThread = new QThread();
-    
-    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()));
-    connect(notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
-    connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
-    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::DirectConnection);
-    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::DirectConnection);
-    
-    notifier->moveToThread(notifierThread);
-}
-
 Notifier::Notifier(QObject* parent)
     : QObject(parent),
       isRunning(false),
       connect_trials(0),
-      isConnected(false),
       numTasks(0)
 {
 }
@@ -64,7 +19,7 @@ void Notifier::stopNotifier()
     isRunning = false;
 }
 
-void Notifier::setNameService(const std::string &nameServiceIP)
+void Notifier::initializeNameService(const std::string &nameServiceIP)
 {
     std::cout << "set nameservice for ip " << nameServiceIP << ".." << std::endl;
     if (nameServiceIP.empty())
@@ -74,16 +29,15 @@ void Notifier::setNameService(const std::string &nameServiceIP)
     else
     {
         nameService = new orocos_cpp::CorbaNameService(nameServiceIP);
-    }
-    
-    isConnected = nameService->isConnected();
-    
+    }   
 }
 
 void Notifier::queryTasks()
 {
+    // check if connection to nameservice is established
     if(!nameService->isConnected())
     {
+        // connect to nameservice
         if(!nameService->connect())
         {
             connect_trials++;
@@ -146,13 +100,26 @@ void Notifier::queryTasks()
         std::vector<std::string>::iterator diconnectedTaskIt = std::find(disconnectedTasks.begin(), disconnectedTasks.end(), tname);
         if (taskIt == nameToRegisteredTask.end())
         {
+            // case: task is not registered yet
             task = RTT::corba::TaskContextProxy::Create(tname);
+            if (!task)
+            {
+                continue;
+            }
+            
+            const RTT::DataFlowInterface *dfi = task->ports();
+            if (!dfi || dfi->getPorts().size() == 0)
+            {
+                continue;
+            }
+            
             nameToRegisteredTask[tname] = task;
             emit updateNameServiceStatus(std::string(std::string("connected: created TaskContextProxy for ") + tname + std::string("..")));
             emit updateTask(task, tname, false);
         }
         else if (diconnectedTaskIt != disconnectedTasks.end())
         {
+            // case: task has reconnected
             disconnectedTasks.erase(diconnectedTaskIt);
             task = RTT::corba::TaskContextProxy::Create(tname);
             nameToRegisteredTask[tname] = task;
@@ -164,6 +131,7 @@ void Notifier::queryTasks()
     taskIt = nameToRegisteredTask.begin();
     for (; taskIt != nameToRegisteredTask.end(); taskIt++)
     {
+        // check if any of the regsitered tasks has disconnected
         if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end() 
             && std::find(disconnectedTasks.begin(), disconnectedTasks.end(), taskIt->first) == disconnectedTasks.end())
         {
@@ -174,44 +142,58 @@ void Notifier::queryTasks()
     }
 }
 
-NameServiceModel::NameServiceModel(QObject* parent): QStandardItemModel(parent)
-{
-    setColumnCount(2);
-    setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
-}
-
-NameServiceModel::~NameServiceModel()
-{
-    for (TaskModel *taskModel: taskModels)
+TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
+    : QObject(parent),
+      nameItem(ItemType::NAMESERVICE),
+      statusItem(ItemType::NAMESERVICE)
+{   
+    tasks.setText("Tasks");;
+    nameItem.appendRow(&tasks);
+    nameItem.setData(this);
+    statusItem.setData(this);
+    
+    if (nameServiceIP.empty())
     {
-        delete taskModel;
+        nameItem.setText("localhost");
     }
-}
-
-void NameServiceModel::update(const QModelIndex &i, const QModelIndex &j)
-{
-    emit dataChanged(i, j);
-}
-
-void NameServiceModel::addTaskModel(TaskModel* task)
-{
-    taskModels.push_back(task);
-    appendRow(task->getRow());
-    connect(task, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(update(const QModelIndex &, const QModelIndex &)));
-    connect(this, SIGNAL(stopNotifier()), task->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
-}
-
-void NameServiceModel::stop()
-{
-    emit stopNotifier();
-}
-
-void NameServiceModel::updateTasks()
-{
-    for (TaskModel *task: taskModels)
+    else
     {
-        task->updateTaskItems();
+        nameItem.setText(nameServiceIP.c_str());
     }
+    
+    statusItem.setText("connecting..");
+    
+    notifier = new Notifier();
+    notifier->initializeNameService(nameServiceIP);
+    
+    if (notifier->getNameService() && notifier->getNameService()->isConnected())
+    {
+        statusItem.setText("connected!");
+    }
+    
+    qRegisterMetaType<std::string>("std::string");
+    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
+                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
+    
+    notifierThread = new QThread();
+    
+    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()));
+    connect(notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
+    connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
+    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::DirectConnection);
+    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::DirectConnection);
+    
+    notifier->moveToThread(notifierThread);
+}
+
+TaskModel::~TaskModel()
+{
+    for (std::map<std::string, TaskItem *>::iterator itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    {
+        delete itemIter->second;
+    }
+    
+    delete notifier;
 }
 
 void TaskModel::waitForTerminate()
@@ -222,14 +204,6 @@ void TaskModel::waitForTerminate()
         notifierThread->terminate();
         notifierThread->wait();
         std::cout << "notifierThread terminated.." << std::endl;
-    }
-}
-
-void NameServiceModel::waitForTerminate()
-{
-    for (TaskModel *task: taskModels)
-    {
-        task->waitForTerminate();
     }
 }
 
@@ -292,18 +266,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     nameToItemMutex.unlock();
 }
 
-void NameServiceModel::addNameService(const std::string& nameServiceIP)
-{
-    if (nameServiceIP.empty())
-    {
-        return;
-    }
-    
-    TaskModel *newModel = new TaskModel(this, nameServiceIP);
-    addTaskModel(newModel);
-    newModel->notifierThread->start();
-}
-
 void TaskModel::updateTaskItem(TaskItem *item)
 {
     if (item->update())
@@ -327,12 +289,62 @@ void TaskModel::updateTaskItems()
     nameToItemMutex.unlock();
 }
 
-TaskModel::~TaskModel()
+NameServiceModel::NameServiceModel(QObject* parent): QStandardItemModel(parent)
 {
-    for (std::map<std::string, TaskItem *>::iterator itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    setColumnCount(2);
+    setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
+}
+
+NameServiceModel::~NameServiceModel()
+{
+    for (TaskModel *taskModel: taskModels)
     {
-        delete itemIter->second;
+        delete taskModel;
+    }
+}
+
+void NameServiceModel::update(const QModelIndex &i, const QModelIndex &j)
+{
+    emit dataChanged(i, j);
+}
+
+void NameServiceModel::addTaskModel(TaskModel* task)
+{
+    taskModels.push_back(task);
+    appendRow(task->getRow());
+    connect(task, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(update(const QModelIndex &, const QModelIndex &)));
+    connect(this, SIGNAL(stopNotifier()), task->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
+}
+
+void NameServiceModel::stop()
+{
+    emit stopNotifier();
+}
+
+void NameServiceModel::updateTasks()
+{
+    for (TaskModel *task: taskModels)
+    {
+        task->updateTaskItems();
+    }
+}
+
+void NameServiceModel::waitForTerminate()
+{
+    for (TaskModel *task: taskModels)
+    {
+        task->waitForTerminate();
+    }
+}
+
+void NameServiceModel::addNameService(const std::string& nameServiceIP)
+{
+    if (nameServiceIP.empty())
+    {
+        return;
     }
     
-    delete notifier;
+    TaskModel *newModel = new TaskModel(this, nameServiceIP);
+    addTaskModel(newModel);
+    newModel->notifierThread->start();
 }
