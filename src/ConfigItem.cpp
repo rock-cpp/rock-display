@@ -104,11 +104,9 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI)
     const Typelib::Type &indirect(array.getIndirection());
     
     int numElemsToDisplay = array.getDimension();
-    bool areMaxElemsDiplayed = false;
     if (numElemsToDisplay > maxArrayElemsDisplayed)
     {
         numElemsToDisplay = maxArrayElemsDisplayed;
-        areMaxElemsDiplayed = true;
     }
     
     int currentRows = name->rowCount();
@@ -369,6 +367,11 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI)
         
         if(cont.kind() == "/std/string")
         {   
+            if (!updateUI)
+            {
+                return false;
+            }
+            
             const std::string content = *static_cast<const std::string *>(valueIn.getData());
             
             if (codec)
