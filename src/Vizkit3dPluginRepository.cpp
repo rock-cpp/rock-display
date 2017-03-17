@@ -14,12 +14,12 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         loader.setFileName(libPath.c_str());
         if(!loader.load())
         {
-            std::cout << "Fail " << std::endl;
+            std::cout << "Vizkit3dPluginRepository: failed to load libPath " << libPath << ".." << std::endl;
         }
         vizkit3d::VizkitPluginFactory *factory = dynamic_cast<vizkit3d::VizkitPluginFactory *>(loader.instance());
         if(!factory)
         {
-            std::cout << "Internal error, plugin is not a factory" << std::endl;
+            std::cout << "Vizkit3dPluginRepository: Internal error, plugin is not a factory.." << std::endl;
             continue;
         }
         
@@ -28,11 +28,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         handle.libararyName = libPath;
         
         QStringList *availablePlugins = factory->getAvailablePlugins();
-        
-        for(const QString &pName: *availablePlugins)
-        {
-            std::cout << "Plugins : " << pName.toStdString() << std::endl;
-        }        
+                
         for(const QString &pName: *availablePlugins)
         {
             std::map<std::string, PluginHandle> typeMap;
@@ -54,20 +50,16 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 {
                     handle.typeName = parameterList[0].data();
                     handle.method = method;
-                    //std::cout << "Into typeMap " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
                     typeMap[handle.typeName] = handle;
-                    std::cout << "signature for " << handle.typeName << " is: " << handle.method.signature() << std::endl;
                 }
             }      
             
             
             delete plugin;
-            std::cout << "Cur Plugin " << pName.toStdString() << std::endl;
             
             for(const auto &it : typeMap)
             {                
                 handle = it.second;
-                std::cout << "Regisering handle " << handle.typeName << " " << handle.libararyName << " " << handle.pluginName << " " << std::endl;
                 typeToPlugins[it.second.typeName].push_back(it.second);
             }
             std::cout << std::endl;
@@ -96,23 +88,21 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
     dottedType = boost::regex_replace(dottedType, boost::regex("</"), "<");
     dottedType = boost::regex_replace(dottedType, boost::regex("/"), "::");
     dottedType = boost::regex_replace(dottedType, boost::regex("\\s\\[.*\\]"), "");
-    
-    //std::cout << "dottet type '" << dottedType << "'" << std::endl;
  
     for(const auto &h: typeToPlugins)
     {
-        //std::cout << "Type '" << h.first << "' handles " << h.second.size() << std::endl;
         if(h.first == dottedType)
         {
-            //std::cout << "FOUND MATCH" << std::endl;
             return h.second;
         }
     }
     
     auto it = typeToPlugins.find(dottedType);
     
-    if(it == typeToPlugins.end());
+    if (it == typeToPlugins.end())
+    {
        return empty;
+    }
 
     return it->second;    
 }

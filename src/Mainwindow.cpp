@@ -4,7 +4,7 @@
 #include "Types.hpp"
 #include "TypedItem.hpp"
 #include <QCursor>
-
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -61,6 +61,12 @@ MainWindow::MainWindow(QWidget *parent) :
     
     view->expand(initialTasks->getRow().first()->index());
     view->expand(initialTasks->getTasks().index());
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    cleanup();
+    QWidget::closeEvent(event);
 }
 
 AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
@@ -129,6 +135,9 @@ void MainWindow::cleanup()
     emit stopNotifier();
     
     model->waitForTerminate();
+    
+    removeAllPlugins();
+    widget3d.close();
 
     delete model;
     delete ui;
@@ -164,7 +173,14 @@ void MainWindow::prepareMenu(const QPoint & pos)
 {
     QModelIndex mi = view->indexAt(pos);
     QStandardItem *item = model->itemFromIndex(mi);
-    QMenu menu(this);
+    QMenu *menu = new QMenu(this);
+    QLabel* label = new QLabel(tr(""), this);
+    label->setAlignment(Qt::AlignCenter);
+    QWidgetAction* a = new QWidgetAction(menu);
+    a->setDefaultWidget(label);
+    menu->addAction(a);
+    menu->setMinimumWidth(100);
+    menu->setMinimumHeight(35);
 
     if (TypedItem *ti = dynamic_cast<TypedItem*>(item))
     {
@@ -175,15 +191,17 @@ void MainWindow::prepareMenu(const QPoint & pos)
 
                 task = titem->getTaskContext();
 
-                QAction *act = menu.addAction("Activate");
-                QAction *sta = menu.addAction("Start");
-                QAction *sto = menu.addAction("Stop");
-                QAction *con = menu.addAction("Configure");
+                QAction *act = menu->addAction("Activate");
+                QAction *sta = menu->addAction("Start");
+                QAction *sto = menu->addAction("Stop");
+                QAction *con = menu->addAction("Configure");
 
                 connect(act, SIGNAL(triggered()), this, SLOT(activateTask()));
                 connect(sta, SIGNAL(triggered()), this, SLOT(startTask()));
                 connect(sto, SIGNAL(triggered()), this, SLOT(stopTask()));
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
+                
+                label->setText(tr("<b>Actions</b>"));
             }
                 break;
                 
@@ -191,18 +209,15 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::OUTPUTPORT:
             {
                 std::string typeName = "";
-                ItemBase *titem = nullptr;
-                OutputPortItem *outport = nullptr;
+                VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
                 
                 if (ti->type() == ItemType::CONFIGITEM)
                 {
-                    titem = static_cast<ItemBase*>(ti->getData());
-                    typeName = titem->getRow().last()->text().toStdString();
+                    typeName = static_cast<ItemBase *>(ti->getData())->getRow().last()->text().toStdString();
                 }
                 else
                 {
-                    outport = static_cast<OutputPortItem*>(ti->getData());
-                    typeName = outport->getType();
+                    typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
 
                 const auto &handles = pluginRepo->getPluginsForType(typeName);
@@ -211,34 +226,28 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 {
                     QSignalMapper* signalMapper = new QSignalMapper(this);
                     QAction *act = nullptr;
-                    
-                    if (ti->type() == ItemType::CONFIGITEM)
+                    if (viz->hasVisualizer(handle.pluginName))
                     {
-                        if (titem->hasVisualizer(handle.pluginName))
-                        {
-                            act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
-                        }
-                        else
-                        {
-                            act = menu.addAction(handle.pluginName.c_str());
-                        }
+                        act = menu->addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
                     }
                     else
                     {
-                        if (outport->hasVisualizer(handle.pluginName))
-                        {
-                            act = menu.addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
-                        }
-                        else
-                        {
-                            act = menu.addAction(handle.pluginName.c_str());
-                        }
+                        act = menu->addAction(handle.pluginName.c_str());
                     }
 
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
                     signalMapper->setMapping(act, new DataContainer(handle, ti));
 
                     connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
+                }
+                
+                label->setText(tr("<b>Plugins</b>"));
+                
+                if (menu->actions().count() == 1)
+                {
+                    QWidgetAction* a = new QWidgetAction(menu);
+                    a->setDefaultWidget(new QLabel(tr("none"), this));
+                    menu->addAction(a);
                 }
             }
                 break;
@@ -247,7 +256,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
         }
       
         QPoint pt(pos);
-        menu.exec(QCursor::pos());
+        menu->exec(QCursor::pos());
     }
 }
 
@@ -259,15 +268,20 @@ void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
     
     if (ti)
     {
-        if (ti->type() == ItemType::CONFIGITEM)
+        VisualizerAdapter *viz = nullptr;
+        
+        if (ti->type() == ItemType::OUTPUTPORT)
         {
-            ItemBase *item = static_cast<ItemBase *>(ti->getData());
-            item->addPlugin(std::make_pair(ph.pluginName, nh));
+            viz = static_cast<PortItem *>(ti->getData());
         }
-        else if (ti->type() == ItemType::OUTPUTPORT)
+        else if (ti->type() == ItemType::CONFIGITEM)
         {
-            OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
-            outputPort->addPlugin(std::make_pair(ph.pluginName, nh));
+            viz = static_cast<ItemBase *>(ti->getData());
+        }
+              
+        if (viz)
+        {
+            viz->addPlugin(ph.pluginName, nh);
         }
     }
     
@@ -310,24 +324,26 @@ void MainWindow::handleOutputPort(QObject *obj)
     DataContainer *d = static_cast<DataContainer*>(obj);
     TypedItem *ti = d->getItem();
     PluginHandle ph = d->getPluginHandle();
-    QObject *plugin = nullptr;
     
-    if (ti->type() == ItemType::CONFIGITEM)
-    {
-        ItemBase *item = static_cast<ItemBase *>(ti->getData());
-        plugin = item->getVisualizer(ph.pluginName);
+    VisualizerAdapter *viz = nullptr;
         
-    }
-    else if (ti->type() == ItemType::OUTPUTPORT)
+    if (ti->type() == ItemType::OUTPUTPORT)
     {
-        OutputPortItem *outputPort = static_cast<OutputPortItem *>(ti->getData());
-        plugin = outputPort->getVisualizer(ph.pluginName);
+        viz = static_cast<PortItem *>(ti->getData());
     }
-    
-    if (plugin)
+    else if (ti->type() == ItemType::CONFIGITEM)
     {
-        removePlugin(plugin, ti);
-        return;
+        viz = static_cast<ItemBase *>(ti->getData());
+    }
+            
+    if (viz)
+    {
+        QObject *plugin = viz->getVisualizer(ph.pluginName);
+        if (plugin)
+        {
+            removePlugin(plugin, ti);
+            return;
+        }
     }
     
     addPlugin(ph, ti);

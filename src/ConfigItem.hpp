@@ -24,7 +24,27 @@ namespace RTT
     }
 }
 
-class ItemBase
+class VisualizerAdapter
+{
+protected:
+    std::map<std::string, VizHandle> visualizers;
+    
+public:
+    VisualizerAdapter()
+    {
+        
+    };
+    ~VisualizerAdapter()
+    {
+        
+    }
+    void addPlugin(const std::string &name, VizHandle handle);
+    bool hasVisualizer(const std::string &name);
+    QObject *getVisualizer(const std::string &name);
+    bool removeVisualizer(QObject *plugin);
+};
+
+class ItemBase : public VisualizerAdapter
 {
 protected:
     TypedItem *name;
@@ -33,18 +53,12 @@ protected:
     
     QTextCodec::ConverterState state;
     std::vector<std::shared_ptr<ItemBase> > children;
-    std::map<std::string, VizHandle> activeVizualizer;
     
 public:
     ItemBase();
     virtual ~ItemBase();
     
     virtual bool hasActiveVisualizers();
-    
-    void addPlugin(std::pair<std::string, VizHandle> handle);
-    bool hasVisualizer(const std::string &name);
-    QObject *getVisualizer(const std::string &name);
-    void removeVisualizer(QObject *plugin);
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
     void setName(const QString &newName)

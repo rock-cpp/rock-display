@@ -33,7 +33,7 @@ public:
         }
         catch (std::exception& e)
         {
-            std::cout << "excpetion in QApplication::notify: " << e.what() << std::endl;
+            std::cout << "exception in QApplication::notify: " << e.what() << std::endl;
             return false;
         }
     }
@@ -41,17 +41,16 @@ public:
 
 bool loadTypkekit(const std::string &typeName)
 {
-    std::cout << "Type " << typeName << " requested " << std::endl;
     std::string tkName;
     if(typeReg.getTypekitDefiningType(typeName, tkName))
     {
-        std::cout << "TK " << tkName << " is defining the type " << typeName << std::endl;
         if(orocos_cpp::PluginHelper::loadTypekitAndTransports(tkName))
         {
-            std::cout << "TK loaded" << std::endl;
             return true;
         }
     }
+    
+    std::cout << "failed to load typekit for " << typeName << std::endl;
     return false;
 }
 

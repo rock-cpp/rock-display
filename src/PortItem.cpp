@@ -44,7 +44,7 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name) : nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT))
+PortItem::PortItem(const std::string& name) : VisualizerAdapter(), nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT))
 {
     nameItem->setText(name.c_str());
 
@@ -80,36 +80,6 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     {
         valueItem->setText(handle->type->getName().c_str());
     }
-}
-
-bool PortItem::removeVisualizer(QObject* plugin)
-{
-    for (std::map<std::string, VizHandle>::iterator it = waitingVizualizer.begin(); it != waitingVizualizer.end(); it++)
-    {
-        if (it->second.plugin == plugin)
-        {
-            waitingVizualizer.erase(it);
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-QObject* PortItem::getVisualizer(const std::string& name)
-{
-    std::map<std::string, VizHandle>::iterator iter = waitingVizualizer.find(name);
-    if (iter != waitingVizualizer.end())
-    {
-        return iter->second.plugin;
-    }
-    
-    return nullptr;
-}
-
-bool PortItem::hasVisualizer(const std::string& name)
-{
-    return waitingVizualizer.find(name) != waitingVizualizer.end();
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
@@ -168,11 +138,11 @@ bool OutputPortItem::updataValue()
             item = getItem(val);
             
             std::map<std::string, VizHandle>::iterator vizIter;
-            while (!waitingVizualizer.empty())
+            while (!visualizers.empty())
             {
-                vizIter = waitingVizualizer.begin();
-                item->addPlugin(*vizIter);
-                waitingVizualizer.erase(vizIter);
+                vizIter = visualizers.begin();
+                item->addPlugin(vizIter->first, vizIter->second);
+                visualizers.erase(vizIter);
             }
             
             QStandardItem *parent = nameItem->parent();
@@ -202,9 +172,4 @@ const std::string& OutputPortItem::getType()
         throw std::runtime_error("Internal error, not typeInfo available");
     }
     return reader->getTypeInfo()->getTypeName();
-}
-
-void PortItem::addPlugin(std::pair< std::string, VizHandle > handle)
-{
-    waitingVizualizer[handle.first] = handle.second;
 }

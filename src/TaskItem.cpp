@@ -143,9 +143,7 @@ bool TaskItem::updateProperties()
                 item = getItem(val);
                 
                 propertyMap[property->getName()] = item;
-                
                 item->setName(property->getName().c_str());
-                item->setType(ItemType::PROPERTY);
                 
                 properties.appendRow(item->getRow());
                 needsUpdate = true;
@@ -153,7 +151,7 @@ bool TaskItem::updateProperties()
             else
             {
                 item = propertyMap[property->getName()];
-                needsUpdate |= item->update(val);
+                needsUpdate |= item->update(val, properties.isExpanded(), true);
             }
         }
     }

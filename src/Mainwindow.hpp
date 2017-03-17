@@ -55,6 +55,8 @@ public:
     {
         cleanup();
     }
+    
+    void closeEvent(QCloseEvent *event);
 
 public slots:
     void prepareMenu(const QPoint &pos);

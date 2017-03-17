@@ -12,7 +12,42 @@
 #include "Types.hpp"
 
 
-ItemBase::ItemBase() : name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8"))
+void VisualizerAdapter::addPlugin(const std::string &name, VizHandle handle)
+{
+    visualizers.insert(std::make_pair(name, handle));
+}
+
+QObject* VisualizerAdapter::getVisualizer(const std::string& name)
+{
+    std::map<std::string, VizHandle>::iterator iter = visualizers.find(name);
+    if (iter != visualizers.end())
+    {
+        return iter->second.plugin;
+    }
+    
+    return nullptr;
+}
+
+bool VisualizerAdapter::hasVisualizer(const std::string& name)
+{
+    return visualizers.find(name) != visualizers.end();
+}
+
+bool VisualizerAdapter::removeVisualizer(QObject* plugin)
+{
+    for (std::map<std::string, VizHandle>::iterator it = visualizers.begin(); it != visualizers.end(); it++)
+    {
+        if (it->second.plugin == plugin)
+        {
+            visualizers.erase(it);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+ItemBase::ItemBase() : VisualizerAdapter(), name(new TypedItem()), value(new TypedItem()), codec(QTextCodec::codecForName("UTF-8"))
 {
     name->setType(ItemType::CONFIGITEM);
     value->setType(ItemType::CONFIGITEM);
@@ -27,40 +62,12 @@ ItemBase::~ItemBase()
 
 bool ItemBase::hasActiveVisualizers()
 {
-    if (!activeVizualizer.empty())
+    if (!visualizers.empty())
     {
         return true;
     }
     
     return false;
-}
-
-bool ItemBase::hasVisualizer(const std::string& name)
-{
-    return activeVizualizer.find(name) != activeVizualizer.end();
-}
-
-void ItemBase::removeVisualizer(QObject* plugin)
-{
-    for (std::map<std::string, VizHandle>::iterator it = activeVizualizer.begin(); it != activeVizualizer.end(); it++)
-    {
-        if (it->second.plugin == plugin)
-        {
-            activeVizualizer.erase(it);
-            return;
-        }
-    }
-}
-
-QObject* ItemBase::getVisualizer(const std::string& name)
-{
-    std::map<std::string, VizHandle>::iterator iter = activeVizualizer.find(name);
-    if (iter != activeVizualizer.end())
-    {
-        return iter->second.plugin;
-    }
-    
-    return nullptr;
 }
 
 Array::Array(Typelib::Value& valueIn)
@@ -325,7 +332,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {   
     bool updateNecessary = (updateUI && this->name->isExpanded()) || forceUpdate;
     
-    for (auto vizHandle : activeVizualizer)
+    for (auto vizHandle : visualizers)
     {   
         QGenericArgument data("void *", valueIn.getData());
         vizHandle.second.method.invoke(vizHandle.second.plugin, data);
@@ -492,9 +499,4 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value)
     }
 
     throw std::runtime_error("Internal Error");
-}
-
-void ItemBase::addPlugin(std::pair<std::string, VizHandle> handle)
-{
-    activeVizualizer[handle.first] = handle.second;
 }
