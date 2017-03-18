@@ -71,7 +71,7 @@ bool TaskItem::update()
         }
     }
     
-    if (ports.empty() || propertyMap.empty() || hasVisualizers || nameItem.isExpanded())
+    if (refreshPorts || ports.empty() || propertyMap.empty() || hasVisualizers || nameItem.isExpanded())
     {    
         needsUpdate |= updatePorts(hasVisualizers);
         stateChanged = updateState();
@@ -86,7 +86,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
 {
     bool needsUpdate = false;
     
-    if (hasVisualizers || ports.empty() || outputPorts.isExpanded())
+    if (refreshPorts || hasVisualizers || ports.empty() || outputPorts.isExpanded())
     {
         const RTT::DataFlowInterface *dfi = task->ports();
 

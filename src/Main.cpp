@@ -31,9 +31,9 @@ public:
         {
             return QApplication::notify(receiver, event);
         }
-        catch (std::exception& e)
+        catch (...)
         {
-            std::cout << "exception in QApplication::notify: " << e.what() << std::endl;
+            std::cout << "exception in QApplication::notify: " << std::endl;
             return false;
         }
     }

@@ -10,7 +10,6 @@
 #include <base/samples/RigidBodyState.hpp>
 #include <QMetaType>
 
-
 class PortHandle
 {
 public:
@@ -152,8 +151,7 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
         return false;
     }
     
-    bool hasNewData = (reader->read(handle->sample) == RTT::NewData);
-    if (!hasNewData)
+    if (!reader->read(handle->sample) == RTT::NewData)
     {
         return false;
     }
