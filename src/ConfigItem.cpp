@@ -67,6 +67,14 @@ bool ItemBase::hasActiveVisualizers()
         return true;
     }
     
+    for (auto child: children)
+    {
+        if (child->hasActiveVisualizers())
+        {
+            return true;
+        }
+    }
+    
     return false;
 }
 
@@ -81,24 +89,6 @@ Array::Array(Typelib::Value& valueIn)
 Array::~Array()
 {
 
-}
-
-bool Array::hasActiveVisualizers()
-{
-    if (ItemBase::hasActiveVisualizers())
-    {
-        return true;
-    }
-    
-    for (auto child: children)
-    {
-        if (child->hasActiveVisualizers())
-        {
-            return true;
-        }
-    }
-    
-    return false;
 }
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -308,24 +298,6 @@ Complex::Complex(Typelib::Value& valueIn)
 Complex::~Complex()
 {
 
-}
-
-bool Complex::hasActiveVisualizers()
-{
-    if (ItemBase::hasActiveVisualizers())
-    {
-        return true;
-    }
-    
-    for (auto child: children)
-    {
-        if (child->hasActiveVisualizers())
-        {
-            return true;
-        }
-    }
-    
-    return false;
 }
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)

@@ -44,7 +44,7 @@ class OutputPortItem : public PortItem
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port);
     virtual ~OutputPortItem();
-    bool updataValue();
+    bool updataValue(bool hasVisualizers=false);
     
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();

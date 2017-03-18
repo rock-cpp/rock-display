@@ -140,14 +140,14 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-bool OutputPortItem::updataValue()
+bool OutputPortItem::updataValue(bool hasVisualizers)
 {    
     if (!handle || !reader)
     {
         return false;
     }
     
-    if (item && !dynamic_cast<Simple *>(item.get()) && !item->hasActiveVisualizers() && !item->getName()->isExpanded())
+    if (!hasVisualizers && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded())
     {
         return false;
     }

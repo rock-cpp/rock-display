@@ -31,7 +31,7 @@ public:
     TaskItem(RTT::corba::TaskContextProxy* _task);
     virtual ~TaskItem();
     bool updateState();
-    bool updatePorts();
+    bool updatePorts(bool hasVisualizers=false);
     bool updateProperties();
     
     void setRefreshPorts(bool refresh=true)

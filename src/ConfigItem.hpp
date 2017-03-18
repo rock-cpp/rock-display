@@ -99,7 +99,6 @@ public:
     virtual ~Array();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
-    virtual bool hasActiveVisualizers();
 };
 
 class Simple : public ItemBase
@@ -120,5 +119,4 @@ public:
     virtual ~Complex();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
-    virtual bool hasActiveVisualizers();
 };

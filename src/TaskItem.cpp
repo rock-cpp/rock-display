@@ -59,9 +59,21 @@ bool TaskItem::update()
         }
     }
     
-    if (ports.empty() || propertyMap.empty() || nameItem.isExpanded())
+    bool hasVisualizers = false;
+    for (auto &port: ports)
+    {
+        std::shared_ptr<ItemBase> item = port.second->getItemBase();
+        
+        if (item && item->hasActiveVisualizers())
+        {
+            hasVisualizers = true;
+            break;
+        }
+    }
+    
+    if (ports.empty() || propertyMap.empty() || hasVisualizers || nameItem.isExpanded())
     {    
-        needsUpdate |= updatePorts();
+        needsUpdate |= updatePorts(hasVisualizers);
         stateChanged = updateState();
         needsUpdate |= stateChanged;
         needsUpdate |= updateProperties();
@@ -70,11 +82,11 @@ bool TaskItem::update()
     return needsUpdate;
 }
 
-bool TaskItem::updatePorts()
+bool TaskItem::updatePorts(bool hasVisualizers)
 {
     bool needsUpdate = false;
     
-    if (ports.empty() || outputPorts.isExpanded())
+    if (hasVisualizers || ports.empty() || outputPorts.isExpanded())
     {
         const RTT::DataFlowInterface *dfi = task->ports();
 
@@ -113,7 +125,7 @@ bool TaskItem::updatePorts()
                     outPortItem->updateOutputPortInterface(outIf);
                 }
                 
-                needsUpdate |= outPortItem->updataValue();
+                needsUpdate |= outPortItem->updataValue(hasVisualizers);
             }
         }
         
