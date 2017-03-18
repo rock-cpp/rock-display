@@ -151,7 +151,7 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
         return false;
     }
     
-    if (!reader->read(handle->sample) == RTT::NewData)
+    if (!(reader->read(handle->sample) == RTT::NewData))
     {
         return false;
     }

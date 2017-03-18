@@ -40,6 +40,7 @@ public:
     }
 
     bool update();
+    bool hasVisualizers();
     
     void updateTaskContext(RTT::corba::TaskContextProxy* _task)
     {
