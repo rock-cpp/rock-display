@@ -25,8 +25,27 @@ TaskItem::~TaskItem()
 {
 }
 
+void TaskItem::reset()
+{
+    for (auto port: ports)
+    {
+        OutputPortItem *outPort = dynamic_cast<OutputPortItem*>(port.second);
+        if (outPort)
+        {
+            outPort->reset();
+        }
+    }
+    
+    task = nullptr;
+}
+
 bool TaskItem::update()
 {   
+    if (!task)
+    {
+        return false;
+    }
+    
     bool needsUpdate = false;
     if (nameItem.text().isEmpty())
     {

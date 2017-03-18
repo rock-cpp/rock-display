@@ -62,7 +62,6 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 handle = it.second;
                 typeToPlugins[it.second.typeName].push_back(it.second);
             }
-            std::cout << std::endl;
         }
 
         delete availablePlugins;

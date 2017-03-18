@@ -122,6 +122,17 @@ void Notifier::queryTasks()
             // case: task has reconnected
             disconnectedTasks.erase(diconnectedTaskIt);
             task = RTT::corba::TaskContextProxy::Create(tname);
+            if (!task)
+            {
+                continue;
+            }
+            
+            const RTT::DataFlowInterface *dfi = task->ports();
+            if (!dfi || dfi->getPorts().size() == 0)
+            {
+                continue;
+            }
+            
             nameToRegisteredTask[tname] = task;
             emit updateNameServiceStatus(std::string(std::string("connected: task ") + tname + std::string(" reconnected..")));
             emit updateTask(task, tname, true);
@@ -252,6 +263,8 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     
     if (!task)
     {
+        // reset task item and its output ports on disconnect
+        item->reset();
         nameToItemMutex.unlock();
         return;
     }

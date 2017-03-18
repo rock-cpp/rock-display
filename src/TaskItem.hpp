@@ -66,4 +66,6 @@ public:
     {
         return this->ports;
     }
+    
+    void reset();
 };

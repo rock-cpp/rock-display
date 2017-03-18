@@ -24,7 +24,12 @@ public:
 
 RTT::base::PortInterface* OutputPortItem::getPort()
 {
-    return this->handle->port;
+    if (handle)
+    {
+        return this->handle->port;
+    }
+    
+    return nullptr;
 }
 
 std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortInterface* portIf)
@@ -63,10 +68,6 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::~OutputPortItem()
-{
-}
-
 OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
@@ -80,6 +81,27 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     {
         valueItem->setText(handle->type->getName().c_str());
     }
+}
+
+OutputPortItem::~OutputPortItem()
+{
+    reset();
+}
+
+void OutputPortItem::reset()
+{
+    if (handle)
+    {
+        delete handle;
+    }
+    
+    if (reader && reader->connected())
+    {
+        reader->disconnect();
+    }
+    
+    handle = nullptr;
+    reader = nullptr;
 }
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
@@ -96,10 +118,12 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     policy.pull = true;
     if(!reader->connectTo(port, policy))
     {
-        throw std::runtime_error("OutputPortItem: Error could not connect reader to port " + port->getName() + " of task " + port->getInterface()->getOwner()->getName());
+        std::cout << "OutputPortItem: Error could not connect reader to port " + port->getName() + " of task " + port->getInterface()->getOwner()->getName() << std::endl;
+        return;
     }
 
     handle = new PortHandle();
+    handle->port = port;
     RTT::types::TypeInfo const *type = port->getTypeInfo();
     handle->transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
     if (! handle->transport)
@@ -118,7 +142,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
 
 bool OutputPortItem::updataValue()
 {    
-    if (!handle)
+    if (!handle || !reader)
     {
         return false;
     }
@@ -128,41 +152,42 @@ bool OutputPortItem::updataValue()
         return false;
     }
     
-    if (reader->read(handle->sample) == RTT::NewData)
+    bool hasNewData = (reader->read(handle->sample) == RTT::NewData);
+    if (!hasNewData)
     {
-        handle->transport->refreshTypelibSample(handle->transportHandle);
-        Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
-       
-        if (!item)
-        {
-            item = getItem(val);
-            
-            std::map<std::string, VizHandle>::iterator vizIter;
-            while (!visualizers.empty())
-            {
-                vizIter = visualizers.begin();
-                item->addPlugin(vizIter->first, vizIter->second);
-                visualizers.erase(vizIter);
-            }
-            
-            QStandardItem *parent = nameItem->parent();
-            
-            int pos = nameItem->row();
-            item->getRow().first()->setText(nameItem->text());
-            parent->removeRow(pos);
-            parent->insertRow(pos, item->getRow());
+        return false;
+    }
 
-            //note, the removeRow deletes these items
-            nameItem = nullptr;
-            valueItem = nullptr;
-            
-            return item->update(val, true);
+    handle->transport->refreshTypelibSample(handle->transportHandle);
+    Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+    
+    if (!item)
+    {
+        item = getItem(val);
+        
+        std::map<std::string, VizHandle>::iterator vizIter;
+        while (!visualizers.empty())
+        {
+            vizIter = visualizers.begin();
+            item->addPlugin(vizIter->first, vizIter->second);
+            visualizers.erase(vizIter);
         }
         
-        return item->update(val, item->getName()->isExpanded());
+        QStandardItem *parent = nameItem->parent();
+        
+        int pos = nameItem->row();
+        item->getRow().first()->setText(nameItem->text());
+        parent->removeRow(pos);
+        parent->insertRow(pos, item->getRow());
+
+        //note, the removeRow deletes these items
+        nameItem = nullptr;
+        valueItem = nullptr;
+        
+        return item->update(val, true, true);
     }
     
-    return false;
+    return item->update(val, item->getName()->isExpanded());
 }
 
 const std::string& OutputPortItem::getType()
