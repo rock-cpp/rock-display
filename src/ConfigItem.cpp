@@ -8,7 +8,6 @@
 #include <rtt/base/OutputPortInterface.hpp>
 #include <rtt/types/TypeInfo.hpp>
 #include <lib_config/TypelibConfiguration.hpp>
-#include <base/Trajectory.hpp>
 #include "Types.hpp"
 
 
@@ -114,15 +113,25 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     
     bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
     
+    if (currentRows > numElemsToDisplay)
+    {
+        while (name->rowCount() > 0)
+        {   
+            name->takeRow(0);
+        }
+        
+        currentRows = 0;
+    }
+    
     bool childRet = false;
-    for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
+    for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childRet |= children[i]->update(arrayV, updateNecessary);
     }
     updateNecessary &= childRet;
     
-    for(int i = currentRows; i < numElemsToDisplay; i++)
+    for (int i = currentRows; i < numElemsToDisplay; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         std::shared_ptr<ItemBase> child = nullptr;
@@ -135,17 +144,12 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         else
         {
             child = getItem(arrayV);
-            child->setName(QString::number(i));
             children.push_back(child);
         }
-            
+        
+        child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
-    
-//     if (currentRows > numElemsToDisplay)
-//     {
-//         name->setRowCount(numElemsToDisplay);
-//     }
     
     return updateNecessary || numElemsDisplayedChanged;
 }
@@ -393,6 +397,16 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         // check if number of displayed items changed
         bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
         
+        if (currentRows > numElemsToDisplay)
+        {
+            while (name->rowCount() > 0)
+            {   
+                name->takeRow(0);
+            }
+            
+            currentRows = 0;
+        } 
+        
         bool childRet = false;
         // update old (displayed) items
         // children size at this step is min(currentRows, numElemsToDisplay)
@@ -401,7 +415,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childRet |= children[i]->update(elem, updateNecessary);
         }
-        updateNecessary &= childRet;
+        updateNecessary &= childRet; 
         
         // case new vector size is bigger
         // append new rows
@@ -418,19 +432,12 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             else
             {
                 child = getItem(elem);
-                child->setName(QString::number(i));
                 children.push_back(child);
             }
             
+            child->setName(QString::number(i));
             name->appendRow(child->getRow());
-        }
-        
-        // case new vector size is smaller
-        // reduce row count
-/*        if (currentRows > numElemsToDisplay)
-        {
-            name->setRowCount(numElemsToDisplay);
-        }   */ 
+        }  
         
         if (numElemsDisplayedChanged)
         {
