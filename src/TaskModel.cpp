@@ -5,6 +5,8 @@
 #include <rtt/transports/corba/TaskContextProxy.hpp>
 #include <boost/thread.hpp>
 
+#include <omniORB4/CORBA.h>
+
 Notifier::Notifier(QObject* parent)
     : QObject(parent),
       isRunning(false),
@@ -15,13 +17,11 @@ Notifier::Notifier(QObject* parent)
 
 void Notifier::stopNotifier()
 {
-    std::cout << "stopping notifier thread.." << std::endl;
     isRunning = false;
 }
 
 void Notifier::initializeNameService(const std::string &nameServiceIP)
 {
-    std::cout << "set nameservice for ip " << nameServiceIP << ".." << std::endl;
     if (nameServiceIP.empty())
     {
         nameService = new orocos_cpp::CorbaNameService();
@@ -142,7 +142,7 @@ void Notifier::queryTasks()
     taskIt = nameToRegisteredTask.begin();
     for (; taskIt != nameToRegisteredTask.end(); taskIt++)
     {
-        // check if any of the regsitered tasks has disconnected
+        // check if any of the registered tasks have disconnected
         if (std::find(tasks.begin(), tasks.end(), taskIt->first) == tasks.end() 
             && std::find(disconnectedTasks.begin(), disconnectedTasks.end(), taskIt->first) == disconnectedTasks.end())
         {
@@ -214,7 +214,6 @@ void TaskModel::waitForTerminate()
     {
         notifierThread->terminate();
         notifierThread->wait();
-        std::cout << "notifierThread terminated.." << std::endl;
     }
 }
 
@@ -281,9 +280,32 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
 
 void TaskModel::updateTaskItem(TaskItem *item)
 {
-    if (item->update())
+    try
     {
-        emit dataChanged(item->updateLeft(), item->updateRight());
+        if (item->update())
+        {
+            emit dataChanged(item->updateLeft(), item->updateRight());
+        }
+    }
+    catch (const CORBA::TRANSIENT& ex)
+    {
+        item->reset();
+        std::cout << "caught CORBA::TRANSIENT exception.." << std::endl;
+    }
+    catch (const CORBA::COMM_FAILURE& ex)
+    {
+        item->reset();
+        std::cout << "caught CORBA::COMM_FAILURE exception.." << std::endl;
+    }
+    catch (const CORBA::OBJ_ADAPTER& ex)
+    {
+        item->reset();
+        std::cout << "caught CORBA::OBJ_ADAPTER exception.." << std::endl;
+    }
+    catch (const CORBA::Exception& ex)
+    {
+        item->reset();
+        std::cout << "caught CORBA::EXCEPTION exception.." << std::endl;
     }
 }
 

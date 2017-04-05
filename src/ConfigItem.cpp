@@ -112,18 +112,10 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         return false;
     }
     
-    bool numElemsDisplayedChanged = false;
-    if (numElemsToDisplay != currentRows)
-    {
-        numElemsDisplayedChanged = true;
-        if (children.size() > numElemsToDisplay)
-        {
-            children.resize(numElemsToDisplay);
-        }
-    }
+    bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
     
     bool childRet = false;
-    for(int i = 0; i < children.size(); i++)
+    for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childRet |= children[i]->update(arrayV, updateNecessary);
@@ -133,16 +125,27 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     for(int i = currentRows; i < numElemsToDisplay; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        std::shared_ptr<ItemBase> child = getItem(arrayV);
-        child->setName(QString::number(i));
-        children.push_back(child);
+        std::shared_ptr<ItemBase> child = nullptr;
+            
+        if (children.size() > i)
+        {
+            children[i]->update(arrayV, true);
+            child = children[i];
+        }
+        else
+        {
+            child = getItem(arrayV);
+            child->setName(QString::number(i));
+            children.push_back(child);
+        }
+            
         name->appendRow(child->getRow());
     }
     
-    if (currentRows > numElemsToDisplay)
-    {
-        name->setRowCount(numElemsToDisplay);
-    }
+//     if (currentRows > numElemsToDisplay)
+//     {
+//         name->setRowCount(numElemsToDisplay);
+//     }
     
     return updateNecessary || numElemsDisplayedChanged;
 }
@@ -388,21 +391,12 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         }
         
         // check if number of displayed items changed
-        bool numElemsDisplayedChanged = false;
-        if (numElemsToDisplay != currentRows)
-        {
-            numElemsDisplayedChanged = true;
-            if (children.size() > numElemsToDisplay)
-            {
-                // downsize child items
-                children.resize(numElemsToDisplay);
-            }
-        }
+        bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
         
         bool childRet = false;
         // update old (displayed) items
         // children size at this step is min(currentRows, numElemsToDisplay)
-        for(int i = 0; i < children.size(); i++)
+        for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childRet |= children[i]->update(elem, updateNecessary);
@@ -414,18 +408,29 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         for(int i = currentRows; i < numElemsToDisplay; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            std::shared_ptr<ItemBase> child = getItem(elem);
-            child->setName(QString::number(i));
-            children.push_back(child);
+            std::shared_ptr<ItemBase> child = nullptr;
+            
+            if (children.size() > i)
+            {
+                children[i]->update(elem, true);
+                child = children[i];
+            }
+            else
+            {
+                child = getItem(elem);
+                child->setName(QString::number(i));
+                children.push_back(child);
+            }
+            
             name->appendRow(child->getRow());
         }
         
         // case new vector size is smaller
         // reduce row count
-        if (currentRows > numElemsToDisplay)
+/*        if (currentRows > numElemsToDisplay)
         {
             name->setRowCount(numElemsToDisplay);
-        }    
+        }   */ 
         
         if (numElemsDisplayedChanged)
         {
