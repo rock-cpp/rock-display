@@ -5,6 +5,7 @@
 #include "TypedItem.hpp"
 #include <QCursor>
 #include <QCloseEvent>
+#include <rock_widget_collection/RockWidgetCollection.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,12 +36,19 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<std::string>("std::string");
     view->setModel(model);
 
-    auto *list = widget3d.getAvailablePlugins();
+    auto *list = widget3d.getAvailablePlugins();    
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
     
-    std::vector<PluginHandle> allAvailablePlugins = pluginRepo->getAllAvailablePlugins();
-    for (const PluginHandle &handle: allAvailablePlugins)
+    PluginHandle handle;
+    handle.typeName = "/base/samples/frame/Frame";
+    handle.pluginName = "ImageView";
+    additionalPlugins.push_back(handle);
+    
+    std::vector<PluginHandle> plugins = pluginRepo->getAllAvailablePlugins();
+    plugins.insert(plugins.end(), additionalPlugins.begin(), additionalPlugins.end());
+    
+    for (const PluginHandle &handle: plugins)
     {
         QSignalMapper* signalMapper = new QSignalMapper (this) ;
         QAction *act = ui->menuWidgets->addAction(handle.pluginName.c_str());
@@ -146,6 +154,7 @@ void MainWindow::cleanup()
 
 MainWindow::~MainWindow()
 {
+    removeAllPlugins();
     cleanup();
 }
 
@@ -220,9 +229,16 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
 
-                const auto &handles = pluginRepo->getPluginsForType(typeName);
+                std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName);
+                for (PluginHandle additionalPlugin: additionalPlugins)
+                {
+                    if (additionalPlugin.typeName == typeName)
+                    {
+                        handles.push_back(additionalPlugin);
+                    }
+                }
 
-                for (const PluginHandle &handle : handles)
+                for (const PluginHandle &handle: handles)
                 {
                     QSignalMapper* signalMapper = new QSignalMapper(this);
                     QAction *act = nullptr;
@@ -261,36 +277,94 @@ void MainWindow::prepareMenu(const QPoint & pos)
 }
 
 void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
-{
-    VizHandle nh = pluginRepo->getNewVizHandle(ph);
-    widget3d.addPlugin(nh.plugin);
-    activePlugins.push_back(std::make_pair(nh.plugin, ti));
+{   
+    VizHandle nh;
     
-    if (ti)
+    if (ph.pluginName == "ImageView")
     {
-        VisualizerAdapter *viz = nullptr;
+        RockWidgetCollection collection;
+        QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
         
-        if (ti->type() == ItemType::OUTPUTPORT)
+        QWidget *imView = nullptr;
+        for (QDesignerCustomWidgetInterface *widgetInterface: customWidgets)
         {
-            viz = static_cast<PortItem *>(ti->getData());
+            const std::string widgetName = widgetInterface->name().toStdString();
+            
+            if (widgetName == ph.pluginName)
+            {
+                imView = widgetInterface->createWidget(nullptr);
+            }
         }
-        else if (ti->type() == ItemType::CONFIGITEM)
+        
+        if (!imView)
         {
-            viz = static_cast<ItemBase *>(ti->getData());
+            return;
         }
-              
-        if (viz)
+        
+        const QMetaObject *metaPlugin = imView->metaObject();
+        
+        for(int i = 0 ; i < metaPlugin->methodCount(); i++)
         {
-            viz->addPlugin(ph.pluginName, nh);
+            QMetaMethod method = metaPlugin->method(i);
+            auto parameterList = method.parameterTypes();
+            if(parameterList.size() != 1)
+            {
+                continue;
+            }
+            
+            std::string signature = method.signature();
+            std::string methodStr("setFrame");
+            if (signature.size() > methodStr.size() && signature.substr(0, methodStr.size()) == methodStr)
+            {
+                ph.typeName = parameterList[0].data();
+                ph.method = method;
+            }
         }
+        
+        nh.method = ph.method;
+        nh.plugin = imView;
+        imView->show();
+    }
+    else
+    {
+        nh = pluginRepo->getNewVizHandle(ph);
+        widget3d.addPlugin(nh.plugin);
+        widget3d.show();
     }
     
-    widget3d.show();
+    activePlugins.push_back(std::make_pair(nh.plugin, ti));
+    
+    if (!ti)
+    {
+        return;
+    }
+    
+    VisualizerAdapter *viz = nullptr;
+    
+    if (ti->type() == ItemType::OUTPUTPORT)
+    {
+        viz = static_cast<PortItem *>(ti->getData());
+    }
+    else if (ti->type() == ItemType::CONFIGITEM)
+    {
+        viz = static_cast<ItemBase *>(ti->getData());
+    }
+        
+    if (viz)
+    {
+        viz->addPlugin(ph.pluginName, nh);
+    }
 }
 
 void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
 {
     widget3d.removePlugin(plugin);
+    
+    QWidget *widget = dynamic_cast<QWidget *>(plugin);
+    if (widget)
+    {    
+        widget->close();
+    }
     
     if (ti)
     {

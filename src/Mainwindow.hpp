@@ -45,7 +45,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
-    vizkit3d::Vizkit3DWidget widget3d;
     Vizkit3dPluginRepository *getPluginRepo()
     {
         return pluginRepo;
@@ -77,6 +76,8 @@ signals:
     void stopNotifier();
     
 private:
+    vizkit3d::Vizkit3DWidget widget3d;
+    std::vector<PluginHandle> additionalPlugins;
     Ui::MainWindow *ui;
     QTreeView *view;
     NameServiceModel *model;
