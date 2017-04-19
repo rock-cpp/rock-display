@@ -99,17 +99,17 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     
     const Typelib::Type &indirect(array.getIndirection());
     
-    int numElemsToDisplay = array.getDimension();
+    size_t numElemsToDisplay = array.getDimension();
     if (numElemsToDisplay > maxArrayElemsDisplayed)
     {
         numElemsToDisplay = maxArrayElemsDisplayed;
     }
     
-    int currentRows = name->rowCount();
-    if (currentRows < 0)
+    if (name->rowCount() < 0)
     {
         return false;
     }
+    size_t currentRows = name->rowCount();
     
     bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
     
@@ -124,14 +124,14 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     }
     
     bool childRet = false;
-    for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
+    for (size_t i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childRet |= children[i]->update(arrayV, updateNecessary);
     }
     updateNecessary &= childRet;
     
-    for (int i = currentRows; i < numElemsToDisplay; i++)
+    for (size_t i = currentRows; i < numElemsToDisplay; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         std::shared_ptr<ItemBase> child = nullptr;
@@ -379,7 +379,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         }
         
         //std::vector
-        int numElemsToDisplay = size;
+        size_t numElemsToDisplay = size;
         bool areMaxElemsDiplayed = false;
         // limit max elems displayed to maxVectorElemsDisplayed
         if (numElemsToDisplay > maxVectorElemsDisplayed)
@@ -388,11 +388,11 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             areMaxElemsDiplayed = true;
         }
         
-        int currentRows = name->rowCount();
-        if (currentRows < 0)
+        if (name->rowCount())
         {
             return false;
         }
+        size_t currentRows = name->rowCount();
         
         // check if number of displayed items changed
         bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
@@ -410,7 +410,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         bool childRet = false;
         // update old (displayed) items
         // children size at this step is min(currentRows, numElemsToDisplay)
-        for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
+        for(size_t i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childRet |= children[i]->update(elem, updateNecessary);
@@ -419,7 +419,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         
         // case new vector size is bigger
         // append new rows
-        for(int i = currentRows; i < numElemsToDisplay; i++)
+        for(size_t i = currentRows; i < numElemsToDisplay; i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             std::shared_ptr<ItemBase> child = nullptr;
