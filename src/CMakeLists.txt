@@ -21,7 +21,9 @@ DEPS_PKGCONFIG
     lib_config
     vizkit3d
     rock_widget_collection
+    base-lib
 )
+add_definitions(-DBASE_LOG_DEBUG)
 
 rock_executable(rock-display_bin Main.cpp
 DEPS

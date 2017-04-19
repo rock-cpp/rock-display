@@ -14,21 +14,24 @@
 #include <orocos_cpp/PluginHelper.hpp>
 #include <thread>
 
+#include <base-logging/Logging.hpp>
+
 orocos_cpp::TypeRegistry typeReg;
 MainWindow *w;
 
 bool loadTypkekit(const std::string &typeName)
 {
+    LOG_INFO_S << "Loading typekit for " << typeName;
     std::string tkName;
     if(typeReg.getTypekitDefiningType(typeName, tkName))
     {
+        LOG_INFO_S << "Typekit name: " << tkName;
         if(orocos_cpp::PluginHelper::loadTypekitAndTransports(tkName))
         {
             return true;
         }
     }
-    
-    std::cout << "failed to load typekit for " << typeName << std::endl;
+    LOG_WARN_S << "failed to load typekit for " << typeName;
     return false;
 }
 

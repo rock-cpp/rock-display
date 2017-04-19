@@ -1,4 +1,5 @@
 #include "Vizkit3dPluginRepository.hpp"
+#include <base-logging/Logging.hpp>
 
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
 {
@@ -14,12 +15,12 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         loader.setFileName(libPath.c_str());
         if(!loader.load())
         {
-            std::cout << "Vizkit3dPluginRepository: failed to load libPath " << libPath << ".." << std::endl;
+            LOG_WARN_S << "Vizkit3dPluginRepository: failed to load libPath " << libPath << "..";
         }
         vizkit3d::VizkitPluginFactory *factory = dynamic_cast<vizkit3d::VizkitPluginFactory *>(loader.instance());
         if(!factory)
         {
-            std::cout << "Vizkit3dPluginRepository: Internal error, plugin is not a factory.." << std::endl;
+            LOG_ERROR_S << "Vizkit3dPluginRepository: Internal error, plugin is not a factory..";
             continue;
         }
         
