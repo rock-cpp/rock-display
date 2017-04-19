@@ -4,7 +4,7 @@
 #include "TaskItem.hpp"
 #include <rtt/transports/corba/TaskContextProxy.hpp>
 #include <boost/thread.hpp>
-
+#include <base-logging/Logging.hpp>
 #include <omniORB4/CORBA.h>
 
 Notifier::Notifier(QObject* parent)
@@ -290,22 +290,22 @@ void TaskModel::updateTaskItem(TaskItem *item)
     catch (const CORBA::TRANSIENT& ex)
     {
         item->reset();
-        std::cout << "caught CORBA::TRANSIENT exception.." << std::endl;
+        LOG_WARN_S << "caught CORBA::TRANSIENT exception..";
     }
     catch (const CORBA::COMM_FAILURE& ex)
     {
         item->reset();
-        std::cout << "caught CORBA::COMM_FAILURE exception.." << std::endl;
+        LOG_WARN_S << "caught CORBA::COMM_FAILURE exception..";
     }
     catch (const CORBA::OBJ_ADAPTER& ex)
     {
         item->reset();
-        std::cout << "caught CORBA::OBJ_ADAPTER exception.." << std::endl;
+        LOG_WARN_S << "caught CORBA::OBJ_ADAPTER exception..";
     }
     catch (const CORBA::Exception& ex)
     {
         item->reset();
-        std::cout << "caught CORBA::EXCEPTION exception.." << std::endl;
+        LOG_WARN_S << "caught CORBA::EXCEPTION exception..";
     }
 }
 

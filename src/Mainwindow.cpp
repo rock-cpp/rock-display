@@ -24,9 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(removeAllPluginsAction, SIGNAL(triggered()), this, SLOT(removeAllPlugins()));
     
     ui->menubar->addMenu(pluginManager);
-    
+      
     view->setSortingEnabled(true);
-    
     model = new NameServiceModel(this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     

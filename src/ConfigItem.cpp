@@ -9,7 +9,7 @@
 #include <rtt/types/TypeInfo.hpp>
 #include <lib_config/TypelibConfiguration.hpp>
 #include "Types.hpp"
-
+#include <base-logging/Logging.hpp>
 
 void VisualizerAdapter::addPlugin(const std::string &name, VizHandle handle)
 {
@@ -239,7 +239,7 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                         valueS = getValue<int64_t>(valueIn);               
                         break;
                     default:
-                        std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                        LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
                         return false;
                 }
                 break;
@@ -260,19 +260,19 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                         valueS = getValue<uint64_t>(valueIn);               
                         break;
                     default:
-                        std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                        LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
                         return false;
                 }
             }
                 break;
             case Typelib::Numeric::NumberOfValidCategories:
-                std::cout << "Internal Error: Got invalid Category" << std::endl;
+                LOG_ERROR_S << "Internal Error: Got invalid Category";
                 return false;
         }
     }
     else
     {
-        std::cout << "got unsupported type.." << std::endl;
+        LOG_WARN_S << "got unsupported type..";
         return false;
     }
     

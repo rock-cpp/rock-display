@@ -1,6 +1,7 @@
 #include <iostream>
 #include <rtt/TaskContext.hpp>
 #include <orocos_cpp/CorbaNameService.hpp>
+#include <base-logging/Logging.hpp>
 
 int main(int argc, char** argv)
 {
@@ -8,7 +9,7 @@ int main(int argc, char** argv)
     
     if(!ns->connect())
     {
-        std::cout << "Could not connect to Nameserver " << std::endl;
+        LOG_ERROR_S << "Could not connect to Nameserver ";
         return 0;
     }
 
