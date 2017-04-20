@@ -94,6 +94,8 @@ public:
     
 signals:
     void dataChanged(const QModelIndex &i, const QModelIndex &j);
+    /**Is emitted every time a new task is added */
+    void taskAdded(const TaskItem* taskItem);
     
 public slots:
     void onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
@@ -119,7 +121,10 @@ public slots:
     void update(const QModelIndex &i, const QModelIndex &j);
     void stop();
     void addNameService(const std::string &nameServiceIP);
+    void taskAdded(const TaskItem* task);
     
 signals:
     void stopNotifier();
+    /**emitted every time a new task is added to one of the task models */
+    void rowAdded();
 };

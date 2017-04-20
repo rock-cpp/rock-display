@@ -71,6 +71,7 @@ public slots:
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
     void addNameService();
     void removeAllPlugins();
+    void sortTasks(); //sorts by column 0
     
 signals:
     void stopNotifier();

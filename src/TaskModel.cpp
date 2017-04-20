@@ -238,6 +238,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
         item = new TaskItem(task);
         nameToItem.insert(std::make_pair(taskName, item));
         tasks.appendRow(item->getRow());
+        emit taskAdded(item);
     }
     else
     {     
@@ -349,7 +350,14 @@ void NameServiceModel::addTaskModel(TaskModel* task)
     appendRow(task->getRow());
     connect(task, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(update(const QModelIndex &, const QModelIndex &)));
     connect(this, SIGNAL(stopNotifier()), task->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
+    connect(task, SIGNAL(taskAdded(const TaskItem*)), this, SLOT(taskAdded(const TaskItem*)));
 }
+
+void NameServiceModel::taskAdded(const TaskItem*)
+{
+    emit rowAdded();
+}
+
 
 void NameServiceModel::stop()
 {
