@@ -49,6 +49,9 @@ MainWindow::MainWindow(QWidget *parent) :
     std::vector<PluginHandle> plugins = pluginRepo->getAllAvailablePlugins();
     plugins.insert(plugins.end(), additionalPlugins.begin(), additionalPlugins.end());
     
+    //sort plugins for easy readability 
+    std::sort(plugins.begin(), plugins.end(), PluginHandleSortByPluginName(true));
+    
     for (const PluginHandle &handle: plugins)
     {
         QSignalMapper* signalMapper = new QSignalMapper (this) ;
