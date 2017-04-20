@@ -26,8 +26,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->menubar->addMenu(pluginManager);
       
     view->setSortingEnabled(true);
+    view->header()->setSortIndicator(0, Qt::AscendingOrder);
     model = new NameServiceModel(this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
+    connect(model, SIGNAL(rowAdded()), this, SLOT(sortTasks()));
     
     TaskModel *initialTasks = new TaskModel(this);
     model->addTaskModel(initialTasks);
@@ -68,6 +70,11 @@ MainWindow::MainWindow(QWidget *parent) :
     
     view->expand(initialTasks->getRow().first()->index());
     view->expand(initialTasks->getTasks().index());
+}
+
+void MainWindow::sortTasks()
+{ 
+    view->sortByColumn(0, view->header()->sortIndicatorOrder());
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
