@@ -125,6 +125,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle = new PortHandle();
     handle->port = port;
     RTT::types::TypeInfo const *type = port->getTypeInfo();
+    std::cout << "port " << port->getName() << " of type " << type->getTypeName() << std::endl;
     handle->transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
     if (! handle->transport)
     {

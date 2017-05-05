@@ -26,7 +26,7 @@ bool loadTypkekit(const std::string &typeName)
     if(typeReg.getTypekitDefiningType(typeName, tkName))
     {
         LOG_INFO_S << "Typekit name: " << tkName;
-        if(orocos_cpp::PluginHelper::loadTypekitAndTransports(tkName))
+        if (orocos_cpp::PluginHelper::loadTypekitAndTransports(tkName))
         {
             return true;
         }

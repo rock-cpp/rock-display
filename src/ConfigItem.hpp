@@ -4,6 +4,8 @@
 #include "TypedItem.hpp"
 #include <typelib/value.hh>
 #include <QTextCodec>
+#include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <orocos_cpp/PluginHelper.hpp>
 
 class PortHandle;
 class OutputPortItem;
@@ -113,6 +115,9 @@ public:
 class Complex : public ItemBase
 {
     const std::size_t maxVectorElemsDisplayed = 500;
+    orogen_transports::TypelibMarshallerBase *transport;
+    orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
+    RTT::base::DataSourceBase::shared_ptr sample;
     
 public:
     Complex(Typelib::Value& valueIn);

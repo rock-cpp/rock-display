@@ -4,12 +4,14 @@
 #include <orocos_cpp_base/OrocosHelpers.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <rtt/typelib/TypelibMarshallerHandle.hpp>
 #include <rtt/base/InputPortInterface.hpp>
 #include <rtt/base/OutputPortInterface.hpp>
 #include <rtt/types/TypeInfo.hpp>
 #include <lib_config/TypelibConfiguration.hpp>
 #include "Types.hpp"
 #include <base-logging/Logging.hpp>
+#include <boost/regex.hpp>
 
 void VisualizerAdapter::addPlugin(const std::string &name, VizHandle handle)
 {
@@ -298,6 +300,27 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 Complex::Complex(Typelib::Value& valueIn)
     : ItemBase()
 {
+    transport = nullptr;
+    transportHandle = nullptr;
+    
+    const Typelib::Type &type(valueIn.getType());
+    RTT::types::TypeInfoRepository::shared_ptr ti = RTT::types::TypeInfoRepository::Instance();
+    std::string typeStr = type.getName();
+    
+    typeStr = boost::regex_replace(typeStr, boost::regex("_m"), "");
+    
+    RTT::types::TypeInfo* typeInfo = ti->type(typeStr);
+    if (typeInfo)
+    {
+        transport = dynamic_cast<orogen_transports::TypelibMarshallerBase*>(typeInfo->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+        transportHandle = transport->createSample();
+        sample = transport->getDataSource(transportHandle);
+    }
+    else
+    {
+        LOG_WARN_S << "cannot find " << typeStr << " in the type info repository";
+    }  
+    
     update(valueIn, true, true);
     value->setText(valueIn.getType().getName().c_str());
 }
@@ -310,17 +333,24 @@ Complex::~Complex()
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {   
     bool updateNecessary = (updateUI && this->name->isExpanded()) || forceUpdate;
+    const Typelib::Type &type(valueIn.getType());
     
-    for (auto vizHandle : visualizers)
-    {   
-        QGenericArgument data("void *", valueIn.getData());
-        vizHandle.second.method.invoke(vizHandle.second.plugin, data);
+    if (!visualizers.empty() && transport)
+    {
+        transport->setTypelibSample(transportHandle, valueIn);
+        sample = transport->getDataSource(transportHandle);
+    
+        for (auto vizHandle : visualizers)
+        {   
+            QGenericArgument data("void *", sample.get()->getRawPointer());
+            vizHandle.second.method.invoke(vizHandle.second.plugin, data);
+        }
     }
     
-    const Typelib::Type &type(valueIn.getType());
     if (type.getCategory() == Typelib::Type::Compound)
     {
-        const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(valueIn.getType());
+        const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(type);
+        
      
         uint8_t *data = static_cast<uint8_t *>(valueIn.getData());
         

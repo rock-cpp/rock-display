@@ -35,6 +35,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             std::map<std::string, PluginHandle> typeMap;
             handle.pluginName = pName.toStdString();
             QObject *plugin = factory->createPlugin(pName);
+            LOG_INFO_S << "plugin " << pName.toStdString() << ":  type: " << handle.typeName;
             
             const QMetaObject *metaPlugin = plugin->metaObject();
         

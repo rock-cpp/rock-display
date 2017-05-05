@@ -61,23 +61,7 @@ void Notifier::queryTasks()
     std::vector<std::string> tasks;
     try
     {
-        boost::thread apiCaller([&]()
-        { 
-            try
-            {
-                tasks = nameService->getRegisteredTasks();
-            }
-            catch (CosNaming::NamingContext::NotFound& ex)
-            {
-                emit updateNameServiceStatus(std::string("CORBA: failed to get registered tasks.."));
-            }
-        } );
-        if (!apiCaller.timed_join(boost::posix_time::milliseconds(500)))
-        {
-            emit updateNameServiceStatus(std::string("orocos_cpp::NameService::getRegisteredTasks() did not return in 500ms.."));
-            return;
-        }
-        
+        tasks = nameService->getRegisteredTasks();
         int numTasksCurrent = tasks.size();
         
         if (numTasksCurrent != numTasks)
@@ -85,6 +69,10 @@ void Notifier::queryTasks()
             numTasks = numTasksCurrent;
             emit updateTasksStatus(std::string(std::string("Tasks [") + std::to_string(numTasks) + std::string("]")));
         }
+    }
+    catch (CosNaming::NamingContext::NotFound& ex)
+    {
+        emit updateNameServiceStatus(std::string("CORBA: failed to get registered tasks.."));
     }
     catch(...)
     {

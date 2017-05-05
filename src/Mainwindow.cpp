@@ -238,6 +238,11 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
 
+                if (typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap</maps/grid/MLSConfig/KALMAN>>")
+                {
+                    typeName = "/maps/grid/MLSMapKalman";
+                }
+                
                 std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName);
                 for (PluginHandle additionalPlugin: additionalPlugins)
                 {
