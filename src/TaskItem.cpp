@@ -64,6 +64,13 @@ bool TaskItem::update()
         return false;
     }
     
+    if (task->server()->_is_nil())
+    {
+        LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
+        reset();
+        return false;
+    }
+    
     bool needsUpdate = false;
     if (nameItem.text().isEmpty())
     {

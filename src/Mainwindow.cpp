@@ -237,8 +237,11 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 {
                     typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
+                
+                std::cout << "tttt " << typeName << std::endl;
 
-                if (typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap</maps/grid/MLSConfig/KALMAN>>")
+                if (typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap</maps/grid/MLSConfig/KALMAN>>"
+                    || typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap__maps_grid_MLSConfig_KALMAN__w>")
                 {
                     typeName = "/maps/grid/MLSMapKalman";
                 }

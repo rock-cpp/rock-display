@@ -85,10 +85,16 @@ void Notifier::queryTasks()
     {
         RTT::corba::TaskContextProxy *task = nullptr;
         taskIt = nameToRegisteredTask.find(tname);
-        std::vector<std::string>::iterator diconnectedTaskIt = std::find(disconnectedTasks.begin(), disconnectedTasks.end(), tname);
-        if (taskIt == nameToRegisteredTask.end())
+        std::vector<std::string>::iterator disconnectedTaskIt = std::find(disconnectedTasks.begin(), disconnectedTasks.end(), tname);
+        bool wasDisconnected = (disconnectedTaskIt != disconnectedTasks.end());
+        // connect/reconnect of task
+        if (taskIt == nameToRegisteredTask.end() || wasDisconnected)
         {
-            // case: task is not registered yet
+            if (wasDisconnected)
+            {
+                disconnectedTasks.erase(disconnectedTaskIt);
+            }
+            
             task = RTT::corba::TaskContextProxy::Create(tname);
             if (!task)
             {
@@ -102,28 +108,8 @@ void Notifier::queryTasks()
             }
             
             nameToRegisteredTask[tname] = task;
-            emit updateNameServiceStatus(std::string(std::string("connected: created TaskContextProxy for ") + tname + std::string("..")));
-            emit updateTask(task, tname, false);
-        }
-        else if (diconnectedTaskIt != disconnectedTasks.end())
-        {
-            // case: task has reconnected
-            disconnectedTasks.erase(diconnectedTaskIt);
-            task = RTT::corba::TaskContextProxy::Create(tname);
-            if (!task)
-            {
-                continue;
-            }
-            
-            const RTT::DataFlowInterface *dfi = task->ports();
-            if (!dfi || dfi->getPorts().size() == 0)
-            {
-                continue;
-            }
-            
-            nameToRegisteredTask[tname] = task;
-            emit updateNameServiceStatus(std::string(std::string("connected: task ") + tname + std::string(" reconnected..")));
-            emit updateTask(task, tname, true);
+            emit updateNameServiceStatus(std::string((wasDisconnected ? std::string("reconnect") : std::string("connect")) + std::string(" of task ") + tname + std::string("..")));
+            emit updateTask(task, tname, wasDisconnected);
         }
     }
 

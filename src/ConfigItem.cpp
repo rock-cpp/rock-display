@@ -40,6 +40,7 @@ bool VisualizerAdapter::removeVisualizer(QObject* plugin)
     {
         if (it->second.plugin == plugin)
         {
+            std::cout << "removing visualizer " << it->first << std::endl;
             visualizers.erase(it);
             return true;
         }
