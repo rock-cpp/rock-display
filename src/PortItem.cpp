@@ -6,8 +6,6 @@
 #include "PortItem.hpp"
 #include "ConfigItem.hpp"
 #include <lib_config/TypelibConfiguration.hpp>
-#include <base/commands/Motion2D.hpp>
-#include <base/samples/RigidBodyState.hpp>
 #include <base-logging/Logging.hpp>
 #include <QMetaType>
 
@@ -158,31 +156,21 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
     }
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
+    
+    if (!visualizers.empty())
+    {
+        for (auto vizHandle : visualizers)
+        {   
+            QGenericArgument data("void *", handle->sample.get()->getRawPointer());
+            vizHandle.second.method.invoke(vizHandle.second.plugin, data);
+        }
+    }
+    
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
     if (!item)
-    {
-        item = getItem(val);
-        
-        std::map<std::string, VizHandle>::iterator vizIter;
-        while (!visualizers.empty())
-        {
-            vizIter = visualizers.begin();
-            item->addPlugin(vizIter->first, vizIter->second);
-            visualizers.erase(vizIter);
-        }
-        
-        QStandardItem *parent = nameItem->parent();
-        
-        int pos = nameItem->row();
-        item->getRow().first()->setText(nameItem->text());
-        parent->removeRow(pos);
-        parent->insertRow(pos, item->getRow());
-
-        //note, the removeRow deletes these items
-        nameItem = nullptr;
-        valueItem = nullptr;
-        
+    {   
+        item = getItem(val, this->nameItem, this->valueItem);
         return item->update(val, true, true);
     }
     

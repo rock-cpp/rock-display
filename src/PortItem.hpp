@@ -32,6 +32,16 @@ public:
     {
         return item;
     }
+    
+    TypedItem *getNameItem()
+    {
+        return nameItem;
+    }
+    
+    TypedItem *getValueItem()
+    {
+        return valueItem;
+    }
 };
 
 class PortHandle;

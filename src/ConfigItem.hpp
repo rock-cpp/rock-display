@@ -10,6 +10,7 @@
 class PortHandle;
 class OutputPortItem;
 class VizHandle;
+class PortItem;
 
 namespace RTT
 {
@@ -34,16 +35,21 @@ protected:
 public:
     VisualizerAdapter()
     {
-        
     };
-    ~VisualizerAdapter()
+    
+    virtual ~VisualizerAdapter()
     {
-        
     }
+    
     void addPlugin(const std::string &name, VizHandle handle);
     bool hasVisualizer(const std::string &name);
     QObject *getVisualizer(const std::string &name);
     bool removeVisualizer(QObject *plugin);
+    virtual bool hasVisualizers()
+    {
+//         std::cout << "VisualizerAdapter::hasVisualizers().." << std::endl;
+        return visualizers.empty();
+    }
 };
 
 class ItemBase : public VisualizerAdapter
@@ -58,9 +64,10 @@ protected:
     
 public:
     ItemBase();
+    ItemBase(TypedItem *name, TypedItem *value);
     virtual ~ItemBase();
     
-    virtual bool hasActiveVisualizers();
+    virtual bool hasVisualizers();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
     void setName(const QString &newName)
@@ -90,14 +97,14 @@ public:
     }
 };
 
-std::shared_ptr<ItemBase> getItem(Typelib::Value& value);
+std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
 
 class Array : public ItemBase
 {   
-    const std::size_t maxArrayElemsDisplayed = 500;
+    const int maxArrayElemsDisplayed = 500;
     
 public:
-    Array(Typelib::Value& valueIn);
+    Array(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
@@ -106,7 +113,7 @@ public:
 class Simple : public ItemBase
 {
 public:
-    Simple(Typelib::Value& valueIn);    
+    Simple(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);    
     virtual ~Simple();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
@@ -114,13 +121,13 @@ public:
 
 class Complex : public ItemBase
 {
-    const std::size_t maxVectorElemsDisplayed = 500;
+    const int maxVectorElemsDisplayed = 500;
     orogen_transports::TypelibMarshallerBase *transport;
     orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
     RTT::base::DataSourceBase::shared_ptr sample;
     
 public:
-    Complex(Typelib::Value& valueIn);
+    Complex(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);

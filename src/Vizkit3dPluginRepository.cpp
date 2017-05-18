@@ -31,7 +31,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
         QStringList *availablePlugins = factory->getAvailablePlugins();
                 
         for(const QString &pName: *availablePlugins)
-        {
+        {   
             std::map<std::string, PluginHandle> typeMap;
             handle.pluginName = pName.toStdString();
             QObject *plugin = factory->createPlugin(pName);
@@ -48,6 +48,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 
                 std::string signature = method.signature();
                 std::string update("update");
+                
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
                     handle.typeName = parameterList[0].data();

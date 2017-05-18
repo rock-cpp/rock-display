@@ -42,19 +42,21 @@ void TaskItem::reset()
 
 bool TaskItem::hasVisualizers()
 {
-    bool hasVisualizers = false;
     for (auto &port: ports)
     {
-        std::shared_ptr<ItemBase> item = port.second->getItemBase();
-        
-        if (item && item->hasActiveVisualizers())
+        if (port.second->hasVisualizers())
         {
-            hasVisualizers = true;
-            break;
+            return true;
+        }
+        
+        std::shared_ptr<ItemBase> item = port.second->getItemBase();
+        if (item && item->hasVisualizers())
+        {
+            return true;
         }
     }
     
-    return hasVisualizers;
+    return false;
 }
 
 bool TaskItem::update()
@@ -74,7 +76,8 @@ bool TaskItem::update()
     bool needsUpdate = false;
     if (nameItem.text().isEmpty())
     {
-        try {
+        try
+        {
             nameItem.setText(task->getName().c_str());
             needsUpdate = true;
         }
@@ -95,18 +98,13 @@ bool TaskItem::update()
     }
 
     // check for port update
-    bool hasViz = false;
-    if (!refreshPorts && !ports.empty() && !nameItem.isExpanded())
+    bool hasVis = hasVisualizers();
+    if (!hasVis && !refreshPorts && !ports.empty() && !nameItem.isExpanded())
     {
-        hasViz = hasVisualizers();
-        
-        if (!hasViz)
-        {
-            return needsUpdate;
-        }
+        return needsUpdate;
     }
     
-    needsUpdate |= updatePorts(hasViz);
+    needsUpdate |= updatePorts(hasVis);
 
     return needsUpdate;
 }

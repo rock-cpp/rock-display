@@ -237,12 +237,6 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 {
                     typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
-
-                if (typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap</maps/grid/MLSConfig/KALMAN>>"
-                    || typeName == "/envire/core/SpatioTemporal</maps/grid/MLSMap__maps_grid_MLSConfig_KALMAN__w>")
-                {
-                    typeName = "/maps/grid/MLSMapKalman";
-                }
                 
                 std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName);
                 for (PluginHandle additionalPlugin: additionalPlugins)
@@ -391,10 +385,7 @@ void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
         else if (ti->type() == ItemType::OUTPUTPORT)
         {
             OutputPortItem *outport = static_cast<OutputPortItem *>(ti->getData());
-            if (!outport->removeVisualizer(plugin))
-            {
-                outport->getItemBase()->removeVisualizer(plugin);
-            }
+            outport->removeVisualizer(plugin);
         }
     }
     
