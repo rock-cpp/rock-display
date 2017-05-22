@@ -161,8 +161,7 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
     {
         for (auto vizHandle : visualizers)
         {   
-            QGenericArgument data("void *", handle->sample.get()->getRawPointer());
-            vizHandle.second.method.invoke(vizHandle.second.plugin, data);
+            updateVisualier(vizHandle.second, handle->sample.get());
         }
     }
     

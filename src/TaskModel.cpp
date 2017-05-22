@@ -184,10 +184,9 @@ TaskModel::~TaskModel()
 void TaskModel::waitForTerminate()
 {
     notifierThread->quit();
-    if (notifierThread->wait())
+    if (notifierThread->wait(100))
     {
         notifierThread->terminate();
-        notifierThread->wait();
     }
 }
 

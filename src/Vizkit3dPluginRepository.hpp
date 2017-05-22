@@ -24,7 +24,6 @@ public:
     QMetaMethod method;
 };
 
-
 /** A functor that can be used with std::sort to sort to sort PluginHandles */
 struct PluginHandleSortByPluginName
 {
@@ -42,7 +41,6 @@ struct PluginHandleSortByPluginName
                                                 a.pluginName.begin(), a.pluginName.end());
     }
 };
-
 
 class Vizkit3dPluginRepository
 {

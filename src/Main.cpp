@@ -56,12 +56,6 @@ int main(int argc, char** argv)
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
     
-    QTimer timer;
-    timer.setInterval(100);
-    
-    QObject::connect(&timer, SIGNAL(timeout()), w, SLOT(updateTasks()), Qt::QueuedConnection);
-    timer.start();
-    
     struct sigaction mainWindowSigIntHandler;
     mainWindowSigIntHandler.sa_handler = handleSigInt;
     sigemptyset(&mainWindowSigIntHandler.sa_mask);

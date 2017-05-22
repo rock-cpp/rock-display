@@ -6,6 +6,7 @@
 #include <QCursor>
 #include <QCloseEvent>
 #include <rock_widget_collection/RockWidgetCollection.h>
+#include <rtt/base/DataSourceBase.hpp>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");
+    qRegisterMetaType<VizHandle>("VizHandle");
     view->setModel(model);
 
     auto *list = widget3d.getAvailablePlugins();    
@@ -66,6 +68,13 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(ui->actionAdd_name_service, SIGNAL(triggered()), this, SLOT(addNameService()));
     
+    taskUpdater = new QThread();
+    uiUpdater = new UIUpdater(model);
+    connect(taskUpdater, SIGNAL(started()), uiUpdater, SLOT(run()));
+    connect(uiUpdater, SIGNAL(finished()), taskUpdater, SLOT(quit()));
+    connect(taskUpdater, SIGNAL(finished()), taskUpdater, SLOT(deleteLater()));
+    uiUpdater->moveToThread(taskUpdater);
+    taskUpdater->start();
     
     nameServiceDialog = new AddNameServiceDialog();
     connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model, SLOT(addNameService(const std::string &)));
@@ -149,9 +158,14 @@ void MainWindow::openPlugin(QObject *obj)
 
 void MainWindow::cleanup()
 {
+    emit stopUIUpdater();
     emit stopNotifier();
     
-    model->waitForTerminate();
+    taskUpdater->quit();
+    if (taskUpdater->wait(100))
+    {
+        taskUpdater->terminate();
+    }
     
     removeAllPlugins();
     widget3d.close();
@@ -367,6 +381,7 @@ void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
     if (viz)
     {
         viz->addPlugin(ph.pluginName, nh);
+        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle, RTT::base::DataSourceBase *)), this, SLOT(updateVisualizer(VizHandle, RTT::base::DataSourceBase *)));
     }
 }
 
@@ -457,4 +472,10 @@ void MainWindow::configureTask()
 void MainWindow::updateTasks()
 {
     model->updateTasks();
+}
+
+void MainWindow::updateVisualizer(VizHandle vizHandle, RTT::base::DataSourceBase *data)
+{
+    QGenericArgument val("void *", data->getRawPointer());
+    vizHandle.method.invoke(vizHandle.plugin, val);
 }

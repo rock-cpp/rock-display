@@ -101,42 +101,6 @@ std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
 
 std::map<std::string, std::string> ItemBase::marshalled2Typelib = lookupMarshalledTypelistTypes();
 
-void VisualizerAdapter::addPlugin(const std::string &name, VizHandle handle)
-{
-    LOG_INFO_S << "add plugin " << name << "..";
-    visualizers.insert(std::make_pair(name, handle));
-}
-
-QObject* VisualizerAdapter::getVisualizer(const std::string& name)
-{
-    std::map<std::string, VizHandle>::iterator iter = visualizers.find(name);
-    if (iter != visualizers.end())
-    {
-        return iter->second.plugin;
-    }
-    
-    return nullptr;
-}
-
-bool VisualizerAdapter::hasVisualizer(const std::string& name)
-{
-    return visualizers.find(name) != visualizers.end();
-}
-
-bool VisualizerAdapter::removeVisualizer(QObject* plugin)
-{
-    for (std::map<std::string, VizHandle>::iterator it = visualizers.begin(); it != visualizers.end(); it++)
-    {
-        if (it->second.plugin == plugin)
-        {
-            visualizers.erase(it);
-            return true;
-        }
-    }
-    
-    return false;
-}
-
 ItemBase::ItemBase()
     : VisualizerAdapter(),
       name(new TypedItem()),
@@ -406,39 +370,47 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     return false;
 }
 
+void Complex::addPlugin(const std::string& name, VizHandle handle)
+{
+    VisualizerAdapter::addPlugin(name, handle);
+    
+    if (!transport)
+    {
+        RTT::types::TypeInfoRepository::shared_ptr ti = RTT::types::TypeInfoRepository::Instance();
+        std::string typeStr = typelibType.getName();
+        
+        // HACK: resolve typelib type for marshalling types ending with '_m'
+        if (boost::algorithm::ends_with(typeStr, "_m"))
+        {
+            marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-2);
+        }
+        
+        if (marshalled2Typelib.find(typeStr) != marshalled2Typelib.end())
+        {
+            LOG_INFO_S << "lookup type " << marshalled2Typelib[typeStr] << " for marshalled type " << typeStr;
+            typeStr = marshalled2Typelib[typeStr];
+        }
+        
+        RTT::types::TypeInfo* typeInfo = ti->type(typeStr);
+        if (typeInfo)
+        {
+            transport = dynamic_cast<orogen_transports::TypelibMarshallerBase*>(typeInfo->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+            transportHandle = transport->createSample();
+            sample = transport->getDataSource(transportHandle);
+        }
+        else
+        {
+            LOG_WARN_S << "typeInfo for " << typeStr << " unknown..";
+        }
+    }
+}
+
 Complex::Complex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
-    : ItemBase(name, value)
+    : ItemBase(name, value),
+      typelibType(valueIn.getType())
 {
     transport = nullptr;
     transportHandle = nullptr;
-    
-    const Typelib::Type &type(valueIn.getType());
-    RTT::types::TypeInfoRepository::shared_ptr ti = RTT::types::TypeInfoRepository::Instance();
-    std::string typeStr = type.getName();
-    
-    // HACK: resolve typelib type for marshalling types ending with '_m'
-    if (boost::algorithm::ends_with(typeStr, "_m"))
-    {
-        marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-2);
-    }
-    
-    if (marshalled2Typelib.find(typeStr) != marshalled2Typelib.end())
-    {
-        LOG_INFO_S << "lookup type " << marshalled2Typelib[typeStr] << " for marshalled type " << typeStr;
-        typeStr = marshalled2Typelib[typeStr];
-    }
-    
-    RTT::types::TypeInfo* typeInfo = ti->type(typeStr);
-    if (typeInfo)
-    {
-        transport = dynamic_cast<orogen_transports::TypelibMarshallerBase*>(typeInfo->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
-        transportHandle = transport->createSample();
-        sample = transport->getDataSource(transportHandle);
-    }
-    else
-    {
-        LOG_WARN_S << "typeInfo for " << typeStr << " unknown..";
-    }
     
     update(valueIn, true, true);
     this->value->setText(valueIn.getType().getName().c_str());
@@ -459,8 +431,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         transport->setTypelibSample(transportHandle, valueIn);
         for (auto vizHandle : visualizers)
         {   
-            QGenericArgument data("void *", sample.get()->getRawPointer());
-            vizHandle.second.method.invoke(vizHandle.second.plugin, data);
+            updateVisualier(vizHandle.second, sample.get());
         }
     }
     

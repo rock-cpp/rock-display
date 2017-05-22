@@ -54,7 +54,7 @@ public slots:
         while (isRunning)
         {
             queryTasks();
-            usleep(20000);
+            usleep(1000);
         }
         
         emit finished();

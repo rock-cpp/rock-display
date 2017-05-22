@@ -7,10 +7,12 @@ SOURCES
     Mainwindow.cpp
     Vizkit3dPluginRepository.cpp
     ConfigItem.cpp
+    VisualizerAdapter.cpp
 MOC
     TaskModel.hpp
     Mainwindow.hpp
     Types.hpp
+    VisualizerAdapter.hpp
 HEADERS
 UI
     task_inspector_window.ui

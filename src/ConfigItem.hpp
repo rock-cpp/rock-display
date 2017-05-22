@@ -1,7 +1,8 @@
 #pragma once
 
-#include <lib_config/Configuration.hpp>
 #include "TypedItem.hpp"
+#include "VisualizerAdapter.hpp"
+#include <lib_config/Configuration.hpp>
 #include <typelib/value.hh>
 #include <QTextCodec>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
@@ -26,30 +27,6 @@ namespace RTT
         class PortInterface;
     }
 }
-
-class VisualizerAdapter
-{
-protected:
-    std::map<std::string, VizHandle> visualizers;
-    
-public:
-    VisualizerAdapter()
-    {
-    };
-    
-    virtual ~VisualizerAdapter()
-    {
-    }
-    
-    void addPlugin(const std::string &name, VizHandle handle);
-    bool hasVisualizer(const std::string &name);
-    QObject *getVisualizer(const std::string &name);
-    bool removeVisualizer(QObject *plugin);
-    virtual bool hasVisualizers()
-    {
-        return visualizers.empty();
-    }
-};
 
 class ItemBase : public VisualizerAdapter
 {
@@ -128,10 +105,12 @@ class Complex : public ItemBase
     orogen_transports::TypelibMarshallerBase *transport;
     orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
     RTT::base::DataSourceBase::shared_ptr sample;
+    const Typelib::Type &typelibType;
     
 public:
     Complex(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
+    virtual void addPlugin(const std::string &name, VizHandle handle);
 };
