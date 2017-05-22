@@ -238,6 +238,11 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
                 }
                 
+                if (ItemBase::marshalled2Typelib.find(typeName) != ItemBase::marshalled2Typelib.end())
+                {
+                    typeName = ItemBase::marshalled2Typelib[typeName];
+                }
+                
                 std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName);
                 for (PluginHandle additionalPlugin: additionalPlugins)
                 {

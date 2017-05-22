@@ -24,6 +24,7 @@ DEPS_PKGCONFIG
     base-lib
     envire_core
     envire_maps
+    tinyxml
 )
 add_definitions(-DBASE_LOG_DEBUG)
 

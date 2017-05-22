@@ -47,7 +47,6 @@ public:
     bool removeVisualizer(QObject *plugin);
     virtual bool hasVisualizers()
     {
-//         std::cout << "VisualizerAdapter::hasVisualizers().." << std::endl;
         return visualizers.empty();
     }
 };
@@ -66,6 +65,8 @@ public:
     ItemBase();
     ItemBase(TypedItem *name, TypedItem *value);
     virtual ~ItemBase();
+    
+    static std::map<std::string, std::string> marshalled2Typelib;
     
     virtual bool hasVisualizers();
     
@@ -95,6 +96,8 @@ public:
     {
         return this->name;
     }
+    
+    static std::map<std::string, std::string> lookupMarshalledTypelistTypes();
 };
 
 std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
