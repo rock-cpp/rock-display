@@ -28,7 +28,7 @@ DEPS_PKGCONFIG
     envire_maps
     tinyxml
 )
-add_definitions(-DBASE_LOG_DEBUG)
+add_definitions(-DBASE_LOG_INFO)
 
 rock_executable(rock-display_bin Main.cpp
 DEPS

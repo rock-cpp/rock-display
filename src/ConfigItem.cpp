@@ -136,7 +136,6 @@ ItemBase::~ItemBase()
 
 bool ItemBase::hasVisualizers()
 {
-    std::cout << "ItemBase::hasVisualizers().." << std::endl;
     if (!visualizers.empty())
     {
         return true;
@@ -431,7 +430,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         transport->setTypelibSample(transportHandle, valueIn);
         for (auto vizHandle : visualizers)
         {   
-            updateVisualier(vizHandle.second, sample.get());
+            updateVisualier(vizHandle.second, sample);
         }
     }
     

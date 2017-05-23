@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<VizHandle>("VizHandle");
+    qRegisterMetaType<RTT::base::DataSourceBase::shared_ptr>("RTT::base::DataSourceBase::shared_ptr");
     view->setModel(model);
 
     auto *list = widget3d.getAvailablePlugins();    
@@ -73,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(taskUpdater, SIGNAL(started()), uiUpdater, SLOT(run()));
     connect(uiUpdater, SIGNAL(finished()), taskUpdater, SLOT(quit()));
     connect(taskUpdater, SIGNAL(finished()), taskUpdater, SLOT(deleteLater()));
+    connect(this, SIGNAL(stopUIUpdater()), uiUpdater, SLOT(stop()), Qt::DirectConnection);
     uiUpdater->moveToThread(taskUpdater);
     taskUpdater->start();
     
@@ -157,12 +159,12 @@ void MainWindow::openPlugin(QObject *obj)
 }
 
 void MainWindow::cleanup()
-{
+{   
     emit stopUIUpdater();
     emit stopNotifier();
     
     taskUpdater->quit();
-    if (taskUpdater->wait(100))
+    if (taskUpdater->wait(500))
     {
         taskUpdater->terminate();
     }
@@ -381,7 +383,7 @@ void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
     if (viz)
     {
         viz->addPlugin(ph.pluginName, nh);
-        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle, RTT::base::DataSourceBase *)), this, SLOT(updateVisualizer(VizHandle, RTT::base::DataSourceBase *)));
+        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle, RTT::base::DataSourceBase::shared_ptr)));
     }
 }
 
@@ -474,8 +476,18 @@ void MainWindow::updateTasks()
     model->updateTasks();
 }
 
-void MainWindow::updateVisualizer(VizHandle vizHandle, RTT::base::DataSourceBase *data)
+void MainWindow::updateVisualizer(VizHandle vizHandle, RTT::base::DataSourceBase::shared_ptr data)
 {
-    QGenericArgument val("void *", data->getRawPointer());
+    if (!data)
+    {
+        return;
+    }
+    
+    QGenericArgument val("void *", data.get()->getRawConstPointer());
+    if (!val.data())
+    {
+        return;
+    }
+    
     vizHandle.method.invoke(vizHandle.plugin, val);
 }

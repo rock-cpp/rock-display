@@ -31,11 +31,11 @@ public:
     {
         return visualizers.empty();
     }
-    void updateVisualier(VizHandle vizhandle, RTT::base::DataSourceBase *data)
+    void updateVisualier(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data)
     {
         emit requestVisualizerUpdate(vizhandle, data);
     }
     
 signals:
-    void requestVisualizerUpdate(VizHandle vizhandle, RTT::base::DataSourceBase *data);
+    void requestVisualizerUpdate(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
 };

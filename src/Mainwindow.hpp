@@ -51,6 +51,11 @@ public slots:
         emit finished();
     }
     
+    void stop()
+    {
+        isRunning = false;
+    }
+    
 private:
     NameServiceModel *model;
     bool isRunning;
@@ -109,7 +114,7 @@ public slots:
     void addNameService();
     void removeAllPlugins();
     void sortTasks(); //sorts by column 0
-    void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase *data);
+    void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
     
 signals:
     void stopNotifier();
