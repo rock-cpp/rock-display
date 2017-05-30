@@ -66,7 +66,7 @@ bool TaskItem::update()
         return false;
     }
     
-    if (!task->server() || task->server()->_is_nil() || !task->server()->isActive())
+    if (!task->server() || task->server()->_is_nil())
     {
         LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
         reset();
