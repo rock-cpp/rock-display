@@ -43,6 +43,16 @@ public:
     {
         return valueItem;
     }
+    
+    virtual bool hasVisualizers()
+    {
+        if (VisualizerAdapter::hasVisualizers() || (item && item->hasVisualizers()))
+        {
+            return true;
+        }
+        
+        return false;
+    }
 };
 
 class PortHandle;

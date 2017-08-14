@@ -48,12 +48,6 @@ bool TaskItem::hasVisualizers()
         {
             return true;
         }
-        
-        std::shared_ptr<ItemBase> item = port.second->getItemBase();
-        if (item && item->hasVisualizers())
-        {
-            return true;
-        }
     }
     
     return false;

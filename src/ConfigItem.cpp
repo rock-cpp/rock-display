@@ -136,7 +136,7 @@ ItemBase::~ItemBase()
 
 bool ItemBase::hasVisualizers()
 {
-    if (!visualizers.empty())
+    if (VisualizerAdapter::hasVisualizers())
     {
         return true;
     }
@@ -430,7 +430,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         transport->setTypelibSample(transportHandle, valueIn);
         for (auto vizHandle : visualizers)
         {   
-            updateVisualier(vizHandle.second, sample);
+            updateVisualizer(vizHandle.second, sample);
         }
     }
     

@@ -72,10 +72,8 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     valueItem->setType(ItemType::OUTPUTPORT);
     nameItem->setData(this);
     valueItem->setData(this);
-    
     typeInfo = port->getTypeInfo()->getTypeName();
-    
-    valueItem->setText(port->getName().c_str());
+    valueItem->setText(typeInfo.c_str());
 }
 
 OutputPortItem::~OutputPortItem()
@@ -135,7 +133,7 @@ bool OutputPortItem::updataValue()
         return false;
     }
     
-    if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded())
+    if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() & !item->hasVisualizers())
     {
         return false;
     }
@@ -158,12 +156,9 @@ bool OutputPortItem::updataValue()
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
     
-    if (!visualizers.empty())
-    {
-        for (auto vizHandle : visualizers)
-        {   
-            updateVisualier(vizHandle.second, handle->sample.get());
-        }
+    for (auto vizHandle: visualizers)
+    {   
+        updateVisualizer(vizHandle.second, handle->sample.get());
     }
     
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
@@ -176,7 +171,6 @@ bool OutputPortItem::updataValue()
         }
         
         item = getItem(val, this->nameItem, this->valueItem);
-        std::cout << "OutputPortItem::updataValue.." << std::endl;
         return item->update(val, true, true);
     }
     

@@ -31,7 +31,7 @@ public:
     {
         return visualizers.empty();
     }
-    void updateVisualier(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data)
+    void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data)
     {
         emit requestVisualizerUpdate(vizhandle, data);
     }
