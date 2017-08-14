@@ -167,7 +167,7 @@ Array::~Array()
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = forceUpdate || (this->name->isExpanded() && updateUI);
+    bool updateNecessary = this->name->isExpanded() && updateUI;
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     
     void *data = valueIn.getData();
@@ -202,9 +202,9 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        childRet |= children[i]->update(arrayV, updateNecessary);
+        childRet |= children[i]->update(arrayV, updateNecessary, forceUpdate);
     }
-    updateNecessary |= childRet;
+    updateNecessary &= childRet;
     
     for (int i = currentRows; i < numElemsToDisplay; i++)
     {
@@ -213,7 +213,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             
         if (static_cast<int>(children.size()) > i)
         {
-            children[i]->update(arrayV, true);
+            children[i]->update(arrayV, true, forceUpdate);
             child = children[i];
         }
         else
@@ -226,7 +226,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         name->appendRow(child->getRow());
     }
     
-    return updateNecessary || numElemsDisplayedChanged;
+    return forceUpdate || updateNecessary || numElemsDisplayedChanged;
 }
 
 Simple::Simple(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
@@ -422,7 +422,7 @@ Complex::~Complex()
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {   
-    bool updateNecessary = forceUpdate || (updateUI && this->name->isExpanded());
+    bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
     
     if (!visualizers.empty() && transport)
@@ -455,10 +455,10 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 continue;
             }
 
-            childRet |= children[i]->update(fieldV, updateNecessary);           
+            childRet |= children[i]->update(fieldV, updateNecessary, forceUpdate);           
             i++;
         }
-        updateNecessary |= childRet;
+        updateNecessary &= childRet;
     }
     else
     {
@@ -467,7 +467,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         
         if(cont.kind() == "/std/string")
         {   
-            if (!forceUpdate && !updateUI)
+            if (!forceUpdate && !updateNecessary)
             {
                 return false;
             }
@@ -479,13 +479,11 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 const QString text = codec->toUnicode(content.c_str(), content.size(), &state);
                 if (state.invalidChars > 0)
                 {
-                    return updateNecessary;
+                    value->setText(QString(""));
                 }
-                
-                if (value->text().toStdString() != text.toStdString())
+                else if (value->text().toStdString() != text.toStdString())
                 {
                     value->setText(text);
-                    return true;
                 }
             }
             
@@ -523,9 +521,9 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            childRet |= children[i]->update(elem, updateNecessary);
+            childRet |= children[i]->update(elem, updateNecessary, forceUpdate);
         }
-        updateNecessary |= childRet; 
+        updateNecessary &= childRet; 
         
         // case new vector size is bigger
         // append new rows
@@ -536,7 +534,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             
             if (static_cast<int>(children.size()) > i)
             {
-                children[i]->update(elem, true);
+                children[i]->update(elem, true, forceUpdate);
                 child = children[i];
             }
             else
@@ -565,7 +563,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         updateNecessary |= numElemsDisplayedChanged;
     }
     
-    return updateNecessary;
+    return forceUpdate || updateNecessary;
 }
 
 std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
