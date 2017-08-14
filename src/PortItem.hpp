@@ -22,6 +22,7 @@ protected:
     std::shared_ptr<ItemBase> item;
     TypedItem *nameItem;
     TypedItem *valueItem;
+    std::string typeInfo;
 
 public:
     PortItem(const std::string &name);
@@ -54,7 +55,7 @@ class OutputPortItem : public PortItem
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port);
     virtual ~OutputPortItem();
-    bool updataValue(bool hasVisualizers=false);
+    bool updataValue();
     
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();

@@ -73,12 +73,9 @@ OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(
     nameItem->setData(this);
     valueItem->setData(this);
     
-    updateOutputPortInterface(port);
+    typeInfo = port->getTypeInfo()->getTypeName();
     
-    if (handle)
-    {
-        valueItem->setText(handle->type->getName().c_str());
-    }
+    valueItem->setText(port->getName().c_str());
 }
 
 OutputPortItem::~OutputPortItem()
@@ -112,13 +109,6 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
     reader->setName(getFreePortName(clientTask, port));
     clientTask->addPort(*reader);
-    RTT::ConnPolicy policy(RTT::ConnPolicy::data());
-    policy.pull = true;
-    if(!reader->connectTo(port, policy))
-    {
-        LOG_ERROR_S << "OutputPortItem: Error could not connect reader to port " + port->getName() + " of task " + port->getInterface()->getOwner()->getName();
-        return;
-    }
 
     handle = new PortHandle();
     handle->port = port;
@@ -138,16 +128,27 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-bool OutputPortItem::updataValue(bool hasVisualizers)
+bool OutputPortItem::updataValue()
 {    
     if (!handle || !reader)
     {
         return false;
     }
     
-    if (!hasVisualizers && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded())
+    if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded())
     {
         return false;
+    }
+    
+    if (!reader->connected())
+    {
+        RTT::ConnPolicy policy(RTT::ConnPolicy::data());
+        policy.pull = true;
+        if(!reader->connectTo(handle->port, policy))
+        {
+            LOG_ERROR_S << "OutputPortItem: Error could not connect reader to port " + handle->port->getName() + " of task " + handle->port->getInterface()->getOwner()->getName();
+            return false;
+        }
     }
     
     if (!(reader->read(handle->sample) == RTT::NewData))
@@ -169,7 +170,13 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
     
     if (!item)
     {   
+        while (nameItem->rowCount() > 0)
+        {
+            nameItem->takeRow(0);
+        }
+        
         item = getItem(val, this->nameItem, this->valueItem);
+        std::cout << "OutputPortItem::updataValue.." << std::endl;
         return item->update(val, true, true);
     }
     
@@ -178,9 +185,5 @@ bool OutputPortItem::updataValue(bool hasVisualizers)
 
 const std::string& OutputPortItem::getType()
 {
-    if(!reader->getTypeInfo())
-    {
-        throw std::runtime_error("Internal error, not typeInfo available");
-    }
-    return reader->getTypeInfo()->getTypeName();
+    return typeInfo;
 }

@@ -8,7 +8,7 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     : task(_task),
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
-      refreshPorts(false),
+      refreshPorts(true),
       stateChanged(false)
 {
     inputPorts.setText("InputPorts");
@@ -99,7 +99,7 @@ bool TaskItem::update()
 
     // check for port update
     bool hasVis = hasVisualizers();
-    if (!hasVis && !refreshPorts && !ports.empty() && !nameItem.isExpanded())
+    if (!hasVis && !nameItem.isExpanded())
     {
         return needsUpdate;
     }
@@ -112,8 +112,9 @@ bool TaskItem::update()
 bool TaskItem::updatePorts(bool hasVisualizers)
 {
     bool needsUpdate = false;
+    bool refreshedOutputPorts = false;
     
-    if (refreshPorts || hasVisualizers || ports.empty() || outputPorts.isExpanded())
+    if (ports.empty() || hasVisualizers || outputPorts.isExpanded())
     {
         const RTT::DataFlowInterface *dfi = task->ports();
 
@@ -129,6 +130,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 {
                     item = new OutputPortItem(outIf);
                     outputPorts.appendRow(item->getRow());
+                    item->getNameItem()->appendRow({new QStandardItem(QString("loading..")), new QStandardItem()});
                 }
                 else
                 {
@@ -144,18 +146,23 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 item = it->second;
             }
 
-            if (outIf)
+            if ((item->hasVisualizers() || outputPorts.isExpanded()) && outIf)
             {
                 OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
+                
                 if (refreshPorts)
                 {
                     outPortItem->updateOutputPortInterface(outIf);
+                    refreshedOutputPorts = true;
                 }
                 
-                needsUpdate |= outPortItem->updataValue(hasVisualizers);
+                needsUpdate |= outPortItem->updataValue();
             }
         }
-        
+    }
+    
+    if (refreshedOutputPorts)
+    {
         refreshPorts = false;
     }
     

@@ -167,7 +167,7 @@ Array::~Array()
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = (this->name->isExpanded() && updateUI) | forceUpdate;
+    bool updateNecessary = forceUpdate || (this->name->isExpanded() && updateUI);
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     
     void *data = valueIn.getData();
@@ -204,7 +204,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
         childRet |= children[i]->update(arrayV, updateNecessary);
     }
-    updateNecessary &= childRet;
+    updateNecessary |= childRet;
     
     for (int i = currentRows; i < numElemsToDisplay; i++)
     {
@@ -265,9 +265,9 @@ std::string getValue(const Typelib::Value& value)
 
 bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = updateUI || forceUpdate;
+    bool updateNecessary = forceUpdate || updateUI;
     
-    if (!updateUI)
+    if (!updateNecessary)
     {
         return false;
     }
@@ -366,7 +366,7 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         }
     }
     
-    return false;
+    return updateNecessary;
 }
 
 void Complex::addPlugin(const std::string& name, VizHandle handle)
@@ -422,7 +422,7 @@ Complex::~Complex()
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {   
-    bool updateNecessary = (updateUI && this->name->isExpanded()) || forceUpdate;
+    bool updateNecessary = forceUpdate || (updateUI && this->name->isExpanded());
     const Typelib::Type &type(valueIn.getType());
     
     if (!visualizers.empty() && transport)
@@ -458,7 +458,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             childRet |= children[i]->update(fieldV, updateNecessary);           
             i++;
         }
-        updateNecessary &= childRet;
+        updateNecessary |= childRet;
     }
     else
     {
@@ -525,7 +525,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
             childRet |= children[i]->update(elem, updateNecessary);
         }
-        updateNecessary &= childRet; 
+        updateNecessary |= childRet; 
         
         // case new vector size is bigger
         // append new rows

@@ -258,6 +258,7 @@ void TaskModel::updateTaskItem(TaskItem *item)
     {
         if (item->update())
         {
+            std::cout << "item " << item->getRow().first()->text().toStdString() << std::endl;
             emit dataChanged(item->updateLeft(), item->updateRight());
         }
     }
