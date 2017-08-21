@@ -55,10 +55,18 @@ MainWindow::MainWindow(QWidget *parent) :
     //sort plugins for easy readability 
     std::sort(plugins.begin(), plugins.end(), PluginHandleSortByPluginName(true));
     
+    std::vector<std::string> menuWidgets;
     for (const PluginHandle &handle: plugins)
     {
+        if (std::find(menuWidgets.begin(), menuWidgets.end(), handle.pluginName) != menuWidgets.end())
+        {
+            continue;
+        }
+        
         QSignalMapper* signalMapper = new QSignalMapper (this) ;
         QAction *act = ui->menuWidgets->addAction(handle.pluginName.c_str());
+        
+        menuWidgets.push_back(handle.pluginName);
 
         connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 

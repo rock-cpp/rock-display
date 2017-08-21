@@ -383,6 +383,10 @@ void Complex::addPlugin(const std::string& name, VizHandle handle)
         {
             marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-2);
         }
+        else if (boost::algorithm::ends_with(typeStr, "_m>"))
+        {
+            marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-3) + ">";
+        }
         
         if (marshalled2Typelib.find(typeStr) != marshalled2Typelib.end())
         {
@@ -429,7 +433,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     {           
         transport->setTypelibSample(transportHandle, valueIn);
         for (auto vizHandle : visualizers)
-        {   
+        {
             updateVisualizer(vizHandle.second, sample);
         }
     }
