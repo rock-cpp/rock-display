@@ -24,8 +24,6 @@ DEPS_PKGCONFIG
     vizkit3d
     rock_widget_collection
     base-lib
-    envire_core
-    envire_maps
     tinyxml
 )
 add_definitions(-DBASE_LOG_INFO)
