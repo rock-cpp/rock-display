@@ -264,7 +264,7 @@ std::string getValue(const Typelib::Value& value)
 }
 
 bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
-{    
+{
     bool updateNecessary = forceUpdate || updateUI;
     
     if (!updateNecessary)
@@ -285,63 +285,74 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     else if (type.getCategory() == Typelib::Type::Numeric)
     {
         const Typelib::Numeric &numeric(static_cast<const Typelib::Numeric &>(valueIn.getType()));
-        switch(numeric.getNumericCategory())
+        if (numeric.getName() == "/bool")
         {
-            case Typelib::Numeric::Float:
-                if(numeric.getSize() == sizeof(float))
-                {
-                    valueS = getValue<float>(valueIn);               
-                }
-                else
-                {
-                    valueS = getValue<double>(valueIn);               
-                }
-                break;
-            case Typelib::Numeric::SInt:
-                switch(numeric.getSize())
-                {
-                    case sizeof(int8_t):
-                        valueS = getValue<int8_t>(valueIn);               
-                        break;
-                    case sizeof(int16_t):
-                        valueS = getValue<int16_t>(valueIn);               
-                        break;
-                    case sizeof(int32_t):
-                        valueS = getValue<int32_t>(valueIn);               
-                        break;
-                    case sizeof(int64_t):
-                        valueS = getValue<int64_t>(valueIn);               
-                        break;
-                    default:
-                        LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
-                        return false;
-                }
-                break;
-            case Typelib::Numeric::UInt:
+            bool *boolVal = static_cast<bool *>(valueIn.getData());
+            if (boolVal)
             {
-                switch(numeric.getSize())
-                {
-                    case sizeof(uint8_t):
-                        valueS = getValue<uint8_t>(valueIn);               
-                        break;
-                    case sizeof(uint16_t):
-                        valueS = getValue<uint16_t>(valueIn);               
-                        break;
-                    case sizeof(uint32_t):
-                        valueS = getValue<uint32_t>(valueIn);               
-                        break;
-                    case sizeof(uint64_t):
-                        valueS = getValue<uint64_t>(valueIn);               
-                        break;
-                    default:
-                        LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
-                        return false;
-                }
+                valueS = (*boolVal ? "true" : "false");
             }
-                break;
-            case Typelib::Numeric::NumberOfValidCategories:
-                LOG_ERROR_S << "Internal Error: Got invalid Category";
-                return false;
+        }
+        else
+        {
+            switch(numeric.getNumericCategory())
+            {
+                case Typelib::Numeric::Float:
+                    if(numeric.getSize() == sizeof(float))
+                    {
+                        valueS = getValue<float>(valueIn);               
+                    }
+                    else
+                    {
+                        valueS = getValue<double>(valueIn);               
+                    }
+                    break;
+                case Typelib::Numeric::SInt:
+                    switch(numeric.getSize())
+                    {
+                        case sizeof(int8_t):
+                            valueS = getValue<int8_t>(valueIn);               
+                            break;
+                        case sizeof(int16_t):
+                            valueS = getValue<int16_t>(valueIn);               
+                            break;
+                        case sizeof(int32_t):
+                            valueS = getValue<int32_t>(valueIn);               
+                            break;
+                        case sizeof(int64_t):
+                            valueS = getValue<int64_t>(valueIn);               
+                            break;
+                        default:
+                            LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
+                            return false;
+                    }
+                    break;
+                case Typelib::Numeric::UInt:
+                {
+                    switch(numeric.getSize())
+                    {
+                        case sizeof(uint8_t):
+                            valueS = getValue<uint8_t>(valueIn);               
+                            break;
+                        case sizeof(uint16_t):
+                            valueS = getValue<uint16_t>(valueIn);               
+                            break;
+                        case sizeof(uint32_t):
+                            valueS = getValue<uint32_t>(valueIn);               
+                            break;
+                        case sizeof(uint64_t):
+                            valueS = getValue<uint64_t>(valueIn);               
+                            break;
+                        default:
+                            LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
+                            return false;
+                    }
+                }
+                    break;
+                case Typelib::Numeric::NumberOfValidCategories:
+                    LOG_ERROR_S << "Internal Error: Got invalid Category";
+                    return false;
+            }
         }
     }
     else
@@ -425,7 +436,7 @@ Complex::~Complex()
 }
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
-{   
+{       
     bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
     
