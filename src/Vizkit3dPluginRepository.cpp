@@ -37,6 +37,12 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             QObject *plugin = factory->createPlugin(pName);
             LOG_INFO_S << "plugin " << pName.toStdString();
             
+            if(!plugin)
+            {
+                std::cout << "warning: couldn't load plugin " << pName.toStdString() << std::endl;
+                continue;
+            }
+            
             const QMetaObject *metaPlugin = plugin->metaObject();
         
             for(int i = 0 ; i < metaPlugin->methodCount(); i++)
