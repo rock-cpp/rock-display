@@ -1,5 +1,6 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include <base-logging/Logging.hpp>
+#include <iostream>
 
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
 {

@@ -44,7 +44,7 @@ void handleSigInt(int v)
 
 int main(int argc, char** argv)
 {
-    typeReg.loadTypelist();
+    typeReg.loadTypeRegistries();
     RTT::corba::ApplicationServer::InitOrb(argc, argv);
 
     QApplication app(argc, argv);
