@@ -17,7 +17,6 @@
 #include <base-logging/Logging.hpp>
 
 orocos_cpp::TypeRegistry typeReg;
-MainWindow *w;
 
 bool loadTypkekit(const std::string &typeName)
 {
@@ -35,33 +34,18 @@ bool loadTypkekit(const std::string &typeName)
     return false;
 }
 
-void handleSigInt(int v)
-{
-    delete w;
-    QApplication::quit();
-    exit(0);
-}
-
 int main(int argc, char** argv)
 {
     typeReg.loadTypeRegistries();
     RTT::corba::ApplicationServer::InitOrb(argc, argv);
 
     QApplication app(argc, argv);
-
-    w = new MainWindow();
-    w->show();
+    MainWindow w;
+    w.show();
 
     RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
     boost::function<bool (const std::string &)> f(&loadTypkekit);
     ti->setAutoLoader(f);
-    
-    struct sigaction mainWindowSigIntHandler;
-    mainWindowSigIntHandler.sa_handler = handleSigInt;
-    sigemptyset(&mainWindowSigIntHandler.sa_mask);
-    mainWindowSigIntHandler.sa_flags = 0;
-    sigaction(SIGTERM, &mainWindowSigIntHandler, NULL);
-    sigaction(SIGINT, &mainWindowSigIntHandler, NULL);
-    
+
     return app.exec();
 }
