@@ -92,11 +92,6 @@ public:
         return pluginRepo;
     }
     
-    void sigIntHandler(int sig)
-    {
-        cleanup();
-    }
-
 public slots:
     void prepareMenu(const QPoint &pos);
     void handleOutputPort(QObject *obj);
