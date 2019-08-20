@@ -99,11 +99,6 @@ void MainWindow::sortTasks()
     view->sortByColumn(0, view->header()->sortIndicatorOrder());
 }
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
-    cleanup();
-    QWidget::closeEvent(event);
-}
 
 AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
 {
