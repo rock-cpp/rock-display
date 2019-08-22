@@ -5,6 +5,7 @@
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include "TaskModel.hpp"
+#include "NameServiceModel.hpp"
 #include "Vizkit3dPluginRepository.hpp"
 #include <vizkit3d/Vizkit3DWidget.hpp>
 #include <thread>
