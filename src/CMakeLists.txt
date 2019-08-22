@@ -1,6 +1,7 @@
 rock_library(rock-display
 SOURCES
     TaskModel.cpp
+    TaskModelNotifier.cpp
     NameServiceModel.cpp
     PortItem.cpp
     TaskItem.cpp
@@ -11,6 +12,7 @@ SOURCES
     VisualizerAdapter.cpp
 MOC
     TaskModel.hpp
+        TaskModelNotifier.hpp
     NameServiceModel.hpp
     Mainwindow.hpp
     Types.hpp
