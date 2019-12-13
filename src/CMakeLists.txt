@@ -1,3 +1,6 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 rock_library(rock-display
 SOURCES
     TaskModel.cpp
@@ -22,8 +25,9 @@ UI
     task_inspector_window.ui
 DEPS_PKGCONFIG
     orocos_cpp
-    QtCore
-    QtGui
+    Qt5Core
+    Qt5Gui
+    Qt5Widgets
     lib_config
     vizkit3d
     rock_widget_collection
@@ -37,8 +41,9 @@ DEPS
     rock-display
 DEPS_PKGCONFIG
     orocos_cpp
-    QtCore
-    QtGui
+    Qt5Core
+    Qt5Gui
+    Qt5Widgets
 UI
     task_inspector_window.ui
 )

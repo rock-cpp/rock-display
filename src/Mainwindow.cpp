@@ -345,7 +345,7 @@ void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
                 continue;
             }
             
-            std::string signature = method.signature();
+            std::string signature = method.methodSignature().toStdString();
             std::string methodStr("setFrame");
             if (signature.size() > methodStr.size() && signature.substr(0, methodStr.size()) == methodStr)
             {

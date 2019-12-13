@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Vizkit3dPluginRepository.hpp"
-#include <Qt/qobject.h>
+#include <QObject>
 #include <map>
 #include <rtt/base/DataSourceBase.hpp>
 

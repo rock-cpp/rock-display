@@ -4,6 +4,7 @@
 #include <QTreeWidget>
 #include <QStandardItem>
 #include <QStandardItemModel>
+#include <QDialog>
 #include "TaskModel.hpp"
 #include "NameServiceModel.hpp"
 #include "Vizkit3dPluginRepository.hpp"
