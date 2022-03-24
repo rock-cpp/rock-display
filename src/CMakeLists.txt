@@ -1,3 +1,6 @@
+rock_find_qt5(REQUIRED Gui Core Widgets)
+
+
 rock_library(rock-display
 SOURCES
     TaskModel.cpp
@@ -12,7 +15,7 @@ SOURCES
     VisualizerAdapter.cpp
 MOC
     TaskModel.hpp
-        TaskModelNotifier.hpp
+    TaskModelNotifier.hpp
     NameServiceModel.hpp
     Mainwindow.hpp
     Types.hpp
@@ -22,13 +25,14 @@ UI
     task_inspector_window.ui
 DEPS_PKGCONFIG
     orocos_cpp
-    QtCore
-    QtGui
     lib_config
     vizkit3d
     rock_widget_collection
     base-lib
     tinyxml
+LIBS Qt5::Core
+     Qt5::Gui
+     Qt5::Widgets
 )
 add_definitions(-DBASE_LOG_INFO)
 
@@ -37,8 +41,10 @@ DEPS
     rock-display
 DEPS_PKGCONFIG
     orocos_cpp
-    QtCore
-    QtGui
+LIBS
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Widgets
 UI
     task_inspector_window.ui
 )

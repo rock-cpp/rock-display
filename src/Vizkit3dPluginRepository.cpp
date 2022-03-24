@@ -53,7 +53,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 if(parameterList.size() != 1)
                     continue;
                 
-                std::string signature = method.signature();
+                std::string signature = method.methodSignature().toStdString();
                 std::string update("update");
                 
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
