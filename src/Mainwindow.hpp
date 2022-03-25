@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QDialog>
 #include <QTreeWidget>
 #include <QStandardItem>
 #include <QStandardItemModel>
