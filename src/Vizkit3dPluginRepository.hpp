@@ -4,7 +4,7 @@
 #include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <string>
 #include <algorithm>
-
+#include <typelib/registry.hh>
 #include <QObject>
 
 class VizHandle
@@ -52,7 +52,7 @@ public:
     
     VizHandle getNewVizHandle(const PluginHandle &handle);
     
-    const std::vector<PluginHandle> &getPluginsForType(const std::string &type);
+    const std::vector<PluginHandle> &getPluginsForType(const std::string &type, const Typelib::Registry* registry = NULL);
     
     const std::vector<PluginHandle> getAllAvailablePlugins();
 };
