@@ -46,6 +46,8 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             
             const QMetaObject *metaPlugin = plugin->metaObject();
         
+            bool foundUpdateFunctions = false;
+            
             for(int i = 0 ; i < metaPlugin->methodCount(); i++)
             {
                 QMetaMethod method = metaPlugin->method(i);
@@ -54,10 +56,11 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                     continue;
                 
                 std::string signature = method.signature();
-                std::string update("update");
+                static const std::string update("update");
                 
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
+                    foundUpdateFunctions = true;
                     handle.typeName = parameterList[0].data();
                     //getPluginsForType expects type names without prefix "::". moc keeps them as given.
                     handle.typeName = boost::regex_replace(handle.typeName, boost::regex("^::"), "");
@@ -65,7 +68,11 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                     typeMap[handle.typeName] = handle;
                 }
             }      
-            
+
+            if (!foundUpdateFunctions)
+            {
+                LOG_WARN_S << "Vizkit3dPluginRepository: no update functions found in " << libPath << "..";
+            }
             
             delete plugin;
             
