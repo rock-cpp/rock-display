@@ -246,6 +246,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::OUTPUTPORT:
             {
                 std::string typeName = "";
+                const Typelib::Registry* registry = NULL;
                 VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
                 
                 if (ti->type() == ItemType::CONFIGITEM)
@@ -254,7 +255,11 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 }
                 else
                 {
-                    typeName = static_cast<OutputPortItem*>(ti->getData())->getType();
+                    auto outputitem = static_cast<OutputPortItem*>(ti->getData());
+                    RTT::types::TypeInfo const *type = outputitem->getPort()->getTypeInfo();
+                    typeName = type->getTypeName();
+                    auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+                    registry = &transport->getRegistry();
                 }
                 
                 if (ItemBase::marshalled2Typelib.find(typeName) != ItemBase::marshalled2Typelib.end())
@@ -262,7 +267,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     typeName = ItemBase::marshalled2Typelib[typeName];
                 }
                 
-                std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName);
+                std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName, registry);
                 for (PluginHandle additionalPlugin: additionalPlugins)
                 {
                     if (additionalPlugin.typeName == typeName)

@@ -1,6 +1,7 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include <base-logging/Logging.hpp>
 #include <iostream>
+#include <boost/regex.hpp>
 
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
 {
@@ -95,8 +96,7 @@ VizHandle Vizkit3dPluginRepository::getNewVizHandle(const PluginHandle& handle)
     return newHandle;
 }
 
-#include <boost/regex.hpp>
-const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type)
+const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type, const Typelib::Registry* registry)
 {
     if(type.empty())
         return empty;
