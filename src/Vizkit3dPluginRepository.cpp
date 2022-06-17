@@ -101,6 +101,7 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
     if(type.empty())
         return empty;
 
+    //try for a direct match first
     std::string dottedType = type.substr(1, type.size());
     dottedType = boost::regex_replace(dottedType, boost::regex("_m"), "");
     dottedType = boost::regex_replace(dottedType, boost::regex("</"), "<");
@@ -109,13 +110,63 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
     dottedType = boost::regex_replace(dottedType, boost::regex(">>"), "> >");
  
     auto it = typeToPlugins.find(dottedType);
-    
-    if (it == typeToPlugins.end())
+    if (it != typeToPlugins.end())
     {
-       return empty;
+        return it->second;
     }
 
-    return it->second;    
+    if(!registry)
+    {
+        return empty;
+    }
+
+    //if there is a typelib registry, try using its isSame method
+    auto typelibType = registry->get(type);
+    if(!typelibType)
+    {
+        LOG_WARN_S << "Vizkit3dPluginRepository: could not find typelib type for " << type << " ..";
+        return empty;
+    }
+
+    std::vector< PluginHandle > resultset;
+    for(const auto &h: typeToPlugins)
+    {
+        std::string pluginTypeName = h.first;
+        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("> >"), ">>");
+        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("::"), "/");
+        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("<"), "</");
+        pluginTypeName = std::string("/")+pluginTypeName;
+
+        auto pluginType = registry->get(pluginTypeName);
+        if (!pluginType)
+        {
+            //these are normal, the types for these plugins are not used in this deployment.
+            //no harm either, we do not remember a negative result from this.
+            //the scenario for a failure here would be: one registry is used for the sample and lookup here,
+            //that does not contain the typedef pluginTypeName refers to.
+            //another registry has the typedef, but now the basename already has typeToPlugins populated and
+            //the (now possible) resolution of the typedef is not found.
+            LOG_DEBUG_S << "Vizkit3dPluginRepository: could not find typelib type for " << pluginTypeName << " ..";
+        }
+
+        if (pluginType && typelibType->isSame(*pluginType))
+        {
+            resultset.insert(resultset.end(), h.second.begin(), h.second.end());
+        }
+    }
+
+    //if the result depends on the used registry, typeToPlugins should not be populated,
+    //but that seems unlikely
+    if(resultset.empty())
+    {
+        typeToPlugins[dottedType] = empty;
+    }
+    else
+    {
+        typeToPlugins[dottedType] = resultset;
+    }
+
+    return typeToPlugins[dottedType];
 }
 
 const std::vector<PluginHandle> Vizkit3dPluginRepository::getAllAvailablePlugins()
