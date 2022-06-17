@@ -139,7 +139,6 @@ void TaskModel::updateTaskItem(TaskItem *item)
     {
         if (item->update())
         {
-            std::cout << "data changed" << std::endl;
             emit dataChanged(item->updateLeft(), item->updateRight());
         }
     }
