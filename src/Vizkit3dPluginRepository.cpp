@@ -108,14 +108,6 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
     dottedType = boost::regex_replace(dottedType, boost::regex("\\s\\[.*\\]"), "");
     dottedType = boost::regex_replace(dottedType, boost::regex(">>"), "> >");
  
-    for(const auto &h: typeToPlugins)
-    {
-        if(h.first == dottedType)
-        {
-            return h.second;
-        }
-    }
-    
     auto it = typeToPlugins.find(dottedType);
     
     if (it == typeToPlugins.end())
