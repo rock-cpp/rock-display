@@ -59,6 +59,8 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
                     handle.typeName = parameterList[0].data();
+                    //getPluginsForType expects type names without prefix "::". moc keeps them as given.
+                    handle.typeName = boost::regex_replace(handle.typeName, boost::regex("^::"), "");
                     handle.method = method;
                     typeMap[handle.typeName] = handle;
                 }
