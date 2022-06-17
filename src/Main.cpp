@@ -24,6 +24,8 @@ int main(int argc, char** argv)
     config.load_all_packages = true;
     orocos.initialize(config);
 
+    base::logging::Logger::getInstance()->configure(base::logging::DEBUG, stdout);
+
     QApplication app(argc, argv);
     MainWindow w;
     w.show();
