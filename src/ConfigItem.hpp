@@ -35,7 +35,6 @@ protected:
     TypedItem *value;
     QTextCodec *codec;
     
-    QTextCodec::ConverterState state;
     std::vector<std::shared_ptr<ItemBase> > children;
     
 public:

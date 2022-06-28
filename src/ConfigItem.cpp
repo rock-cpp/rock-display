@@ -408,6 +408,7 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     {
         if (codec)
         {
+            QTextCodec::ConverterState state;
             const QString text = codec->toUnicode(valueS.c_str(), valueS.size(), &state);
             
             if (state.invalidChars > 0)
@@ -531,6 +532,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             
             if (codec)
             {
+                QTextCodec::ConverterState state;
                 const QString text = codec->toUnicode(content.c_str(), content.size(), &state);
                 if (state.invalidChars > 0)
                 {
