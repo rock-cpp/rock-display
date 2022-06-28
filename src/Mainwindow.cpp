@@ -7,6 +7,7 @@
 #include <QCloseEvent>
 #include <rock_widget_collection/RockWidgetCollection.h>
 #include <rtt/base/DataSourceBase.hpp>
+#include "NameServiceItemDelegate.hpp"
 
 void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
 {
@@ -63,6 +64,9 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<VizHandle>("VizHandle");
     qRegisterMetaType<RTT::base::DataSourceBase::shared_ptr>("RTT::base::DataSourceBase::shared_ptr");
     view->setModel(model);
+
+    NameServiceItemDelegate *delegate = new NameServiceItemDelegate(this);
+    view->setItemDelegate(delegate);
 
     auto *list = widget3d.getAvailablePlugins();    
     pluginRepo = new Vizkit3dPluginRepository(*list);
