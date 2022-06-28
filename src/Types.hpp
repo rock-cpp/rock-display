@@ -3,7 +3,11 @@
 #include <QObject>
 #include "Vizkit3dPluginRepository.hpp"
 
-enum ItemType {TASK = 1001, OUTPUTPORT = 1002, INPUTPORT = 1003, CONFIGITEM = 1004, NAMESERVICE = 1005 };
+enum ItemType {TASK          = QStandardItem::UserType+1,   //1001
+               OUTPUTPORT    = QStandardItem::UserType+2,
+               INPUTPORT     = QStandardItem::UserType+3,
+               CONFIGITEM    = QStandardItem::UserType+4,
+               NAMESERVICE   = QStandardItem::UserType+5 };
 
 class TypedItem;
 
