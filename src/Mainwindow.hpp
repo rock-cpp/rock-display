@@ -21,48 +21,6 @@ namespace RTT {
     }
 }
 
-class UIUpdater : public QObject
-{
-    Q_OBJECT
-
-public:
-    UIUpdater(NameServiceModel *model)
-        : model(model)
-    {
-    }
-    
-    virtual ~UIUpdater()
-    {
-    }
-    
-signals:
-    void finished();
-    
-public slots:
-    void run()
-    {
-        isRunning = true;
-            
-        while (isRunning)
-        {
-            model->updateTasks();
-            usleep(20000);
-        }
-        
-        model->waitForTerminate();
-        emit finished();
-    }
-    
-    void stop()
-    {
-        isRunning = false;
-    }
-    
-private:
-    NameServiceModel *model;
-    bool isRunning;
-};
-
 class AddNameServiceDialog : public QDialog
 {
     Q_OBJECT
@@ -126,8 +84,7 @@ private:
     MyVizkit3DWidget widget3d;
     std::vector<PluginHandle> additionalPlugins;
     Ui::MainWindow *ui;
-    QThread *taskUpdater;
-    UIUpdater *uiUpdater;
+    QTimer *uiUpdateTimer;
     QTreeView *view;
     NameServiceModel *model;
     RTT::corba::TaskContextProxy *task;

@@ -38,18 +38,22 @@ TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
     }
     
     qRegisterMetaType<std::string>("std::string");
-    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
-                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
-    
+
     notifierThread = new QThread();
     
-    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()));
+    notifier->moveToThread(notifierThread);
+
+    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
+                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
+                      Qt::QueuedConnection
+           );
+
+    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()), Qt::DirectConnection);
     connect(notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
     connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
-    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::DirectConnection);
-    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::DirectConnection);
+    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::QueuedConnection);
+    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::QueuedConnection);
     
-    notifier->moveToThread(notifierThread);
 }
 
 TaskModel::~TaskModel()
@@ -86,7 +90,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
 {
     TaskItem *item = nullptr;
     
-    nameToItemMutex.lock();
     std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
     if (itemIt == nameToItem.end())
     {
@@ -120,7 +123,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     {
         // reset task item and its output ports on disconnect
         item->reset();
-        nameToItemMutex.unlock();
         return;
     }
     
@@ -131,7 +133,6 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     }
     
     updateTaskItem(item);
-    nameToItemMutex.unlock();
 }
 
 void TaskModel::updateTaskItem(TaskItem *item)
@@ -172,11 +173,9 @@ QList< QStandardItem* > TaskModel::getRow()
 
 void TaskModel::updateTaskItems()
 {
-    nameToItemMutex.lock();
-    for (std::map<std::string, TaskItem *>::iterator itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
     {
         updateTaskItem(itemIter->second);
     }
-    nameToItemMutex.unlock();
 }
 

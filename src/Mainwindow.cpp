@@ -101,14 +101,10 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(ui->actionAdd_name_service, SIGNAL(triggered()), this, SLOT(addNameService()));
     
-    taskUpdater = new QThread();
-    uiUpdater = new UIUpdater(model);
-    connect(taskUpdater, SIGNAL(started()), uiUpdater, SLOT(run()));
-    connect(uiUpdater, SIGNAL(finished()), taskUpdater, SLOT(quit()));
-    connect(taskUpdater, SIGNAL(finished()), taskUpdater, SLOT(deleteLater()));
-    connect(this, SIGNAL(stopUIUpdater()), uiUpdater, SLOT(stop()), Qt::DirectConnection);
-    uiUpdater->moveToThread(taskUpdater);
-    taskUpdater->start();
+    uiUpdateTimer = new QTimer(this);
+    connect(uiUpdateTimer, &QTimer::timeout,
+            model, &NameServiceModel::updateTasks);
+    uiUpdateTimer->start(20);
     
     nameServiceDialog = new AddNameServiceDialog();
     connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model, SLOT(addNameService(const std::string &)));
@@ -187,14 +183,9 @@ void MainWindow::openPlugin(QObject *obj)
 
 void MainWindow::cleanup()
 {   
-    emit stopUIUpdater();
+    uiUpdateTimer->stop();
+
     emit stopNotifier();
-    
-    taskUpdater->quit();
-    if (taskUpdater->wait(500))
-    {
-        taskUpdater->terminate();
-    }
     
     removeAllPlugins();
     widget3d.close();

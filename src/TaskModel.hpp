@@ -19,7 +19,6 @@ class TaskModel : public QObject
     QStandardItem tasks;
 
     std::map<std::string, TaskItem *> nameToItem;
-    std::mutex nameToItemMutex;
     
     void updateTaskItem(TaskItem *item);
     
