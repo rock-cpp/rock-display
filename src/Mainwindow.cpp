@@ -273,6 +273,25 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 const Typelib::Registry* registry = NULL;
                 VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
                 
+                QModelIndex pi = mi;
+                while(pi.isValid()) {
+                    TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
+                    if (!(pti))
+                        break;
+                    if (pti->type() == ItemType::OUTPUTPORT)
+                    {
+                        RTT::types::TypeInfo const *type = nullptr;
+                        auto outputitem = static_cast<OutputPortItem*>(pti->getData());
+                        type = outputitem->getPort()->getTypeInfo();
+                        auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+                        registry = &transport->getRegistry();
+                        break;
+                    }
+                    if (pti->type() != ItemType::CONFIGITEM && pti->type() != ItemType::EDITABLEITEM)
+                        break;
+                    pi = pi.parent();
+                }
+
                 if (ti->type() == ItemType::CONFIGITEM)
                 {
                     typeName = static_cast<ItemBase *>(ti->getData())->getRow().last()->text().toStdString();
@@ -282,8 +301,6 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     auto outputitem = static_cast<OutputPortItem*>(ti->getData());
                     RTT::types::TypeInfo const *type = outputitem->getPort()->getTypeInfo();
                     typeName = type->getTypeName();
-                    auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
-                    registry = &transport->getRegistry();
                 }
                 
                 if (ItemBase::marshalled2Typelib.find(typeName) != ItemBase::marshalled2Typelib.end())
