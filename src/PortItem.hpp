@@ -73,3 +73,20 @@ public:
     
     void reset();
 };
+
+class InputPortItem : public PortItem
+{
+    PortHandle *handle;
+    RTT::base::OutputPortInterface *writer;
+
+public:
+    InputPortItem(RTT::base::InputPortInterface* port);
+    virtual ~InputPortItem();
+    bool updataValue();
+
+    void updateInputPortInterface(RTT::base::InputPortInterface* port);
+    const std::string &getType();
+    RTT::base::PortInterface* getPort();
+
+    void reset();
+};

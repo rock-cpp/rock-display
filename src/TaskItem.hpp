@@ -19,7 +19,8 @@ private:
     RTT::corba::TaskContextProxy *task;
     TypedItem nameItem;
     TypedItem statusItem;
-    bool refreshPorts;
+    bool refreshOutputPorts;
+    bool refreshInputPorts;
     TypedItem inputPorts;
     TypedItem outputPorts;
     TypedItem properties;
@@ -36,7 +37,8 @@ public:
     
     void setRefreshPorts(bool refresh=true)
     {
-        this->refreshPorts = refresh;
+        this->refreshOutputPorts = refresh;
+        this->refreshInputPorts = refresh;
     }
 
     bool update();

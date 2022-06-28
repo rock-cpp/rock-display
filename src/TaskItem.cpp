@@ -8,7 +8,8 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
     : task(_task),
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
-      refreshPorts(true),
+      refreshOutputPorts(true),
+      refreshInputPorts(true),
       stateChanged(false)
 {
     inputPorts.setText("InputPorts");
@@ -107,8 +108,9 @@ bool TaskItem::updatePorts(bool hasVisualizers)
 {
     bool needsUpdate = false;
     bool refreshedOutputPorts = false;
+    bool refreshedInputPorts = false;
     
-    if (ports.empty() || hasVisualizers || outputPorts.isExpanded())
+    if (ports.empty() || hasVisualizers || outputPorts.isExpanded() || inputPorts.isExpanded())
     {
         const RTT::DataFlowInterface *dfi = task->ports();
 
@@ -116,6 +118,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
         {
             const std::string portName(pi->getName());
             RTT::base::OutputPortInterface *outIf = dynamic_cast<RTT::base::OutputPortInterface *>(pi);
+            RTT::base::InputPortInterface *inIf = dynamic_cast<RTT::base::InputPortInterface *>(pi);
             auto it = ports.find(portName);
             PortItem *item = nullptr;
             if (it == ports.end())
@@ -124,12 +127,22 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 {
                     item = new OutputPortItem(outIf);
                     outputPorts.appendRow(item->getRow());
-                    item->getNameItem()->appendRow({new QStandardItem(QString("loading..")), new QStandardItem()});
+                    item->getNameItem()->appendRow({new QStandardItem(QString("waiting for data..")), new QStandardItem()});
+                }
+                else if (inIf)
+                {
+                    auto inPortItem = new InputPortItem(inIf);
+                    item = inPortItem;
+                    inputPorts.appendRow(item->getRow());
+                    //the QStandardModel becomes confused when items are added later when there were none
+                    //at the start.
+                    item->getNameItem()->appendRow({new QStandardItem(QString("no elements(yet)")), new QStandardItem()});
                 }
                 else
                 {
+                    LOG_WARN_S << "found port item that is neither input nor output";
+                    //should not happen i guess?
                     item = new PortItem(pi->getName());
-                    inputPorts.appendRow(item->getRow());
                 }
                 
                 ports.insert(std::make_pair(portName, item));
@@ -144,7 +157,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
             {
                 OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
                 
-                if (refreshPorts)
+                if (refreshOutputPorts)
                 {
                     outPortItem->updateOutputPortInterface(outIf);
                     refreshedOutputPorts = true;
@@ -152,12 +165,28 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 
                 needsUpdate |= outPortItem->updataValue();
             }
+            if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
+            {
+                InputPortItem *inPortItem = static_cast<InputPortItem *>(item);
+
+                if (refreshInputPorts)
+                {
+                    inPortItem->updateInputPortInterface(inIf);
+                    refreshedInputPorts = true;
+                }
+
+                needsUpdate |= inPortItem->updataValue();
+            }
         }
     }
     
     if (refreshedOutputPorts)
     {
-        refreshPorts = false;
+        refreshOutputPorts = false;
+    }
+    if (refreshedInputPorts)
+    {
+        refreshInputPorts = false;
     }
     
     return needsUpdate;
