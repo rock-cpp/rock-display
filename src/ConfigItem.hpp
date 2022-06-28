@@ -47,6 +47,8 @@ public:
     virtual bool hasVisualizers();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
+    virtual Typelib::Value& getValueHandle();
+
     void setName(const QString &newName)
     {
         name->setText(newName);
@@ -76,17 +78,49 @@ public:
     static std::map<std::string, std::string> lookupMarshalledTypelistTypes();
 };
 
+/** Returns a static ItemBase config item
+ *
+ * @param value      Used to populate initial values.
+ * @param nameItem   TypedItem to use for name column. Will be generated if nullptr.
+ * @param valueItem  TypedItem to use for value column. Will be generated if nullptr.
+ * @return  One of Array, Simple, Complex.
+ */
 std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
+
+/** Returns an editable ItemBase config item
+ *
+ * @param value      Used to store changed data. must be kept alive for the lifetime of the item.
+ * @param nameItem   TypedItem to use for name column. Will be generated if nullptr.
+ * @param valueItem  TypedItem to use for value column. Will be generated if nullptr.
+ * @return one of EditableArray, EditableSimple, EditableComplex.
+ */
+std::shared_ptr<ItemBase> getEditableItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
 
 class Array : public ItemBase
 {   
+protected:
     const int maxArrayElemsDisplayed = 500;
-    
+
+    virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const;
+
 public:
     Array(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
+};
+
+class EditableArray : public Array
+{
+private:
+    Typelib::Value value_handle;
+protected:
+    virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
+public:
+    EditableArray(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    virtual ~EditableArray();
+    virtual Typelib::Value& getValueHandle() override;
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class Simple : public ItemBase
@@ -98,18 +132,45 @@ public:
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
 };
 
+class EditableSimple : public Simple
+{
+private:
+    Typelib::Value value_handle;
+public:
+    EditableSimple(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    virtual ~EditableSimple();
+    virtual Typelib::Value& getValueHandle() override;
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+};
+
 class Complex : public ItemBase
 {
+protected:
     const int maxVectorElemsDisplayed = 500;
     orogen_transports::TypelibMarshallerBase *transport;
     orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
     RTT::base::DataSourceBase::shared_ptr sample;
     const Typelib::Type &typelibType;
-    
+
+    virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const;
+
 public:
     Complex(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
     virtual void addPlugin(const std::string &name, VizHandle handle);
+};
+
+class EditableComplex : public Complex
+{
+private:
+    Typelib::Value value_handle;
+protected:
+    virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
+public:
+    EditableComplex(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    virtual ~EditableComplex();
+    virtual Typelib::Value& getValueHandle() override;
+    virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };

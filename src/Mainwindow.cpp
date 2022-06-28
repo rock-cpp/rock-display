@@ -278,7 +278,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                         registry = &transport->getRegistry();
                         break;
                     }
-                    if (pti->type() != ItemType::CONFIGITEM)
+                    if (pti->type() != ItemType::CONFIGITEM && pti->type() != ItemType::EDITABLEITEM)
                         break;
                     pi = pi.parent();
                 }

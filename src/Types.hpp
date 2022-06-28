@@ -7,7 +7,8 @@ enum ItemType {TASK          = QStandardItem::UserType+1,   //1001
                OUTPUTPORT    = QStandardItem::UserType+2,
                INPUTPORT     = QStandardItem::UserType+3,
                CONFIGITEM    = QStandardItem::UserType+4,
-               NAMESERVICE   = QStandardItem::UserType+5 };
+               NAMESERVICE   = QStandardItem::UserType+5,
+               EDITABLEITEM  = QStandardItem::UserType+6 };
 
 class TypedItem;
 

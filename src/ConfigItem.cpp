@@ -152,6 +152,12 @@ bool ItemBase::hasVisualizers()
     return false;
 }
 
+Typelib::Value& ItemBase::getValueHandle()
+{
+    static Typelib::Value novalue;
+    return novalue;
+}
+
 Array::Array(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {
@@ -160,6 +166,11 @@ Array::Array(TypedItem *name, TypedItem *value)
 Array::~Array()
 {
 
+}
+
+std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
+{
+    return ::getItem(value, nameItem, valueItem);
 }
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -225,6 +236,38 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     }
     
     return forceUpdate || updateNecessary || numElemsDisplayedChanged;
+}
+
+EditableArray::EditableArray(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+    : Array(name, value)
+    , value_handle(valueIn)
+{
+    if(!name || !value)
+    {
+        this->name->setType(ItemType::EDITABLEITEM);
+        this->value->setType(ItemType::EDITABLEITEM);
+    }
+}
+
+EditableArray::~EditableArray()
+{
+
+}
+
+Typelib::Value& EditableArray::getValueHandle()
+{
+    return value_handle;
+}
+
+std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
+{
+    return ::getEditableItem(value, nameItem, valueItem);
+}
+
+bool EditableArray::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+{
+    value_handle = valueIn;
+    return Array::update(valueIn, updateUI, forceUpdate);
 }
 
 Simple::Simple(TypedItem *name, TypedItem *value)
@@ -429,6 +472,35 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     return updateNecessary;
 }
 
+EditableSimple::EditableSimple(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+    : Simple(name, value)
+    , value_handle(valueIn)
+{
+    if(this->value)
+        this->value->setEditable(true);
+    if(!name || !value)
+    {
+        this->name->setType(ItemType::EDITABLEITEM);
+        this->value->setType(ItemType::EDITABLEITEM);
+    }
+}
+
+EditableSimple::~EditableSimple()
+{
+
+}
+
+Typelib::Value& EditableSimple::getValueHandle()
+{
+    return value_handle;
+}
+
+bool EditableSimple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+{
+    value_handle = valueIn;
+    return Simple::update(valueIn, updateUI, forceUpdate);
+}
+
 void Complex::addPlugin(const std::string& name, VizHandle handle)
 {
     VisualizerAdapter::addPlugin(name, handle);
@@ -479,6 +551,11 @@ Complex::Complex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
 Complex::~Complex()
 {
 
+}
+
+std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
+{
+    return ::getItem(value, nameItem, valueItem);
 }
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -629,6 +706,38 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     return forceUpdate || updateNecessary;
 }
 
+EditableComplex::EditableComplex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+    : Complex(valueIn, name, value)
+    , value_handle(valueIn)
+{
+    if(!name || !value)
+    {
+        this->name->setType(ItemType::EDITABLEITEM);
+        this->value->setType(ItemType::EDITABLEITEM);
+    }
+}
+
+EditableComplex::~EditableComplex()
+{
+}
+
+Typelib::Value& EditableComplex::getValueHandle()
+{
+    return value_handle;
+}
+
+
+std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
+{
+    return ::getEditableItem(value, nameItem, valueItem);
+}
+
+bool EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+{
+    value_handle = valueIn;
+    return Complex::update(valueIn, updateUI, forceUpdate);
+}
+
 std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
 {   
     const Typelib::Type &type(value.getType());
@@ -645,6 +754,33 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, 
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
             return std::shared_ptr<ItemBase>(new Complex(value, nameItem, valueItem));
+            break;
+        case Typelib::Type::NullType:
+        case Typelib::Type::Pointer:
+        case Typelib::Type::Opaque:
+        case Typelib::Type::NumberOfValidCategories:
+            break;
+    }
+
+    throw std::runtime_error("Internal Error");
+}
+
+std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
+{
+    const Typelib::Type &type(value.getType());
+
+    switch(type.getCategory())
+    {
+        case Typelib::Type::Array:
+            return std::shared_ptr<ItemBase>(new EditableArray(value, nameItem, valueItem));
+            break;
+        case Typelib::Type::Enum:
+        case Typelib::Type::Numeric:
+            return std::shared_ptr<ItemBase>(new EditableSimple(value, nameItem, valueItem));
+            break;
+        case Typelib::Type::Compound:
+        case Typelib::Type::Container:
+            return std::shared_ptr<ItemBase>(new EditableComplex(value, nameItem, valueItem));
             break;
         case Typelib::Type::NullType:
         case Typelib::Type::Pointer:
