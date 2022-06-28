@@ -84,7 +84,7 @@ class Array : public ItemBase
     const int maxArrayElemsDisplayed = 500;
     
 public:
-    Array(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    Array(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
@@ -93,7 +93,7 @@ public:
 class Simple : public ItemBase
 {
 public:
-    Simple(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);    
+    Simple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Simple();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);

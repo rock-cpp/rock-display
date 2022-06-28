@@ -152,12 +152,9 @@ bool ItemBase::hasVisualizers()
     return false;
 }
 
-Array::Array(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+Array::Array(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {
-    const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
-    this->value->setText(array.getName().c_str());
-    update(valueIn, true, true);
 }
 
 Array::~Array()
@@ -169,6 +166,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
     bool updateNecessary = this->name->isExpanded() && updateUI;
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
+    this->value->setText(array.getName().c_str());
     
     void *data = valueIn.getData();
     
@@ -213,7 +211,6 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             
         if (static_cast<int>(children.size()) > i)
         {
-            children[i]->update(arrayV, true, forceUpdate);
             child = children[i];
         }
         else
@@ -221,7 +218,8 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             child = getItem(arrayV);
             children.push_back(child);
         }
-        
+
+        child->update(arrayV, true, forceUpdate);
         child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
@@ -229,10 +227,9 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     return forceUpdate || updateNecessary || numElemsDisplayedChanged;
 }
 
-Simple::Simple(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+Simple::Simple(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {
-    update(valueIn, true, true);
 }
 
 Simple::~Simple()
@@ -471,9 +468,6 @@ Complex::Complex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
 {
     transport = nullptr;
     transportHandle = nullptr;
-
-    this->value->setText(valueIn.getType().getName().c_str());
-    update(valueIn, true, true);
 }
 
 Complex::~Complex()
@@ -485,7 +479,9 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {       
     bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
-    
+
+    this->value->setText(valueIn.getType().getName().c_str());
+
     if (!visualizers.empty() && transport)
     {           
         transport->setTypelibSample(transportHandle, valueIn);
@@ -512,8 +508,6 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 children.push_back(newVal);
                 name->appendRow(newVal->getRow());
                 childRet = true;
-                i++;
-                continue;
             }
 
             childRet |= children[i]->update(fieldV, updateNecessary, forceUpdate);           
@@ -596,7 +590,6 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             
             if (static_cast<int>(children.size()) > i)
             {
-                children[i]->update(elem, true, forceUpdate);
                 child = children[i];
             }
             else
@@ -604,7 +597,8 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 child = getItem(elem);
                 children.push_back(child);
             }
-            
+
+            child->update(elem, true, forceUpdate);
             child->setName(QString::number(i));
             name->appendRow(child->getRow());
         }  
@@ -635,11 +629,11 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, 
     switch(type.getCategory())
     {
         case Typelib::Type::Array:
-            return std::shared_ptr<ItemBase>(new Array(value, nameItem, valueItem));
+            return std::shared_ptr<ItemBase>(new Array(nameItem, valueItem));
             break;
         case Typelib::Type::Enum:
         case Typelib::Type::Numeric:
-            return std::shared_ptr<ItemBase>(new Simple(value, nameItem, valueItem));
+            return std::shared_ptr<ItemBase>(new Simple(nameItem, valueItem));
             break;
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
