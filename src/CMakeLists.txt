@@ -18,6 +18,7 @@ SOURCES
     configitemhandlers/EnumHandler.cpp
     configitemhandlers/ContainerHandler.cpp
     configitemhandlers/StdStringHandler.cpp
+    configitemhandlers/ImageCtxMenuHandler.cpp
     ConfigItemHandlerRepository.cpp
 MOC
     TaskModel.hpp
@@ -31,6 +32,7 @@ MOC
     configitemhandlers/EnumHandler.hpp
     configitemhandlers/ContainerHandler.hpp
     configitemhandlers/StdStringHandler.hpp
+    configitemhandlers/ImageCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
 HEADERS
 UI
@@ -42,6 +44,7 @@ DEPS_PKGCONFIG
     rock_widget_collection
     base-lib
     tinyxml
+    frame_helper
 LIBS Qt5::Core
      Qt5::Gui
      Qt5::Widgets
