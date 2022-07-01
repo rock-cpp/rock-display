@@ -7,6 +7,7 @@ SOURCES
     TaskModelNotifier.cpp
     NameServiceModel.cpp
     NameServiceItemDelegate.cpp
+    ConfigItemHandler.cpp
     PortItem.cpp
     TaskItem.cpp
     TypedItem.cpp
@@ -19,6 +20,7 @@ MOC
     TaskModelNotifier.hpp
     NameServiceModel.hpp
     NameServiceItemDelegate.hpp
+    ConfigItemHandler.hpp
     Mainwindow.hpp
     Types.hpp
     VisualizerAdapter.hpp
