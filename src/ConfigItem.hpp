@@ -34,7 +34,6 @@ class ItemBase : public VisualizerAdapter
 protected:
     TypedItem *name;
     TypedItem *value;
-    QTextCodec *codec;
     
     std::vector<std::shared_ptr<ItemBase> > children;
     ConfigItemHandlerRepository *handlerrepo;
@@ -49,6 +48,7 @@ public:
     ItemBase(TypedItem *name, TypedItem *value);
     virtual ~ItemBase();
     
+    QTextCodec *codec;
     static std::map<std::string, std::string> marshalled2Typelib;
     
     virtual bool hasVisualizers();
