@@ -155,6 +155,7 @@ public:
     virtual ~EditableSimple();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    bool updateFromEdit();
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
 

@@ -534,6 +534,180 @@ bool EditableSimple::update(Typelib::Value& valueIn, bool updateUI, bool forceUp
     return Simple::update(valueIn, updateUI, forceUpdate);
 }
 
+template <class T>
+bool setValue(Typelib::Value& value, std::string const &valueS)
+{
+    T *val = static_cast<T *>(value.getData());
+
+    if (!val)
+    {
+        return false;
+    }
+
+    try
+    {
+        T newval = boost::lexical_cast<T>(valueS);
+        if (*val == newval)
+            return false;
+        *val = newval;
+        return true;
+    }
+    catch (...)
+    {
+
+    }
+
+    return false;
+}
+
+template <>
+bool setValue<uint8_t>(Typelib::Value& value, std::string const &valueS)
+{
+    uint8_t *val = static_cast<uint8_t *>(value.getData());
+
+    if (!val)
+    {
+        return false;
+    }
+
+    try
+    {
+        int newval = boost::lexical_cast<int>(valueS);
+        if (*val == newval)
+            return false;
+        *val = newval;
+        return true;
+    }
+    catch (...)
+    {
+
+    }
+
+    return false;
+}
+
+template <>
+bool setValue<int8_t>(Typelib::Value& value, std::string const &valueS)
+{
+    int8_t *val = static_cast<int8_t *>(value.getData());
+
+    if (!val)
+    {
+        return false;
+    }
+
+    try
+    {
+        int newval = boost::lexical_cast<int>(valueS);
+        if (*val == newval)
+            return false;
+        *val = newval;
+        return true;
+    }
+    catch (...)
+    {
+
+    }
+
+    return false;
+}
+
+bool EditableSimple::updateFromEdit()
+{
+    QString data = value->data(Qt::EditRole).toString();
+
+    const Typelib::Type &type(value_handle.getType());
+    std::string valueS = data.toStdString();
+    if (codec)
+    {
+        QByteArray bytes = codec->fromUnicode(data);
+        valueS = bytes.toStdString();
+    }
+
+    if (type.getCategory() == Typelib::Type::Enum)
+    {
+        const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>(value_handle.getType());
+        Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(value_handle.getData()));
+        if (!intVal)
+            return false;
+        if (*intVal == enumT.get(valueS))
+            return false;
+        *intVal = enumT.get(valueS);
+        return true;
+    }
+    else if (type.getCategory() == Typelib::Type::Numeric)
+    {
+        const Typelib::Numeric &numeric(static_cast<const Typelib::Numeric &>(value_handle.getType()));
+        if (numeric.getName() == "/bool")
+        {
+            bool *boolVal = static_cast<bool *>(value_handle.getData());
+            if (!boolVal)
+                return false;
+            *boolVal = data.compare("true",Qt::CaseInsensitive) == 0;
+        }
+        else
+        {
+            switch(numeric.getNumericCategory())
+            {
+                case Typelib::Numeric::Float:
+                    if(numeric.getSize() == sizeof(float))
+                    {
+                        return setValue<float>(value_handle, valueS);
+                    }
+                    else
+                    {
+                        return setValue<double>(value_handle, valueS);
+                    }
+                    break;
+                case Typelib::Numeric::SInt:
+                    switch(numeric.getSize())
+                    {
+                        case sizeof(int8_t):
+                            return setValue<int8_t>(value_handle, valueS);
+                        case sizeof(int16_t):
+                            return setValue<int16_t>(value_handle, valueS);
+                        case sizeof(int32_t):
+                            return setValue<int32_t>(value_handle, valueS);
+                        case sizeof(int64_t):
+                            return setValue<int64_t>(value_handle, valueS);
+                        default:
+                            LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
+                            return false;
+                    }
+                    break;
+                case Typelib::Numeric::UInt:
+                {
+                    switch(numeric.getSize())
+                    {
+                        case sizeof(uint8_t):
+                            return setValue<uint8_t>(value_handle, valueS);
+                        case sizeof(uint16_t):
+                            return setValue<uint16_t>(value_handle, valueS);
+                        case sizeof(uint32_t):
+                            return setValue<uint32_t>(value_handle, valueS);
+                        case sizeof(uint64_t):
+                            return setValue<uint64_t>(value_handle, valueS);
+                        default:
+                            LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
+                            return false;
+                    }
+                }
+                    break;
+                case Typelib::Numeric::NumberOfValidCategories:
+                    LOG_ERROR_S << "Internal Error: Got invalid Category";
+                    return false;
+            }
+        }
+    }
+    else
+    {
+        LOG_WARN_S << "got unsupported type..";
+        return false;
+    }
+
+    return false;
+}
+
 bool EditableSimple::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
 {
     bool isEqual = Typelib::compare(valueCurrent, valueOld);
