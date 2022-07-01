@@ -20,6 +20,11 @@ public:
     void updateTasks();
     void waitForTerminate();
 
+    void notifyItemDataEdited(const QModelIndex &i) const
+    {
+        emit itemDataEdited(i);
+    }
+
 private slots:
     void taskModelDataChanged(const QModelIndex &i, const QModelIndex &j);
 public slots:
@@ -27,8 +32,9 @@ public slots:
     void addNameService(const std::string &nameServiceIP);
     void taskAdded(const TaskItem* task);
 
-    signals:
-            void stopNotifier();
+signals:
+    void stopNotifier();
     /**emitted every time a new task is added to one of the task models */
     void rowAdded();
+    void itemDataEdited(const QModelIndex &i) const;
 };
