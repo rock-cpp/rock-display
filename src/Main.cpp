@@ -1,17 +1,7 @@
-#include <iostream>
 #include <orocos_cpp/orocos_cpp.hpp>
-#include <rtt/transports/corba/ApplicationServer.hpp>
-#include <rtt/types/TypeInfoRepository.hpp>
-#include <signal.h>
 
-#include "TaskModel.hpp"
 #include "Mainwindow.hpp"
-#include <vizkit3d/Vizkit3DWidget.hpp>
-#include "Vizkit3dPluginRepository.hpp"
 #include <QApplication>
-#include <QTimer>
-
-#include <thread>
 
 #include <base-logging/Logging.hpp>
 
