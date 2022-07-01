@@ -9,6 +9,7 @@
 #include <rtt/base/DataSourceBase.hpp>
 #include "NameServiceItemDelegate.hpp"
 #include "ConfigItemHandlerRepository.hpp"
+#include "ConfigItemHandler.hpp"
 
 void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
 {
@@ -229,16 +230,96 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     }
 }
 
+static const Typelib::Registry* getItemRegistry(QModelIndex const &mi, NameServiceModel *model)
+{
+    QStandardItem *item = model->itemFromIndex(mi);
+
+    TypedItem *ti = dynamic_cast<TypedItem*>(item);
+    if (!ti)
+        return nullptr;
+    switch (ti->type()) {
+        case ItemType::CONFIGITEM:
+        case ItemType::OUTPUTPORT:
+        case ItemType::INPUTPORT:
+        case ItemType::EDITABLEITEM:
+        {
+            QModelIndex pi = mi;
+            while(pi.isValid()) {
+                TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
+                if (!(pti))
+                    break;
+                if (pti->type() == ItemType::OUTPUTPORT || pti->type() == ItemType::INPUTPORT)
+                {
+                    RTT::types::TypeInfo const *type = nullptr;
+                    if (pti->type() == ItemType::OUTPUTPORT)
+                    {
+                        auto outputitem = static_cast<OutputPortItem*>(pti->getData());
+                        type = outputitem->getPort()->getTypeInfo();
+                    }
+                    else
+                    {
+                        auto inputitem = static_cast<InputPortItem*>(pti->getData());
+                        type = inputitem->getPort()->getTypeInfo();
+                    }
+                    auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+
+                    return &transport->getRegistry();
+                }
+                if (pti->type() != ItemType::CONFIGITEM && pti->type() != ItemType::EDITABLEITEM)
+                    break;
+                pi = pi.parent();
+            }
+            return nullptr;
+        }
+        default:
+            return nullptr;
+    }
+}
+
+static std::string getItemTypeName(QModelIndex const &mi, NameServiceModel *model)
+{
+    QStandardItem *item = model->itemFromIndex(mi);
+
+    TypedItem *ti = dynamic_cast<TypedItem*>(item);
+    if (!ti)
+        return std::string();
+    if (ti->type() == ItemType::CONFIGITEM)
+    {
+        //maybe better store this in the ConfigItem and retrieve from there, instead of from the value column?
+        return static_cast<ItemBase *>(ti->getData())->getRow().last()->text().toStdString();
+    }
+    else if(ti->type() == ItemType::OUTPUTPORT)
+    {
+        auto outputitem = static_cast<OutputPortItem*>(ti->getData());
+        RTT::types::TypeInfo const *type = outputitem->getPort()->getTypeInfo();
+        return type->getTypeName();
+    }
+    else if(ti->type() == ItemType::INPUTPORT)
+    {
+        auto inputitem = static_cast<InputPortItem*>(ti->getData());
+        RTT::types::TypeInfo const *type = inputitem->getPort()->getTypeInfo();
+        return type->getTypeName();
+    }
+    else if (ti->type() == ItemType::EDITABLEITEM)
+    {
+        auto item = static_cast<ItemBase *>(ti->getData());
+        Typelib::Value &val = item->getValueHandle();
+        const Typelib::Type &type(val.getType());
+        return type.getName();
+    }
+    return std::string();
+}
+
 void MainWindow::prepareMenu(const QPoint & pos)
 {
     QModelIndex mi = view->indexAt(pos);
     QStandardItem *item = model->itemFromIndex(mi);
     QMenu *menu = new QMenu(this);
-    QLabel* label = new QLabel(tr(""), this);
+    //there is also addSection, but the styling is lacking.
+    QLabel* label = new QLabel(tr(""), menu);
     label->setAlignment(Qt::AlignCenter);
-    QWidgetAction* a = new QWidgetAction(menu);
-    a->setDefaultWidget(label);
-    menu->addAction(a);
+    QWidgetAction* labelAction = new QWidgetAction(menu);
+    labelAction->setDefaultWidget(label);
     menu->setMinimumWidth(100);
     menu->setMinimumHeight(35);
 
@@ -251,6 +332,8 @@ void MainWindow::prepareMenu(const QPoint & pos)
 
                 task = titem->getTaskContext();
 
+                menu->addAction(labelAction);
+                label->setText(tr("<b>Actions</b>"));
                 QAction *act = menu->addAction("Activate");
                 QAction *sta = menu->addAction("Start");
                 QAction *sto = menu->addAction("Stop");
@@ -260,46 +343,35 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 connect(sta, SIGNAL(triggered()), this, SLOT(startTask()));
                 connect(sto, SIGNAL(triggered()), this, SLOT(stopTask()));
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
-                
-                label->setText(tr("<b>Actions</b>"));
+
             }
                 break;
                 
             case ItemType::CONFIGITEM:
             case ItemType::OUTPUTPORT:
+            case ItemType::INPUTPORT:
+            case ItemType::EDITABLEITEM:
             {
-                std::string typeName = "";
-                const Typelib::Registry* registry = NULL;
+                std::string typeName = getItemTypeName(mi, model);
+                const Typelib::Registry* registry = getItemRegistry(mi, model);
                 VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
-                
-                QModelIndex pi = mi;
-                while(pi.isValid()) {
-                    TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
-                    if (!(pti))
-                        break;
-                    if (pti->type() == ItemType::OUTPUTPORT)
-                    {
-                        RTT::types::TypeInfo const *type = nullptr;
-                        auto outputitem = static_cast<OutputPortItem*>(pti->getData());
-                        type = outputitem->getPort()->getTypeInfo();
-                        auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
-                        registry = &transport->getRegistry();
-                        break;
-                    }
-                    if (pti->type() != ItemType::CONFIGITEM && pti->type() != ItemType::EDITABLEITEM)
-                        break;
-                    pi = pi.parent();
+
+                ItemBase* itembase = nullptr;
+                if(ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::EDITABLEITEM)
+                    itembase = static_cast<ItemBase*>(ti->getData());
+                else if (ti->type() == ItemType::INPUTPORT || ti->type() == ItemType::OUTPUTPORT)
+                {
+                    itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
                 }
 
-                if (ti->type() == ItemType::CONFIGITEM)
+                if(itembase)
                 {
-                    typeName = static_cast<ItemBase *>(ti->getData())->getRow().last()->text().toStdString();
-                }
-                else
-                {
-                    auto outputitem = static_cast<OutputPortItem*>(ti->getData());
-                    RTT::types::TypeInfo const *type = outputitem->getPort()->getTypeInfo();
-                    typeName = type->getTypeName();
+                    for(auto &h : itembase->getHandlerStack())
+                    {
+                        if (h->flags() & ConfigItemHandler::Flags::ContextMenuItems) {
+                            h->addContextMenuEntries(menu, mi);
+                        }
+                    }
                 }
                 
                 if (ItemBase::marshalled2Typelib.find(typeName) != ItemBase::marshalled2Typelib.end())
@@ -315,6 +387,9 @@ void MainWindow::prepareMenu(const QPoint & pos)
                         handles.push_back(additionalPlugin);
                     }
                 }
+
+                menu->addAction(labelAction);
+                label->setText(tr("<b>Plugins</b>"));
 
                 for (const PluginHandle &handle: handles)
                 {
@@ -335,9 +410,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
                 }
                 
-                label->setText(tr("<b>Plugins</b>"));
-                
-                if (menu->actions().count() == 1)
+                if (handles.size() == 0)
                 {
                     QWidgetAction* a = new QWidgetAction(menu);
                     a->setDefaultWidget(new QLabel(tr("none"), this));
@@ -349,7 +422,6 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 return;
         }
       
-        QPoint pt(pos);
         menu->exec(QCursor::pos());
     }
 }
