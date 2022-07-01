@@ -38,6 +38,11 @@ protected:
     std::vector<std::shared_ptr<ItemBase> > children;
     
 public:
+    enum UsedRoles {
+        ModifiedRole = Qt::UserRole + 1
+    };
+
+
     ItemBase();
     ItemBase(TypedItem *name, TypedItem *value);
     virtual ~ItemBase();
@@ -48,6 +53,7 @@ public:
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
     virtual Typelib::Value& getValueHandle();
+    virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) { return false; }
 
     void setName(const QString &newName)
     {
@@ -121,6 +127,7 @@ public:
     virtual ~EditableArray();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
 
 class Simple : public ItemBase
@@ -141,6 +148,7 @@ public:
     virtual ~EditableSimple();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
 
 class Complex : public ItemBase
@@ -173,4 +181,5 @@ public:
     virtual ~EditableComplex();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };

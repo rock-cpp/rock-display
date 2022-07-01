@@ -270,6 +270,38 @@ bool EditableArray::update(Typelib::Value& valueIn, bool updateUI, bool forceUpd
     return Array::update(valueIn, updateUI, forceUpdate);
 }
 
+bool EditableArray::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
+{
+    bool isEqual = true;
+
+    const Typelib::Array &array = static_cast<const Typelib::Array &>(valueCurrent.getType());
+    this->value->setText(array.getName().c_str());
+
+    void *dataCurrent = valueCurrent.getData();
+    void *dataOld = valueOld.getData();
+
+    const Typelib::Type &indirect(array.getIndirection());
+
+    size_t numElems = array.getDimension();
+
+    if (children.size() < numElems)
+    {
+        isEqual &= Typelib::compare(valueCurrent, valueOld);
+    }
+
+    for (size_t i = 0; i < children.size() && i < numElems; i++)
+    {
+        Typelib::Value arrayVCurrent(static_cast<uint8_t *>(dataCurrent) + i * indirect.getSize(), indirect);
+        Typelib::Value arrayVOld(static_cast<uint8_t *>(dataOld) + i * indirect.getSize(), indirect);
+        isEqual &= children[i]->compareAndMark(arrayVCurrent, arrayVOld);
+    }
+
+    name->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+    value->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+
+    return isEqual;
+}
+
 Simple::Simple(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {
@@ -499,6 +531,16 @@ bool EditableSimple::update(Typelib::Value& valueIn, bool updateUI, bool forceUp
 {
     value_handle = valueIn;
     return Simple::update(valueIn, updateUI, forceUpdate);
+}
+
+bool EditableSimple::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
+{
+    bool isEqual = Typelib::compare(valueCurrent, valueOld);
+
+    name->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+    value->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+
+    return isEqual;
 }
 
 void Complex::addPlugin(const std::string& name, VizHandle handle)
@@ -736,6 +778,64 @@ bool EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceU
 {
     value_handle = valueIn;
     return Complex::update(valueIn, updateUI, forceUpdate);
+}
+
+bool EditableComplex::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
+{
+    const Typelib::Type &type(valueCurrent.getType());
+    bool isEqual = true;
+
+    if (type.getCategory() == Typelib::Type::Compound)
+    {
+
+        const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(type);
+        uint8_t *dataCurrent = static_cast<uint8_t *>(valueCurrent.getData());
+        uint8_t *dataOld = static_cast<uint8_t *>(valueOld.getData());
+        size_t i = 0;
+        if(children.size() < comp.getFields().size())
+        {
+            isEqual &= Typelib::compare(valueCurrent, valueOld);
+        }
+        for (const Typelib::Field &field: comp.getFields())
+        {
+            Typelib::Value fieldVCurrent(dataCurrent + field.getOffset(), field.getType());
+            Typelib::Value fieldVOld(dataOld + field.getOffset(), field.getType());
+
+            if (children.size() <= i)
+            {
+                break;
+            }
+
+            isEqual &= children[i]->compareAndMark(fieldVCurrent, fieldVOld);
+            i++;
+        }
+    }
+    else
+    {
+        const Typelib::Container &cont = static_cast<const Typelib::Container &>(valueCurrent.getType());
+        const size_t sizeCurrent = cont.getElementCount(valueCurrent.getData());
+        const size_t sizeOld = cont.getElementCount(valueOld.getData());
+
+        isEqual &= sizeOld == sizeCurrent;
+
+        if (children.size() < sizeCurrent &&
+            children.size() < sizeOld)
+        {
+            isEqual &= Typelib::compare(valueCurrent, valueOld);
+        }
+        for(size_t i = 0; i < children.size() && i < sizeCurrent && i < sizeOld; i++)
+        {
+            Typelib::Value elemCurrent = cont.getElement(valueCurrent.getData(), i);
+            Typelib::Value elemOld = cont.getElement(valueOld.getData(), i);
+
+            children[i]->compareAndMark(elemCurrent,elemOld);
+        }
+    }
+
+    name->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+    value->QStandardItem::setData(QVariant(!isEqual), ItemBase::ModifiedRole);
+
+    return isEqual;
 }
 
 std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
