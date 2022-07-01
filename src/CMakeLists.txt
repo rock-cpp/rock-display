@@ -15,6 +15,7 @@ SOURCES
     Vizkit3dPluginRepository.cpp
     ConfigItem.cpp
     VisualizerAdapter.cpp
+    configitemhandlers/EnumHandler.cpp
     ConfigItemHandlerRepository.cpp
 MOC
     TaskModel.hpp
@@ -25,6 +26,7 @@ MOC
     Mainwindow.hpp
     Types.hpp
     VisualizerAdapter.hpp
+    configitemhandlers/EnumHandler.hpp
     ConfigItemHandlerRepository.hpp
 HEADERS
 UI
