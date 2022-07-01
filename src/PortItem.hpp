@@ -87,6 +87,7 @@ public:
     InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~InputPortItem();
     bool updataValue();
+    bool compareAndMarkData();
 
     void updateInputPortInterface(RTT::base::InputPortInterface* port);
     const std::string &getType();

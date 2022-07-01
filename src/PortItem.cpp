@@ -318,3 +318,8 @@ Typelib::Value &InputPortItem::getOldData()
 {
     return oldData;
 }
+
+bool InputPortItem::compareAndMarkData()
+{
+    return item->compareAndMark(currentData, oldData);
+}
