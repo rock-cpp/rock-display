@@ -223,6 +223,12 @@ void InputPortItem::reset()
 
     handle = nullptr;
     writer = nullptr;
+
+    if (oldDataBuffer.size() != 0)
+    {
+        Typelib::destroy(oldData);
+        oldDataBuffer.resize(0);
+    }
 }
 
 void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port)
@@ -273,7 +279,16 @@ bool InputPortItem::updataValue()
         updateVisualizer(vizHandle.second, handle->sample.get());
     }
 
-    Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+    currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+
+    if (oldDataBuffer.size() == 0)
+    {
+        Typelib::Type const &type = currentData.getType();
+        oldDataBuffer.resize(type.getSize());
+        Typelib::init(oldDataBuffer.data(), Typelib::layout_of(type));
+        oldData = Typelib::Value(oldDataBuffer.data(), type);
+        Typelib::copy(oldData, currentData);
+    }
 
     if (!item)
     {
@@ -282,14 +297,24 @@ bool InputPortItem::updataValue()
             nameItem->takeRow(0);
         }
 
-        item = getEditableItem(val, handlerrepo, this->nameItem, this->valueItem);
-        return item->update(val, true, true);
+        item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
+        return item->update(currentData, true, true);
     }
 
-    return item->update(val, item->getName()->isExpanded());
+    return item->update(currentData, item->getName()->isExpanded());
 }
 
 const std::string& InputPortItem::getType()
 {
     return typeInfo;
+}
+
+Typelib::Value &InputPortItem::getCurrentData()
+{
+    return currentData;
+}
+
+Typelib::Value &InputPortItem::getOldData()
+{
+    return oldData;
 }

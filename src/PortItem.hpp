@@ -78,6 +78,9 @@ public:
 class InputPortItem : public PortItem
 {
     PortHandle *handle;
+    Typelib::Value currentData;
+    Typelib::Value oldData;
+    std::vector<uint8_t> oldDataBuffer;
     RTT::base::OutputPortInterface *writer;
 
 public:
@@ -88,6 +91,8 @@ public:
     void updateInputPortInterface(RTT::base::InputPortInterface* port);
     const std::string &getType();
     RTT::base::PortInterface* getPort();
+    Typelib::Value &getCurrentData();
+    Typelib::Value &getOldData();
 
     void reset();
 };
