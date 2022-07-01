@@ -96,4 +96,6 @@ public:
     Typelib::Value &getOldData();
 
     void reset();
+    void sendCurrentData();
+    void restoreOldData();
 };

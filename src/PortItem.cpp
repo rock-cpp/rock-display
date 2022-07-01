@@ -319,6 +319,31 @@ Typelib::Value &InputPortItem::getOldData()
     return oldData;
 }
 
+void InputPortItem::sendCurrentData()
+{
+    if (!writer)
+        return;
+
+    if (!writer->connected())
+    {
+        RTT::ConnPolicy policy(RTT::ConnPolicy::data());
+        if(!writer->connectTo(handle->port, policy))
+        {
+            LOG_ERROR_S << "InputPortItem: Error could not connect writer to port " + handle->port->getName() + " of task " + handle->port->getInterface()->getOwner()->getName();
+            return;
+        }
+    }
+
+    writer->write(handle->sample);
+
+    Typelib::copy(oldData, currentData);
+}
+
+void InputPortItem::restoreOldData()
+{
+    Typelib::copy(currentData, oldData);
+}
+
 bool InputPortItem::compareAndMarkData()
 {
     return item->compareAndMark(currentData, oldData);
