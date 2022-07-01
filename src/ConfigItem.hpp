@@ -63,7 +63,7 @@ public:
         this->value->setType(newType);
     }
     
-    std::vector<std::shared_ptr<ItemBase> > getChildren()
+    std::vector<std::shared_ptr<ItemBase> > const &getChildren() const
     {
         return this->children;
     }
