@@ -3,10 +3,12 @@
 #include "ConfigItemHandler.hpp"
 
 #include "configitemhandlers/EnumHandler.hpp"
+#include "configitemhandlers/StdStringHandler.hpp"
 
 ConfigItemHandlerRepository::ConfigItemHandlerRepository()
 {
     configitemhandlers.push_back(new EnumHandler());
+    configitemhandlers.push_back(new StdStringHandler());
 }
 
 std::vector<ConfigItemHandler const*> ConfigItemHandlerRepository::findNameServiceConfigItemHandlersFor(Typelib::Type const &type, bool editing)

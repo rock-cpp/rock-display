@@ -865,34 +865,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     {
         const Typelib::Container &cont = static_cast<const Typelib::Container &>(valueIn.getType());
         const size_t size = cont.getElementCount(valueIn.getData());
-        
-        if(cont.kind() == "/std/string")
-        {   
-            if (!forceUpdate && !updateNecessary)
-            {
-                return false;
-            }
-            
-            const std::string content = *static_cast<const std::string *>(valueIn.getData());
-            
-            if (codec)
-            {
-                QTextCodec::ConverterState state;
-                const QString text = codec->toUnicode(content.c_str(), content.size(), &state);
-                if (state.invalidChars > 0)
-                {
-                    return updateNecessary;
-                }
-                else if (value->text().toStdString() != text.toStdString())
-                {
-                    value->setText(text);
-                    return true;
-                }
-            }
-            
-            return updateNecessary;
-        }
-        
+
         //std::vector
         int numElemsToDisplay = static_cast<int>(size);
         bool areMaxElemsDiplayed = false;
