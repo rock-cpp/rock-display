@@ -19,11 +19,12 @@ class TaskModel : public QObject
     QStandardItem tasks;
 
     std::map<std::string, TaskItem *> nameToItem;
+    ConfigItemHandlerRepository *handlerrepo;
     
     void updateTaskItem(TaskItem *item);
     
 public:
-    explicit TaskModel(QObject* parent = 0, const std::string &nameServiceIP = {});
+    explicit TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0, const std::string &nameServiceIP = {});
     virtual ~TaskModel();
     void updateTaskItems();
     TaskModelNotifier *notifier;

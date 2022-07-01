@@ -37,7 +37,8 @@ std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortI
     }
 }
 
-PortItem::PortItem(const std::string& name) : VisualizerAdapter(), nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT))
+PortItem::PortItem(const std::string& name, ConfigItemHandlerRepository *handlerrepo)
+    : VisualizerAdapter(), nameItem(new TypedItem(ItemType::INPUTPORT)), valueItem(new TypedItem(ItemType::INPUTPORT)), handlerrepo(handlerrepo)
 {
     nameItem->setText(name.c_str());
 
@@ -56,7 +57,7 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)
+OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
     valueItem->setType(ItemType::OUTPUTPORT);
@@ -170,7 +171,7 @@ bool OutputPortItem::updataValue()
             nameItem->takeRow(0);
         }
         
-        item = getItem(val, this->nameItem, this->valueItem);
+        item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
         return item->update(val, true, true);
     }
     
@@ -182,7 +183,7 @@ const std::string& OutputPortItem::getType()
     return typeInfo;
 }
 
-InputPortItem::InputPortItem(RTT::base::InputPortInterface* port) : PortItem(port->getName()) , handle(nullptr)
+InputPortItem::InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), writer(nullptr)
 {
     nameItem->setType(ItemType::INPUTPORT);
     valueItem->setType(ItemType::INPUTPORT);
@@ -281,7 +282,7 @@ bool InputPortItem::updataValue()
             nameItem->takeRow(0);
         }
 
-        item = getEditableItem(val, this->nameItem, this->valueItem);
+        item = getEditableItem(val, handlerrepo, this->nameItem, this->valueItem);
         return item->update(val, true, true);
     }
 

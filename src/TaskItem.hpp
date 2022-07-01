@@ -27,9 +27,10 @@ private:
     std::map<std::string, PortItem *> ports;
     std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
     bool stateChanged;
+    ConfigItemHandlerRepository *handlerrepo;
     
 public:
-    TaskItem(RTT::corba::TaskContextProxy* _task);
+    TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo);
     virtual ~TaskItem();
     bool updateState();
     bool updatePorts(bool hasVisualizers=false);

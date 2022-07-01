@@ -2,7 +2,8 @@
 #include "TaskModel.hpp"
 #include "TaskModelNotifier.hpp"
 
-NameServiceModel::NameServiceModel(QObject* parent): QStandardItemModel(parent)
+NameServiceModel::NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent)
+    : QStandardItemModel(parent), handlerrepo(handlerrepo)
 {
     setColumnCount(2);
     setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
@@ -65,7 +66,7 @@ void NameServiceModel::addNameService(const std::string& nameServiceIP)
         return;
     }
 
-    TaskModel *newModel = new TaskModel(this, nameServiceIP);
+    TaskModel *newModel = new TaskModel(handlerrepo, this, nameServiceIP);
     addTaskModel(newModel);
     newModel->notifierThread->start();
 }

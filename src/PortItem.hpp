@@ -23,9 +23,10 @@ protected:
     TypedItem *nameItem;
     TypedItem *valueItem;
     std::string typeInfo;
+    ConfigItemHandlerRepository *handlerrepo;
 
 public:
-    PortItem(const std::string &name);
+    PortItem(const std::string &name, ConfigItemHandlerRepository *handlerrepo);
     virtual ~PortItem();
     QList<QStandardItem *> getRow();
     
@@ -63,7 +64,7 @@ class OutputPortItem : public PortItem
     RTT::base::InputPortInterface *reader;
     
 public:
-    OutputPortItem(RTT::base::OutputPortInterface* port);
+    OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~OutputPortItem();
     bool updataValue();
     
@@ -80,7 +81,7 @@ class InputPortItem : public PortItem
     RTT::base::OutputPortInterface *writer;
 
 public:
-    InputPortItem(RTT::base::InputPortInterface* port);
+    InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~InputPortItem();
     bool updataValue();
 

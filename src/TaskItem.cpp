@@ -4,13 +4,14 @@
 #include <lib_config/TypelibConfiguration.hpp>
 #include <base-logging/Logging.hpp>
 
-TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task)
+TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo)
     : task(_task),
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
       refreshOutputPorts(true),
       refreshInputPorts(true),
-      stateChanged(false)
+      stateChanged(false),
+      handlerrepo(handlerrepo)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -125,13 +126,13 @@ bool TaskItem::updatePorts(bool hasVisualizers)
             {
                 if (outIf)
                 {
-                    item = new OutputPortItem(outIf);
+                    item = new OutputPortItem(outIf, handlerrepo);
                     outputPorts.appendRow(item->getRow());
                     item->getNameItem()->appendRow({new QStandardItem(QString("waiting for data..")), new QStandardItem()});
                 }
                 else if (inIf)
                 {
-                    auto inPortItem = new InputPortItem(inIf);
+                    auto inPortItem = new InputPortItem(inIf, handlerrepo);
                     item = inPortItem;
                     inputPorts.appendRow(item->getRow());
                     //the QStandardModel becomes confused when items are added later when there were none
@@ -142,7 +143,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 {
                     LOG_WARN_S << "found port item that is neither input nor output";
                     //should not happen i guess?
-                    item = new PortItem(pi->getName());
+                    item = new PortItem(pi->getName(), handlerrepo);
                 }
                 
                 ports.insert(std::make_pair(portName, item));
@@ -226,7 +227,7 @@ bool TaskItem::updateProperties()
         auto it = propertyMap.find(property->getName());
         if (it == propertyMap.end())
         {
-            item = getItem(val);
+            item = getItem(val, handlerrepo);
             
             propertyMap[property->getName()] = item;
             item->setName(property->getName().c_str());

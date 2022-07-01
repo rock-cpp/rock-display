@@ -18,6 +18,7 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 #include <tinyxml.h>
+#include "ConfigItemHandlerRepository.hpp"
 
 std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
 {
@@ -170,7 +171,7 @@ Array::~Array()
 
 std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
-    return ::getItem(value, nameItem, valueItem);
+    return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -261,7 +262,7 @@ Typelib::Value& EditableArray::getValueHandle()
 
 std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
-    return ::getEditableItem(value, nameItem, valueItem);
+    return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
 }
 
 bool EditableArray::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -597,7 +598,7 @@ Complex::~Complex()
 
 std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
-    return ::getItem(value, nameItem, valueItem);
+    return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
 bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -771,7 +772,7 @@ Typelib::Value& EditableComplex::getValueHandle()
 
 std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
-    return ::getEditableItem(value, nameItem, valueItem);
+    return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
 }
 
 bool EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
@@ -838,22 +839,24 @@ bool EditableComplex::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Va
     return isEqual;
 }
 
-std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
+std::shared_ptr< ItemBase > getItem(Typelib::Value& value, ConfigItemHandlerRepository *handlerrepo, TypedItem *nameItem, TypedItem *valueItem)
 {   
     const Typelib::Type &type(value.getType());
     
+    std::shared_ptr<ItemBase> itembase;
+
     switch(type.getCategory())
     {
         case Typelib::Type::Array:
-            return std::shared_ptr<ItemBase>(new Array(nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new Array(nameItem, valueItem));
             break;
         case Typelib::Type::Enum:
         case Typelib::Type::Numeric:
-            return std::shared_ptr<ItemBase>(new Simple(nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new Simple(nameItem, valueItem));
             break;
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
-            return std::shared_ptr<ItemBase>(new Complex(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new Complex(value, nameItem, valueItem));
             break;
         case Typelib::Type::NullType:
         case Typelib::Type::Pointer:
@@ -862,25 +865,31 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value, TypedItem *nameItem, 
             break;
     }
 
-    throw std::runtime_error("Internal Error");
+    if(!itembase)
+        throw std::runtime_error("Internal Error");
+
+    itembase->setHandlerRepo(handlerrepo);
+    return itembase;
 }
 
-std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem)
+std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, ConfigItemHandlerRepository *handlerrepo, TypedItem *nameItem, TypedItem *valueItem)
 {
     const Typelib::Type &type(value.getType());
 
+    std::shared_ptr<ItemBase> itembase;
+
     switch(type.getCategory())
     {
         case Typelib::Type::Array:
-            return std::shared_ptr<ItemBase>(new EditableArray(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableArray(value, nameItem, valueItem));
             break;
         case Typelib::Type::Enum:
         case Typelib::Type::Numeric:
-            return std::shared_ptr<ItemBase>(new EditableSimple(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableSimple(value, nameItem, valueItem));
             break;
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
-            return std::shared_ptr<ItemBase>(new EditableComplex(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableComplex(value, nameItem, valueItem));
             break;
         case Typelib::Type::NullType:
         case Typelib::Type::Pointer:
@@ -889,5 +898,9 @@ std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, TypedItem *na
             break;
     }
 
-    throw std::runtime_error("Internal Error");
+    if(!itembase)
+        throw std::runtime_error("Internal Error");
+
+    itembase->setHandlerRepo(handlerrepo);
+    return itembase;
 }

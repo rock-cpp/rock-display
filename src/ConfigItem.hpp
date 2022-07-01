@@ -12,6 +12,7 @@ class PortHandle;
 class OutputPortItem;
 class VizHandle;
 class PortItem;
+class ConfigItemHandlerRepository;
 
 namespace RTT
 {
@@ -36,6 +37,7 @@ protected:
     QTextCodec *codec;
     
     std::vector<std::shared_ptr<ItemBase> > children;
+    ConfigItemHandlerRepository *handlerrepo;
     
 public:
     enum UsedRoles {
@@ -80,7 +82,12 @@ public:
     {
         return this->name;
     }
-    
+
+    void setHandlerRepo(ConfigItemHandlerRepository *handlerrepo)
+    {
+        this->handlerrepo = handlerrepo;
+    }
+
     static std::map<std::string, std::string> lookupMarshalledTypelistTypes();
 };
 
@@ -91,7 +98,7 @@ public:
  * @param valueItem  TypedItem to use for value column. Will be generated if nullptr.
  * @return  One of Array, Simple, Complex.
  */
-std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
+std::shared_ptr<ItemBase> getItem(Typelib::Value& value, ConfigItemHandlerRepository *handlerrepo, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
 
 /** Returns an editable ItemBase config item
  *
@@ -100,7 +107,7 @@ std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = n
  * @param valueItem  TypedItem to use for value column. Will be generated if nullptr.
  * @return one of EditableArray, EditableSimple, EditableComplex.
  */
-std::shared_ptr<ItemBase> getEditableItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
+std::shared_ptr<ItemBase> getEditableItem(Typelib::Value& value, ConfigItemHandlerRepository *handlerrepo, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr);
 
 class Array : public ItemBase
 {   

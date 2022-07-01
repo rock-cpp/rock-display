@@ -8,6 +8,7 @@
 #include <rock_widget_collection/RockWidgetCollection.h>
 #include <rtt/base/DataSourceBase.hpp>
 #include "NameServiceItemDelegate.hpp"
+#include "ConfigItemHandlerRepository.hpp"
 
 void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
 {
@@ -53,11 +54,14 @@ MainWindow::MainWindow(QWidget *parent) :
       
     view->setSortingEnabled(true);
     view->header()->setSortIndicator(0, Qt::AscendingOrder);
-    model = new NameServiceModel(this);
+
+    handlerrepo = new ConfigItemHandlerRepository;
+
+    model = new NameServiceModel(handlerrepo, this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     connect(model, SIGNAL(rowAdded()), this, SLOT(sortTasks()));
     
-    TaskModel *initialTasks = new TaskModel(this);
+    TaskModel *initialTasks = new TaskModel(handlerrepo, this);
     model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");

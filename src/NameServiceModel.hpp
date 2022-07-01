@@ -3,15 +3,17 @@
 
 class TaskModel;
 class TaskItem;
+class ConfigItemHandlerRepository;
 
 class NameServiceModel : public QStandardItemModel
 {
     Q_OBJECT
 
     std::vector<TaskModel *> taskModels;
+    ConfigItemHandlerRepository *handlerrepo;
 
 public:
-    explicit NameServiceModel(QObject* parent = 0);
+    explicit NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0);
     virtual ~NameServiceModel();
     void addTaskModel(TaskModel *task);
 

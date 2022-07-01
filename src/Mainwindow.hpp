@@ -89,6 +89,7 @@ private:
     NameServiceModel *model;
     RTT::corba::TaskContextProxy *task;
     Vizkit3dPluginRepository *pluginRepo;
+    ConfigItemHandlerRepository *handlerrepo;
     AddNameServiceDialog *nameServiceDialog;
     void cleanup();
     std::vector<std::pair<QObject *, TypedItem *>> activePlugins;

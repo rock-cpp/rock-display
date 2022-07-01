@@ -8,10 +8,11 @@
 #include <omniORB4/CORBA.h>
 #include "TaskModelNotifier.hpp"
 
-TaskModel::TaskModel(QObject* parent, const std::string &nameServiceIP)
+TaskModel::TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent, const std::string &nameServiceIP)
     : QObject(parent),
       nameItem(ItemType::NAMESERVICE),
-      statusItem(ItemType::NAMESERVICE)
+      statusItem(ItemType::NAMESERVICE),
+      handlerrepo(handlerrepo)
 {   
     tasks.setText("Tasks");;
     nameItem.appendRow(&tasks);
@@ -93,7 +94,7 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
     if (itemIt == nameToItem.end())
     {
-        item = new TaskItem(task);
+        item = new TaskItem(task, handlerrepo);
         nameToItem.insert(std::make_pair(taskName, item));
         tasks.appendRow(item->getRow());
         emit taskAdded(item);
