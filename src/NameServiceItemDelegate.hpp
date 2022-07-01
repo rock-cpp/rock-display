@@ -7,6 +7,8 @@ class NameServiceItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
+private:
+    void defaultPaint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 public:
     explicit NameServiceItemDelegate(QObject* parent = 0);
     virtual ~NameServiceItemDelegate() override;
