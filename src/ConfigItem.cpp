@@ -18,6 +18,7 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 #include <tinyxml.h>
+#include "ConfigItemHandler.hpp"
 #include "ConfigItemHandlerRepository.hpp"
 
 std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
@@ -177,6 +178,19 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
 bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
     bool updateNecessary = this->name->isExpanded() && updateUI;
+
+    for(auto &h : handlerStack)
+    {
+        if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
+        {
+            updateNecessary |= h->convertFromTypelibValue(value, valueIn, codec);
+            if (h->flags() & ConfigItemHandler::Flags::HideFields)
+            {
+                return forceUpdate || updateNecessary;
+            }
+        }
+    }
+
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     this->value->setText(array.getName().c_str());
     
@@ -390,7 +404,15 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     {
         return false;
     }
-    
+
+    for(auto &h : handlerStack)
+    {
+        if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
+        {
+            return h->convertFromTypelibValue(value, valueIn, codec);
+        }
+    }
+
     const Typelib::Type &type(valueIn.getType());
     std::string valueS = value->text().toStdString();
     if (codec)
@@ -614,6 +636,14 @@ bool setValue<int8_t>(Typelib::Value& value, std::string const &valueS)
 
 bool EditableSimple::updateFromEdit()
 {
+    for(auto &h : handlerStack)
+    {
+        if (h->flags() & ConfigItemHandler::Flags::ConvertsToTypelibValue)
+        {
+            return h->convertToTypelibValue(value_handle, value, codec);
+        }
+    }
+
     QString data = value->data(Qt::EditRole).toString();
 
     const Typelib::Type &type(value_handle.getType());
@@ -780,8 +810,6 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
-    this->value->setText(valueIn.getType().getName().c_str());
-
     if (!visualizers.empty() && transport)
     {           
         transport->setTypelibSample(transportHandle, valueIn);
@@ -790,7 +818,25 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             updateVisualizer(vizHandle.second, sample);
         }
     }
-    
+
+    bool haveCustomValue = false;
+
+    for(auto &h : handlerStack)
+    {
+        if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
+        {
+            updateNecessary |= h->convertFromTypelibValue(value, valueIn, codec);
+            haveCustomValue = true;
+            if (h->flags() & ConfigItemHandler::Flags::HideFields)
+            {
+                return forceUpdate || updateNecessary;
+            }
+        }
+    }
+
+    if (!haveCustomValue)
+        this->value->setText(valueIn.getType().getName().c_str());
+
     if (type.getCategory() == Typelib::Type::Compound)
     {
         const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(type);
@@ -931,6 +977,21 @@ EditableComplex::EditableComplex(Typelib::Value& valueIn, TypedItem *name, Typed
     {
         this->name->setType(ItemType::EDITABLEITEM);
         this->value->setType(ItemType::EDITABLEITEM);
+    }
+}
+
+void EditableComplex::setHandlerStack(std::vector<ConfigItemHandler const*> const &stack)
+{
+    Complex::setHandlerStack(stack);
+    for(auto &h : handlerStack)
+    {
+        if (h->flags() & (ConfigItemHandler::Flags::ConvertsToTypelibValue |
+                ConfigItemHandler::Flags::CustomEditor))
+        {
+            if(value)
+                value->setEditable(true);
+            return;
+        }
     }
 }
 

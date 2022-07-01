@@ -210,5 +210,6 @@ public:
     virtual ~EditableComplex();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
