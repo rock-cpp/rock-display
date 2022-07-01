@@ -16,6 +16,7 @@ SOURCES
     ConfigItem.cpp
     VisualizerAdapter.cpp
     configitemhandlers/EnumHandler.cpp
+    configitemhandlers/ContainerHandler.cpp
     configitemhandlers/StdStringHandler.cpp
     ConfigItemHandlerRepository.cpp
 MOC
@@ -28,6 +29,7 @@ MOC
     Types.hpp
     VisualizerAdapter.hpp
     configitemhandlers/EnumHandler.hpp
+    configitemhandlers/ContainerHandler.hpp
     configitemhandlers/StdStringHandler.hpp
     ConfigItemHandlerRepository.hpp
 HEADERS
