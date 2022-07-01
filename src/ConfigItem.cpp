@@ -317,6 +317,11 @@ bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     
     const Typelib::Type &type(valueIn.getType());
     std::string valueS = value->text().toStdString();
+    if (codec)
+    {
+        QByteArray bytes = codec->fromUnicode(value->text());
+        valueS = bytes.toStdString();
+    }
     std::string oldValue = valueS;
     
     if (type.getCategory() == Typelib::Type::Enum)
