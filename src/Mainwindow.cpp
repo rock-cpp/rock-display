@@ -61,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
     model = new NameServiceModel(handlerrepo, this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     connect(model, SIGNAL(rowAdded()), this, SLOT(sortTasks()));
+    connect(model, &NameServiceModel::itemDataEdited,
+            this, &MainWindow::itemDataEdited);
     
     TaskModel *initialTasks = new TaskModel(handlerrepo, this);
     model->addTaskModel(initialTasks);
@@ -69,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<VizHandle>("VizHandle");
     qRegisterMetaType<RTT::base::DataSourceBase::shared_ptr>("RTT::base::DataSourceBase::shared_ptr");
     view->setModel(model);
+    view->header()->resizeSection(0, 250);
 
     NameServiceItemDelegate *delegate = new NameServiceItemDelegate(this);
     view->setItemDelegate(delegate);
@@ -166,6 +169,27 @@ void AddNameServiceDialog::accept()
 {
     QDialog::accept();
     addNameService();
+}
+
+PortChangeConfirmationWidget::PortChangeConfirmationWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    QPushButton *acceptBtn = new QPushButton(tr("Accept"), this);
+    QPushButton *rejectBtn = new QPushButton(tr("Reject"), this);
+
+    connect(acceptBtn, &QPushButton::clicked,
+            this, &PortChangeConfirmationWidget::accepted);
+    connect(rejectBtn, &QPushButton::clicked,
+            this, &PortChangeConfirmationWidget::rejected);
+
+    QHBoxLayout *lt = new QHBoxLayout(this);
+    lt->addWidget(acceptBtn);
+    lt->addWidget(rejectBtn);
+    lt->addStretch();
+
+    setLayout(lt);
+
+    setAutoFillBackground(true);
 }
 
 void MainWindow::removeAllPlugins()
@@ -611,3 +635,65 @@ void MainWindow::updateVisualizer(VizHandle vizHandle, RTT::base::DataSourceBase
     
     vizHandle.method.invoke(vizHandle.plugin, val);
 }
+
+void MainWindow::itemDataEdited(const QModelIndex &index)
+{
+    //This very probably is an EDITABLEITEM, so scan for the INPUTPORT
+    //if it is not, or we cannot find INPUTPORT, we just bail out.
+    InputPortItem *inputitem = nullptr;
+    QModelIndex pi = index;
+    while(pi.isValid()) {
+        TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
+        if (!(pti))
+            return;
+        if (pti->type() == ItemType::INPUTPORT)
+        {
+            inputitem = static_cast<InputPortItem*>(pti->getData());
+            break;
+        }
+        if (pti->type() != ItemType::EDITABLEITEM)
+            return;
+        pi = pi.parent();
+    }
+
+    if(!inputitem)
+        return;
+
+    if(!inputitem->compareAndMarkData())
+    {
+        if (changeconfirms.find(inputitem) == changeconfirms.end())
+        {
+            PortChangeConfirmationWidget *wid = new PortChangeConfirmationWidget(this);
+            changeconfirms.insert(std::make_pair(inputitem, wid));
+            view->setIndexWidget(inputitem->getValueItem()->index(), wid);
+            connect(wid, &PortChangeConfirmationWidget::accepted,
+                    this, [inputitem,this,wid]()
+            {
+                inputitem->sendCurrentData();
+                inputitem->compareAndMarkData();
+                changeconfirms.erase(changeconfirms.find(inputitem));
+                view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
+                wid->deleteLater();
+            });
+            connect(wid, &PortChangeConfirmationWidget::rejected,
+                    this, [inputitem,this,wid]()
+            {
+                inputitem->restoreOldData();
+                inputitem->compareAndMarkData();
+                changeconfirms.erase(changeconfirms.find(inputitem));
+                view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
+                wid->deleteLater();
+            });
+        }
+    }
+    else
+    {
+        auto it = changeconfirms.find(inputitem);
+        if (it != changeconfirms.end()) {
+            view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
+            delete it->second;
+            changeconfirms.erase(it);
+        }
+    }
+}
+

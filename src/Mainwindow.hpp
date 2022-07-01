@@ -21,6 +21,8 @@ namespace RTT {
     }
 }
 
+class InputPortItem;
+
 class AddNameServiceDialog : public QDialog
 {
     Q_OBJECT
@@ -37,6 +39,19 @@ public slots:
     
 signals:
     void requestNameServiceAdd(const std::string &nameServiceIP);
+};
+
+class PortChangeConfirmationWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    PortChangeConfirmationWidget(QWidget* parent = nullptr);
+
+signals:
+    void accepted();
+    void rejected();
+
 };
 
 class MyVizkit3DWidget : public vizkit3d::Vizkit3DWidget
@@ -75,6 +90,7 @@ public slots:
     void removeAllPlugins();
     void sortTasks(); //sorts by column 0
     void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
+    void itemDataEdited(const QModelIndex &index);
     
 signals:
     void stopNotifier();
@@ -91,6 +107,9 @@ private:
     Vizkit3dPluginRepository *pluginRepo;
     ConfigItemHandlerRepository *handlerrepo;
     AddNameServiceDialog *nameServiceDialog;
+
+    std::map<InputPortItem*,PortChangeConfirmationWidget*> changeconfirms;
+
     void cleanup();
     std::vector<std::pair<QObject *, TypedItem *>> activePlugins;
     void removePlugin(QObject *plugin, TypedItem *ti);
