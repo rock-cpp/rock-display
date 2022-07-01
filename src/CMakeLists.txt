@@ -15,6 +15,7 @@ SOURCES
     Vizkit3dPluginRepository.cpp
     ConfigItem.cpp
     VisualizerAdapter.cpp
+    ConfigItemHandlerRepository.cpp
 MOC
     TaskModel.hpp
     TaskModelNotifier.hpp
@@ -24,6 +25,7 @@ MOC
     Mainwindow.hpp
     Types.hpp
     VisualizerAdapter.hpp
+    ConfigItemHandlerRepository.hpp
 HEADERS
 UI
     task_inspector_window.ui
