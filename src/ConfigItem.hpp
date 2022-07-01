@@ -29,6 +29,8 @@ namespace RTT
     }
 }
 
+class ConfigItemHandler;
+
 class ItemBase : public VisualizerAdapter
 {
 protected:
@@ -38,6 +40,15 @@ protected:
     std::vector<std::shared_ptr<ItemBase> > children;
     ConfigItemHandlerRepository *handlerrepo;
     
+    /** Stack of handlers associated with this item.
+     *
+     * Each of these handlers may decide to produce a custom textual output,
+     * a custom editor, custom context menu entries or similar. It may also
+     * decide it fully handled this item and there is no more to do(TODO: do we want to do this?).
+     *
+     * The handlerStack is determined during getItem and getEditableItem
+     */
+    std::vector<ConfigItemHandler const*> handlerStack;
 public:
     enum UsedRoles {
         ModifiedRole = Qt::UserRole + 1
@@ -86,6 +97,16 @@ public:
     void setHandlerRepo(ConfigItemHandlerRepository *handlerrepo)
     {
         this->handlerrepo = handlerrepo;
+    }
+
+    virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack)
+    {
+        handlerStack = stack;
+    }
+
+    std::vector<ConfigItemHandler const*> const &getHandlerStack()
+    {
+        return handlerStack;
     }
 
     static std::map<std::string, std::string> lookupMarshalledTypelistTypes();

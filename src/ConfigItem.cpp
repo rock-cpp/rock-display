@@ -1043,6 +1043,7 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value, ConfigItemHandlerRepo
         throw std::runtime_error("Internal Error");
 
     itembase->setHandlerRepo(handlerrepo);
+    itembase->setHandlerStack(handlerrepo->findNameServiceConfigItemHandlersFor(type, false));
     return itembase;
 }
 
@@ -1076,5 +1077,6 @@ std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, ConfigItemHan
         throw std::runtime_error("Internal Error");
 
     itembase->setHandlerRepo(handlerrepo);
+    itembase->setHandlerStack(handlerrepo->findNameServiceConfigItemHandlersFor(type, true));
     return itembase;
 }
