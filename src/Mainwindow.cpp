@@ -52,7 +52,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(removeAllPluginsAction, SIGNAL(triggered()), this, SLOT(removeAllPlugins()));
     
     ui->menubar->addMenu(pluginManager);
-      
+
+    connect(ui->lineEdit, &QLineEdit::textEdited,
+            this, &MainWindow::filterTextEdited);
+
     view->setSortingEnabled(true);
     view->header()->setSortIndicator(0, Qt::AscendingOrder);
 
@@ -131,6 +134,28 @@ void MainWindow::sortTasks()
     view->sortByColumn(0, view->header()->sortIndicatorOrder());
 }
 
+void MainWindow::filterTextEdited(QString const &text)
+{
+    //ordinally, i'd reach for QSortFilteredModelProxy, but in this
+    //case, the model is not enough of an abstraction and data
+    //is passed around bypassing the model interface
+    //(meaning the data() function).
+    for(int i = 0; i < model->rowCount(QModelIndex()); i++)
+    {
+        //nameservices
+        QModelIndex nsindex = model->index(i,0,QModelIndex());
+        QModelIndex tasksindex = model->index(0,0,nsindex);
+        for(int j = 0; j < model->rowCount(tasksindex); j++)
+        {
+            //tasks
+            QModelIndex taskindex = model->index(j,0,tasksindex);
+            view->setRowHidden(j,tasksindex,
+                !model->data(taskindex, Qt::DisplayRole).toString()
+                .contains(text, Qt::CaseInsensitive)
+            );
+        }
+    }
+}
 
 AddNameServiceDialog::AddNameServiceDialog(QWidget* parent): QDialog(parent)
 {

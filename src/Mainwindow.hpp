@@ -91,7 +91,10 @@ public slots:
     void sortTasks(); //sorts by column 0
     void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
     void itemDataEdited(const QModelIndex &index);
-    
+
+private slots:
+    void filterTextEdited(QString const &text);
+
 signals:
     void stopNotifier();
     void stopUIUpdater();
