@@ -2,14 +2,15 @@
 
 #include <QMainWindow>
 #include <QDialog>
-#include <QTreeWidget>
-#include <QStandardItem>
-#include <QStandardItemModel>
-#include "TaskModel.hpp"
 #include "NameServiceModel.hpp"
-#include "Vizkit3dPluginRepository.hpp"
 #include <vizkit3d/Vizkit3DWidget.hpp>
-#include <thread>
+#include <rtt/base/DataSourceBase.hpp>
+
+QT_BEGIN_NAMESPACE
+class QLineEdit;
+class QTreeView;
+class QTimer;
+QT_END_NAMESPACE
 
 namespace Ui {
     class MainWindow;
@@ -21,7 +22,11 @@ namespace RTT {
     }
 }
 
+class TypedItem;
 class InputPortItem;
+class Vizkit3dPluginRepository;
+class PluginHandle;
+class VizHandle;
 
 class AddNameServiceDialog : public QDialog
 {

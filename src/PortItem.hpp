@@ -1,10 +1,11 @@
 #pragma once
 
-#include <QStandardItem>
-#include "TypedItem.hpp"
-#include "Types.hpp"
 #include "ConfigItem.hpp"
-#include "Vizkit3dPluginRepository.hpp"
+#include "VisualizerAdapter.hpp"
+
+QT_BEGIN_NAMESPACE
+class QStandardItem;
+QT_END_NAMESPACE
 
 namespace RTT
 {
@@ -15,6 +16,8 @@ namespace RTT
         class PortInterface;
     }
 }
+
+class TypedItem;
 
 class PortItem : public VisualizerAdapter
 {

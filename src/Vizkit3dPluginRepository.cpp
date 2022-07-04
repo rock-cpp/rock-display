@@ -2,6 +2,7 @@
 #include <base-logging/Logging.hpp>
 #include <iostream>
 #include <boost/regex.hpp>
+#include <typelib/registry.hh>
 
 VizHandle *Vizkit3dPluginHandle::createViz() const
 {

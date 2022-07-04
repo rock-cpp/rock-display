@@ -1,6 +1,7 @@
 #include "NameServiceModel.hpp"
 #include "TaskModel.hpp"
 #include "TaskModelNotifier.hpp"
+#include <QThread>
 
 NameServiceModel::NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent)
     : QStandardItemModel(parent), handlerrepo(handlerrepo)

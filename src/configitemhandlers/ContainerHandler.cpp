@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QWidgetAction>
 #include <QLabel>
+#include <rtt/typelib/TypelibMarshallerBase.hpp>
 
 static Typelib::Value *getItemTypelibValue(QModelIndex const &mi, NameServiceModel const *model)
 {

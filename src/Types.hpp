@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include "Vizkit3dPluginRepository.hpp"
+#include <QStandardItem>
 
 enum ItemType {TASK          = QStandardItem::UserType+1,   //1001
                OUTPUTPORT    = QStandardItem::UserType+2,
@@ -11,6 +11,7 @@ enum ItemType {TASK          = QStandardItem::UserType+1,   //1001
                EDITABLEITEM  = QStandardItem::UserType+6 };
 
 class TypedItem;
+class PluginHandle;
 
 class DataContainer : public QObject {
     Q_OBJECT

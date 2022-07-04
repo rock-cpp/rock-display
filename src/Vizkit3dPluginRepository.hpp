@@ -4,13 +4,17 @@
 #include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <string>
 #include <algorithm>
-#include <typelib/registry.hh>
 #include <QObject>
 #include <rtt/base/DataSourceBase.hpp>
 
 QT_BEGIN_NAMESPACE
 class QWidget;
 QT_END_NAMESPACE
+
+namespace Typelib
+{
+    class Registry;
+}
 
 class VizHandle
 {

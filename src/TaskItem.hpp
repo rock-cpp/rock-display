@@ -1,8 +1,11 @@
 #pragma once
-#include <QStandardItem>
 #include "PortItem.hpp"
 #include "TypedItem.hpp"
 #include "Types.hpp"
+
+QT_BEGIN_NAMESPACE
+class QStandardItem;
+QT_END_NAMESPACE
 
 namespace RTT
 {

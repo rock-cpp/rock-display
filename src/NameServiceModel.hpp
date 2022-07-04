@@ -1,5 +1,6 @@
 #pragma once
 #include <QStandardItemModel>
+#include <vector>
 
 class TaskModel;
 class TaskItem;

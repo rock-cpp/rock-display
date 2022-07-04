@@ -1,11 +1,19 @@
 #pragma once
 
-#include <QStandardItemModel>
-#include "TaskItem.hpp"
-#include <mutex>
+#include <QStandardItem>
+#include "TypedItem.hpp"
+
+namespace RTT
+{
+    namespace corba
+    {
+        class TaskContextProxy;
+    }
+}
 
 class TaskModelNotifier;
-
+class TaskItem;
+class ConfigItemHandlerRepository;
 
 class TaskModel : public QObject
 {

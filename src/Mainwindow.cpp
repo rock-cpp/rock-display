@@ -1,5 +1,21 @@
+
+/* including this first because it uses "emit" and "signals" which are
+ * #defined by QT
+ *
+ * workaround that works in some compilers:
+ * #pragma push_macro("emit")
+ * #pragma push_macro("signals")
+ * #undef emit
+ * #undef signals
+ */
 #include <rtt/transports/corba/TaskContextProxy.hpp>
+/*
+ * #pragma pop_macro("signals")
+ * #pragma pop_macro("emit")
+ */
+
 #include "Mainwindow.hpp"
+
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"
 #include "TypedItem.hpp"
@@ -10,6 +26,11 @@
 #include "NameServiceItemDelegate.hpp"
 #include "ConfigItemHandlerRepository.hpp"
 #include "ConfigItemHandler.hpp"
+#include "Vizkit3dPluginRepository.hpp"
+#include "TaskModel.hpp"
+#include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include "PortItem.hpp"
+#include "TaskItem.hpp"
 
 void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
 {

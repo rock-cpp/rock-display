@@ -1,13 +1,17 @@
+/* this include is first because it uses "emit" and "signals" which are
+ * #defined by Qt */
+#include <orocos_cpp_base/ProxyPort.hpp>
+#include "PortItem.hpp"
+
 #include <rtt/base/OutputPortInterface.hpp>
 #include <orocos_cpp_base/OrocosHelpers.hpp>
-#include <orocos_cpp_base/ProxyPort.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
-#include "PortItem.hpp"
+#include <boost/lexical_cast.hpp>
 #include "ConfigItem.hpp"
 #include <lib_config/TypelibConfiguration.hpp>
 #include <base-logging/Logging.hpp>
 #include <QMetaType>
+#include "Types.hpp"
 
 class PortHandle
 {

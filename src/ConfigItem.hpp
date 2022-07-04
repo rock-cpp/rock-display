@@ -2,11 +2,12 @@
 
 #include "TypedItem.hpp"
 #include "VisualizerAdapter.hpp"
-#include <lib_config/Configuration.hpp>
 #include <typelib/value.hh>
-#include <QTextCodec>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
-#include <orocos_cpp/PluginHelper.hpp>
+
+QT_BEGIN_NAMESPACE
+class QTextCodec;
+QT_END_NAMESPACE
 
 class PortHandle;
 class OutputPortItem;
