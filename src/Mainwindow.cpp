@@ -35,6 +35,84 @@ void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
         QApplication::quit();
 }
 
+class ImageViewPluginHandle : public PluginHandle
+{
+public:
+    std::string typeName;
+    virtual VizHandle *createViz() const override;
+};
+
+class ImageViewVizHandle : public VizHandle
+{
+public:
+    QWidget *widget;
+    QMetaMethod method;
+    virtual void updateVisualizer(RTT::base::DataSourceBase::shared_ptr data) override;
+    virtual QObject *getVizkit3dPluginObject() override { return nullptr; }
+    virtual QWidget *getStandaloneWidget() override { return widget; }
+};
+
+VizHandle *ImageViewPluginHandle::createViz() const
+{
+    RockWidgetCollection collection;
+    QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
+
+    QWidget *imView = nullptr;
+    for (QDesignerCustomWidgetInterface *widgetInterface: customWidgets)
+    {
+        const std::string widgetName = widgetInterface->name().toStdString();
+
+        if (widgetName == pluginName)
+        {
+            imView = widgetInterface->createWidget(nullptr);
+        }
+    }
+
+    if (!imView)
+    {
+        return nullptr;
+    }
+
+    const QMetaObject *metaPlugin = imView->metaObject();
+
+    QMetaMethod found_method;
+    for(int i = 0 ; i < metaPlugin->methodCount(); i++)
+    {
+        QMetaMethod method = metaPlugin->method(i);
+        auto parameterList = method.parameterTypes();
+        if(parameterList.size() != 1)
+        {
+            continue;
+        }
+
+        std::string signature = method.methodSignature().toStdString();
+        std::string methodStr("setFrame");
+        if (signature.size() > methodStr.size() && signature.substr(0, methodStr.size()) == methodStr)
+        {
+            found_method = method;
+        }
+    }
+
+    ImageViewVizHandle *ivvh = new ImageViewVizHandle;
+
+
+    ivvh->method = found_method;
+    ivvh->widget = imView;
+    return ivvh;
+}
+
+void ImageViewVizHandle::updateVisualizer(RTT::base::DataSourceBase::shared_ptr data)
+{
+    QGenericArgument val("void *", data.get()->getRawConstPointer());
+    if (!val.data())
+    {
+        return;
+    }
+
+    method.invoke(widget, val);
+}
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -71,7 +149,6 @@ MainWindow::MainWindow(QWidget *parent) :
     model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");
-    qRegisterMetaType<VizHandle>("VizHandle");
     qRegisterMetaType<RTT::base::DataSourceBase::shared_ptr>("RTT::base::DataSourceBase::shared_ptr");
     view->setModel(model);
     view->header()->resizeSection(0, 250);
@@ -83,29 +160,31 @@ MainWindow::MainWindow(QWidget *parent) :
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
     
-    PluginHandle handle;
-    handle.typeName = "/base/samples/frame/Frame";
-    handle.pluginName = "ImageView";
+    ImageViewPluginHandle *handle = new ImageViewPluginHandle;
+    handle->typeName = "/base/samples/frame/Frame";
+    handle->pluginName = "ImageView";
     additionalPlugins.push_back(handle);
     
-    std::vector<PluginHandle> plugins = pluginRepo->getAllAvailablePlugins();
+    std::vector<PluginHandle const *> plugins;
+    for (Vizkit3dPluginHandle const *p : pluginRepo->getAllAvailablePlugins())
+        plugins.push_back(p);
     plugins.insert(plugins.end(), additionalPlugins.begin(), additionalPlugins.end());
     
     //sort plugins for easy readability 
     std::sort(plugins.begin(), plugins.end(), PluginHandleSortByPluginName(true));
     
     std::vector<std::string> menuWidgets;
-    for (const PluginHandle &handle: plugins)
+    for (const PluginHandle *handle: plugins)
     {
-        if (std::find(menuWidgets.begin(), menuWidgets.end(), handle.pluginName) != menuWidgets.end())
+        if (std::find(menuWidgets.begin(), menuWidgets.end(), handle->pluginName) != menuWidgets.end())
         {
             continue;
         }
         
         QSignalMapper* signalMapper = new QSignalMapper (this) ;
-        QAction *act = ui->menuWidgets->addAction(handle.pluginName.c_str());
+        QAction *act = ui->menuWidgets->addAction(QString::fromStdString(handle->pluginName));
         
-        menuWidgets.push_back(handle.pluginName);
+        menuWidgets.push_back(handle->pluginName);
 
         connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
 
@@ -235,7 +314,7 @@ void MainWindow::addNameService()
 void MainWindow::openPlugin(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
-    PluginHandle ph = d->getPluginHandle();
+    PluginHandle const *ph = d->getPluginHandle();
     addPlugin(ph, nullptr);
 }
 
@@ -428,10 +507,16 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     typeName = ItemBase::marshalled2Typelib[typeName];
                 }
                 
-                std::vector<PluginHandle> handles = pluginRepo->getPluginsForType(typeName, registry);
-                for (PluginHandle additionalPlugin: additionalPlugins)
+                std::vector<PluginHandle const *> handles;
+                for (auto &p : pluginRepo->getPluginsForType(typeName, registry))
                 {
-                    if (additionalPlugin.typeName == typeName)
+                    handles.push_back(&p);
+                }
+                for (PluginHandle *additionalPlugin: additionalPlugins)
+                {
+                    ImageViewPluginHandle const * ivph = dynamic_cast<ImageViewPluginHandle const *>
+                    (additionalPlugin);
+                    if (ivph && ivph->typeName == typeName)
                     {
                         handles.push_back(additionalPlugin);
                     }
@@ -440,17 +525,17 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 menu->addAction(labelAction);
                 label->setText(tr("<b>Plugins</b>"));
 
-                for (const PluginHandle &handle: handles)
+                for (const PluginHandle *handle: handles)
                 {
                     QSignalMapper* signalMapper = new QSignalMapper(this);
                     QAction *act = nullptr;
-                    if (viz->hasVisualizer(handle.pluginName))
+                    if (viz->hasVisualizer(handle->pluginName))
                     {
-                        act = menu->addAction(std::string(std::string("remove ") + handle.pluginName).c_str());
+                        act = menu->addAction(tr("remove %1").arg(QString::fromStdString(handle->pluginName)));
                     }
                     else
                     {
-                        act = menu->addAction(handle.pluginName.c_str());
+                        act = menu->addAction(QString::fromStdString(handle->pluginName));
                     }
 
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
@@ -475,116 +560,85 @@ void MainWindow::prepareMenu(const QPoint & pos)
     }
 }
 
-void MainWindow::addPlugin(PluginHandle &ph, TypedItem* ti)
+void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
 {   
-    VizHandle nh;
-    
-    if (ph.pluginName == "ImageView")
+    VizHandle *nh = ph->createViz();
+
+    if (!nh)
     {
-        RockWidgetCollection collection;
-        QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
-        
-        QWidget *imView = nullptr;
-        for (QDesignerCustomWidgetInterface *widgetInterface: customWidgets)
-        {
-            const std::string widgetName = widgetInterface->name().toStdString();
-            
-            if (widgetName == ph.pluginName)
-            {
-                imView = widgetInterface->createWidget(nullptr);
-            }
-        }
-        
-        if (!imView)
-        {
-            return;
-        }
-        
-        const QMetaObject *metaPlugin = imView->metaObject();
-        
-        for(int i = 0 ; i < metaPlugin->methodCount(); i++)
-        {
-            QMetaMethod method = metaPlugin->method(i);
-            auto parameterList = method.parameterTypes();
-            if(parameterList.size() != 1)
-            {
-                continue;
-            }
-            
-            std::string signature = method.methodSignature().toStdString();
-            std::string methodStr("setFrame");
-            if (signature.size() > methodStr.size() && signature.substr(0, methodStr.size()) == methodStr)
-            {
-                ph.typeName = parameterList[0].data();
-                ph.method = method;
-            }
-        }
-        
-        nh.method = ph.method;
-        nh.plugin = imView;
-        imView->show();
+        return;
     }
-    else
+    
+    QWidget *widget = nh->getStandaloneWidget();
+    if (widget)
     {
-        nh = pluginRepo->getNewVizHandle(ph);
-        widget3d.addPlugin(nh.plugin);
+        widget->show();
+    }
+    QObject *v3dplugin = nh->getVizkit3dPluginObject();
+    if (v3dplugin)
+    {
+        widget3d.addPlugin(v3dplugin);
         widget3d.show();
     }
-    
-    activePlugins.push_back(std::make_pair(nh.plugin, ti));
+
+    activePlugins.push_back(std::make_pair(nh, ti));
     
     if (!ti)
     {
         return;
     }
-    
+
     VisualizerAdapter *viz = nullptr;
     
-    if (ti->type() == ItemType::OUTPUTPORT)
+    if (ti->type() == ItemType::OUTPUTPORT || ti->type() == ItemType::INPUTPORT)
     {
         viz = static_cast<PortItem *>(ti->getData());
     }
-    else if (ti->type() == ItemType::CONFIGITEM)
+    else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::CONFIGITEM)
     {
         viz = static_cast<ItemBase *>(ti->getData());
     }
         
     if (viz)
     {
-        viz->addPlugin(ph.pluginName, nh);
-        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle, RTT::base::DataSourceBase::shared_ptr)));
+        viz->addPlugin(ph->pluginName, nh);
+        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle*, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle*, RTT::base::DataSourceBase::shared_ptr)));
     }
 }
 
-void MainWindow::removePlugin(QObject *plugin, TypedItem *ti)
+void MainWindow::removePlugin(VizHandle *plugin, TypedItem *ti)
 {
-    widget3d.removePlugin(plugin);
-    
-    QWidget *widget = dynamic_cast<QWidget *>(plugin);
+    QObject *v3dplugin = plugin->getVizkit3dPluginObject();
+    if (v3dplugin)
+    {
+        widget3d.removePlugin(v3dplugin);
+    }
+    QWidget *widget = plugin->getStandaloneWidget();
     if (widget)
-    {    
+    {
         widget->close();
     }
     
     if (ti)
     {
-        if (ti->type() == ItemType::CONFIGITEM)
+        if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::EDITABLEITEM)
         {
             ItemBase *item = static_cast<ItemBase *>(ti->getData());
             item->removeVisualizer(plugin);
         }
-        else if (ti->type() == ItemType::OUTPUTPORT)
+        else if (ti->type() == ItemType::OUTPUTPORT || ti->type() == ItemType::INPUTPORT)
         {
-            OutputPortItem *outport = static_cast<OutputPortItem *>(ti->getData());
-            outport->removeVisualizer(plugin);
+            PortItem *portitem = static_cast<PortItem *>(ti->getData());
+            portitem->removeVisualizer(plugin);
         }
     }
     
-    for (std::vector<std::pair<QObject *, TypedItem *>>::iterator it = activePlugins.begin(); it != activePlugins.end(); it++)
+    for (std::vector<std::pair<VizHandle *, TypedItem *>>::iterator it = activePlugins.begin(); it != activePlugins.end(); it++)
     {   
         if (it->first == plugin)
         {
             activePlugins.erase(it);
+            delete plugin;
             break;
         }
     }
@@ -594,7 +648,7 @@ void MainWindow::handleOutputPort(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
     TypedItem *ti = d->getItem();
-    PluginHandle ph = d->getPluginHandle();
+    PluginHandle const *ph = d->getPluginHandle();
     
     VisualizerAdapter *viz = nullptr;
         
@@ -609,7 +663,7 @@ void MainWindow::handleOutputPort(QObject *obj)
             
     if (viz)
     {
-        QObject *plugin = viz->getVisualizer(ph.pluginName);
+        VizHandle *plugin = viz->getVisualizer(ph->pluginName);
         if (plugin)
         {
             removePlugin(plugin, ti);
@@ -645,20 +699,15 @@ void MainWindow::updateTasks()
     model->updateTasks();
 }
 
-void MainWindow::updateVisualizer(VizHandle vizHandle, RTT::base::DataSourceBase::shared_ptr data)
+void MainWindow::updateVisualizer(VizHandle *vizHandle, RTT::base::DataSourceBase::shared_ptr data)
 {
     if (!data)
     {
         return;
     }
-    
-    QGenericArgument val("void *", data.get()->getRawConstPointer());
-    if (!val.data())
-    {
-        return;
-    }
-    
-    vizHandle.method.invoke(vizHandle.plugin, val);
+    //since the vizHandle knows how to pass the raw data pointer on, this signal is
+    //actually not needed.
+    vizHandle->updateVisualizer(data);
 }
 
 void MainWindow::itemDataEdited(const QModelIndex &index)

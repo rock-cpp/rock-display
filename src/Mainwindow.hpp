@@ -89,7 +89,7 @@ public slots:
     void addNameService();
     void removeAllPlugins();
     void sortTasks(); //sorts by column 0
-    void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
+    void updateVisualizer(VizHandle *vizhandle, RTT::base::DataSourceBase::shared_ptr data);
     void itemDataEdited(const QModelIndex &index);
 
 private slots:
@@ -101,7 +101,7 @@ signals:
     
 private:
     MyVizkit3DWidget widget3d;
-    std::vector<PluginHandle> additionalPlugins;
+    std::vector<PluginHandle*> additionalPlugins;
     Ui::MainWindow *ui;
     QTimer *uiUpdateTimer;
     QTreeView *view;
@@ -114,7 +114,7 @@ private:
     std::map<InputPortItem*,PortChangeConfirmationWidget*> changeconfirms;
 
     void cleanup();
-    std::vector<std::pair<QObject *, TypedItem *>> activePlugins;
-    void removePlugin(QObject *plugin, TypedItem *ti);
-    void addPlugin(PluginHandle &ph, TypedItem *ti);
+    std::vector<std::pair<VizHandle *, TypedItem *>> activePlugins;
+    void removePlugin(VizHandle *plugin, TypedItem *ti);
+    void addPlugin(PluginHandle const *ph, TypedItem *ti);
 };

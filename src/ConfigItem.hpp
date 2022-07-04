@@ -196,7 +196,7 @@ public:
     virtual ~Complex();
     
     virtual bool update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false);
-    virtual void addPlugin(const std::string &name, VizHandle handle);
+    virtual void addPlugin(const std::string &name, VizHandle *handle);
 };
 
 class EditableComplex : public Complex

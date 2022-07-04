@@ -3,6 +3,25 @@
 #include <iostream>
 #include <boost/regex.hpp>
 
+VizHandle *Vizkit3dPluginHandle::createViz() const
+{
+    Vizkit3dVizHandle *newHandle = new Vizkit3dVizHandle;
+    newHandle->plugin = factory->createPlugin(QString::fromStdString(pluginName));
+    newHandle->method = method;
+    return newHandle;
+}
+
+void Vizkit3dVizHandle::updateVisualizer(RTT::base::DataSourceBase::shared_ptr data)
+{
+    QGenericArgument val("void *", data.get()->getRawConstPointer());
+    if (!val.data())
+    {
+        return;
+    }
+
+    method.invoke(plugin, val);
+}
+
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
 {
     QPluginLoader loader;
@@ -26,7 +45,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             continue;
         }
         
-        PluginHandle handle;
+        Vizkit3dPluginHandle handle;
         handle.factory = factory;
         handle.libararyName = libPath;
         
@@ -34,7 +53,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 
         for(const QString &pName: *availablePlugins)
         {   
-            std::map<std::string, PluginHandle> typeMap;
+            std::map<std::string, Vizkit3dPluginHandle> typeMap;
             handle.pluginName = pName.toStdString();
             QObject *plugin = factory->createPlugin(pName);
             LOG_INFO_S << "plugin " << pName.toStdString();
@@ -88,15 +107,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
     }
 }
 
-VizHandle Vizkit3dPluginRepository::getNewVizHandle(const PluginHandle& handle)
-{
-    VizHandle newHandle;
-    newHandle.plugin = handle.factory->createPlugin(handle.pluginName.c_str());
-    newHandle.method = handle.method;
-    return newHandle;
-}
-
-const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type, const Typelib::Registry* registry)
+const std::vector< Vizkit3dPluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type, const Typelib::Registry* registry)
 {
     if(type.empty())
         return empty;
@@ -128,7 +139,7 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
         return empty;
     }
 
-    std::vector< PluginHandle > resultset;
+    std::vector< Vizkit3dPluginHandle > resultset;
     for(const auto &h: typeToPlugins)
     {
         std::string pluginTypeName = h.first;
@@ -169,14 +180,14 @@ const std::vector< PluginHandle >& Vizkit3dPluginRepository::getPluginsForType(c
     return typeToPlugins[dottedType];
 }
 
-const std::vector<PluginHandle> Vizkit3dPluginRepository::getAllAvailablePlugins()
+const std::vector<Vizkit3dPluginHandle*> Vizkit3dPluginRepository::getAllAvailablePlugins()
 {
-    std::vector<PluginHandle> plugins;
+    std::vector<Vizkit3dPluginHandle*> plugins;
     for (auto &t2p: typeToPlugins)
     {
         for (auto &plugin: t2p.second)
         {
-            plugins.push_back(plugin);
+            plugins.push_back(&plugin);
         }
     }
     

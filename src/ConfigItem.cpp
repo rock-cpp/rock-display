@@ -748,7 +748,7 @@ bool EditableSimple::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Val
     return isEqual;
 }
 
-void Complex::addPlugin(const std::string& name, VizHandle handle)
+void Complex::addPlugin(const std::string& name, VizHandle *handle)
 {
     VisualizerAdapter::addPlugin(name, handle);
     

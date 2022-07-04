@@ -12,7 +12,7 @@ class VisualizerAdapter : public QObject
     Q_OBJECT
     
 protected:
-    std::map<std::string, VizHandle> visualizers;
+    std::map<std::string, VizHandle*> visualizers;
     
 public:
     VisualizerAdapter()
@@ -23,19 +23,19 @@ public:
     {
     }
     
-    virtual void addPlugin(const std::string &name, VizHandle handle);
+    virtual void addPlugin(const std::string &name, VizHandle *handle);
     bool hasVisualizer(const std::string &name);
-    QObject *getVisualizer(const std::string &name);
-    bool removeVisualizer(QObject *plugin);
+    VizHandle *getVisualizer(const std::string &name);
+    bool removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
         return visualizers.empty();
     }
-    void updateVisualizer(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data)
+    void updateVisualizer(VizHandle *vizhandle, RTT::base::DataSourceBase::shared_ptr data)
     {
         emit requestVisualizerUpdate(vizhandle, data);
     }
     
 signals:
-    void requestVisualizerUpdate(VizHandle vizhandle, RTT::base::DataSourceBase::shared_ptr data);
+    void requestVisualizerUpdate(VizHandle *vizhandle, RTT::base::DataSourceBase::shared_ptr data);
 };

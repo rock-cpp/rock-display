@@ -16,11 +16,11 @@ class DataContainer : public QObject {
     Q_OBJECT
 
     private:
-        PluginHandle _handle;
+        PluginHandle const *_handle;
         TypedItem *_ti;
 
     public:
-        DataContainer(PluginHandle handle, TypedItem *ti) : _handle(handle), _ti(ti)
+        DataContainer(PluginHandle const *handle, TypedItem *ti) : _handle(handle), _ti(ti)
         {
 
         }
@@ -30,7 +30,7 @@ class DataContainer : public QObject {
 
         }
 
-        PluginHandle getPluginHandle()
+        PluginHandle const *getPluginHandle()
         {
             return _handle;
         }
