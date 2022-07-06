@@ -20,6 +20,7 @@ SOURCES
     configitemhandlers/StdStringHandler.cpp
     configitemhandlers/ImageCtxMenuHandler.cpp
     ConfigItemHandlerRepository.cpp
+    vizplugins/imageviewplugin.cpp
 MOC
     TaskModel.hpp
     TaskModelNotifier.hpp
@@ -34,6 +35,7 @@ MOC
     configitemhandlers/StdStringHandler.hpp
     configitemhandlers/ImageCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
+    vizplugins/imageviewplugin.hpp
 HEADERS
 UI
     task_inspector_window.ui
