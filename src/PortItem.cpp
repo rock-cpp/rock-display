@@ -187,6 +187,16 @@ const std::string& OutputPortItem::getType()
     return typeInfo;
 }
 
+Typelib::Value OutputPortItem::getValueHandle()
+{
+    return Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+}
+
+RTT::base::DataSourceBase::shared_ptr OutputPortItem::getBaseSample()
+{
+    return handle->sample;
+}
+
 InputPortItem::InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), writer(nullptr)
 {
     nameItem->setType(ItemType::INPUTPORT);
@@ -351,4 +361,14 @@ void InputPortItem::restoreOldData()
 bool InputPortItem::compareAndMarkData()
 {
     return item->compareAndMark(currentData, oldData);
+}
+
+Typelib::Value InputPortItem::getValueHandle()
+{
+    return Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+}
+
+RTT::base::DataSourceBase::shared_ptr InputPortItem::getBaseSample()
+{
+    return handle->sample;
 }

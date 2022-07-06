@@ -57,6 +57,8 @@ public:
         
         return false;
     }
+    virtual Typelib::Value getValueHandle() { return Typelib::Value(); }
+    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() { return nullptr; }
 };
 
 class PortHandle;
@@ -76,6 +78,8 @@ public:
     RTT::base::PortInterface* getPort();
     
     void reset();
+    virtual Typelib::Value getValueHandle() override;
+    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
 };
 
 class InputPortItem : public PortItem
@@ -101,4 +105,7 @@ public:
     void reset();
     void sendCurrentData();
     void restoreOldData();
+
+    virtual Typelib::Value getValueHandle() override;
+    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
 };

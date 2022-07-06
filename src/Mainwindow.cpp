@@ -29,6 +29,7 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include "TaskModel.hpp"
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <rtt/base/DataSourceBase.hpp>
 #include "PortItem.hpp"
 #include "TaskItem.hpp"
 #include "vizplugins/imageviewplugin.hpp"
@@ -576,20 +577,32 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
     }
 
     VisualizerAdapter *viz = nullptr;
+    Typelib::Value value;
+    RTT::base::DataSourceBase::shared_ptr base_sample;
     
     if (ti->type() == ItemType::OUTPUTPORT || ti->type() == ItemType::INPUTPORT)
     {
-        viz = static_cast<PortItem *>(ti->getData());
+        PortItem *pi = static_cast<PortItem *>(ti->getData());
+        viz = pi;
+        value = pi->getValueHandle();
+        base_sample = pi->getBaseSample();
     }
     else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::CONFIGITEM)
     {
-        viz = static_cast<ItemBase *>(ti->getData());
+        ItemBase * item = static_cast<ItemBase *>(ti->getData());
+        viz = item;
+        value = item->getValueHandle();
+        base_sample = item->getBaseSample();
     }
         
     if (viz)
     {
         viz->addPlugin(ph->pluginName, nh);
         connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)));
+        if (value.getData() && base_sample)
+        {
+            updateVisualizer(nh, value.getData(), base_sample);
+        }
     }
 }
 
