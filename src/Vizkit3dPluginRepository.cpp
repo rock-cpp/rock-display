@@ -4,6 +4,35 @@
 #include <boost/regex.hpp>
 #include <typelib/registry.hh>
 
+static std::string convertTypelibToDottedTypeName(std::string const &typelibTypeName)
+{
+    std::string dottedTypeName = typelibTypeName.substr(1, typelibTypeName.size());
+    static boost::regex re1("_m");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re1, "");
+    static boost::regex re2("</");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re2, "<");
+    static boost::regex re3("/");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re3, "::");
+    static boost::regex re4("\\s\\[.*\\]");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re4, "");
+    static boost::regex re5(">>");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re5, "> >");
+    return dottedTypeName;
+}
+
+static std::string convertDottedToTypelibTypeName(std::string const &dottedTypeName)
+{
+    std::string typelibTypeName = dottedTypeName;
+    static boost::regex re1("> >");
+    typelibTypeName = boost::regex_replace(typelibTypeName, re1, ">>");
+    static boost::regex re2("::");
+    typelibTypeName = boost::regex_replace(typelibTypeName, re2, "/");
+    static boost::regex re3("<");
+    typelibTypeName = boost::regex_replace(typelibTypeName, re3, "</");
+    typelibTypeName = std::string("/")+typelibTypeName;
+    return typelibTypeName;
+}
+
 VizHandle *Vizkit3dPluginHandle::createViz() const
 {
     Vizkit3dVizHandle *newHandle = new Vizkit3dVizHandle;
@@ -46,16 +75,11 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             continue;
         }
         
-        Vizkit3dPluginHandle handle;
-        handle.factory = factory;
-        handle.libararyName = libPath;
-        
         QStringList *availablePlugins = factory->getAvailablePlugins();
                 
         for(const QString &pName: *availablePlugins)
         {   
-            std::map<std::string, Vizkit3dPluginHandle> typeMap;
-            handle.pluginName = pName.toStdString();
+            std::map<std::string, Vizkit3dPluginHandle*> typeMap;
             QObject *plugin = factory->createPlugin(pName);
             LOG_INFO_S << "plugin " << pName.toStdString();
             
@@ -82,11 +106,16 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
                     foundUpdateFunctions = true;
-                    handle.typeName = parameterList[0].data();
+                    Vizkit3dPluginHandle *handle = new Vizkit3dPluginHandle();
+                    handle->factory = factory;
+                    handle->libararyName = libPath;
+
+                    handle->pluginName = pName.toStdString();
+                    handle->typeName = parameterList[0].data();
                     //getPluginsForType expects type names without prefix "::". moc keeps them as given.
-                    handle.typeName = boost::regex_replace(handle.typeName, boost::regex("^::"), "");
-                    handle.method = method;
-                    typeMap[handle.typeName] = handle;
+                    handle->typeName = boost::regex_replace(handle->typeName, boost::regex("^::"), "");
+                    handle->method = method;
+                    typeMap[handle->typeName] = handle;
                 }
             }      
 
@@ -99,8 +128,7 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             
             for(const auto &it : typeMap)
             {                
-                handle = it.second;
-                typeToPlugins[it.second.typeName].push_back(it.second);
+                typeToPlugins[it.second->typeName].push_back(it.second);
             }
         }
 
@@ -108,18 +136,13 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
     }
 }
 
-const std::vector< Vizkit3dPluginHandle >& Vizkit3dPluginRepository::getPluginsForType(const std::string& type, const Typelib::Registry* registry)
+const std::vector< Vizkit3dPluginHandle *>& Vizkit3dPluginRepository::getPluginsForType(const std::string& type, const Typelib::Registry* registry)
 {
     if(type.empty())
         return empty;
 
     //try for a direct match first
-    std::string dottedType = type.substr(1, type.size());
-    dottedType = boost::regex_replace(dottedType, boost::regex("_m"), "");
-    dottedType = boost::regex_replace(dottedType, boost::regex("</"), "<");
-    dottedType = boost::regex_replace(dottedType, boost::regex("/"), "::");
-    dottedType = boost::regex_replace(dottedType, boost::regex("\\s\\[.*\\]"), "");
-    dottedType = boost::regex_replace(dottedType, boost::regex(">>"), "> >");
+    std::string dottedType = convertTypelibToDottedTypeName(type);
  
     auto it = typeToPlugins.find(dottedType);
     if (it != typeToPlugins.end())
@@ -140,14 +163,10 @@ const std::vector< Vizkit3dPluginHandle >& Vizkit3dPluginRepository::getPluginsF
         return empty;
     }
 
-    std::vector< Vizkit3dPluginHandle > resultset;
+    std::vector< Vizkit3dPluginHandle *> resultset;
     for(const auto &h: typeToPlugins)
     {
-        std::string pluginTypeName = h.first;
-        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("> >"), ">>");
-        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("::"), "/");
-        pluginTypeName = boost::regex_replace(pluginTypeName, boost::regex("<"), "</");
-        pluginTypeName = std::string("/")+pluginTypeName;
+        std::string pluginTypeName = convertDottedToTypelibTypeName(h.first);
 
         auto pluginType = registry->get(pluginTypeName);
         if (!pluginType)
@@ -188,7 +207,7 @@ const std::vector<Vizkit3dPluginHandle*> Vizkit3dPluginRepository::getAllAvailab
     {
         for (auto &plugin: t2p.second)
         {
-            plugins.push_back(&plugin);
+            plugins.push_back(plugin);
         }
     }
     

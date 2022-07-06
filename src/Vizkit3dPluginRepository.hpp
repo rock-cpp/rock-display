@@ -16,7 +16,7 @@ namespace Typelib
     class Registry;
 }
 
-class VizHandle
+class VizHandle : public QObject
 {
 public:
     virtual ~VizHandle() {}
@@ -35,7 +35,7 @@ public:
     virtual QWidget *getStandaloneWidget() override { return nullptr; }
 };
 
-class PluginHandle
+class PluginHandle : public QObject
 {
 public:
     std::string pluginName;
@@ -48,7 +48,7 @@ class Vizkit3dPluginHandle : public PluginHandle
 public:
     vizkit3d::VizkitPluginFactory *factory;
     std::string libararyName;
-    std::string typeName;
+    std::string typeName; //this is a dotted type name, global scoped, without :: prefix
     QMetaMethod method;
     virtual VizHandle *createViz() const override;
 };
@@ -73,13 +73,13 @@ struct PluginHandleSortByPluginName
 
 class Vizkit3dPluginRepository
 {
-    std::vector<Vizkit3dPluginHandle> empty;
+    std::vector<Vizkit3dPluginHandle*> empty;
     
-    std::map<std::string, std::vector<Vizkit3dPluginHandle> > typeToPlugins;
+    std::map<std::string, std::vector<Vizkit3dPluginHandle*> > typeToPlugins;
 public:
     Vizkit3dPluginRepository(QStringList &plugins);
     
-    const std::vector<Vizkit3dPluginHandle> &getPluginsForType(const std::string &type, const Typelib::Registry* registry = NULL);
+    const std::vector<Vizkit3dPluginHandle*> &getPluginsForType(const std::string &type, const Typelib::Registry* registry = NULL);
     
     const std::vector<Vizkit3dPluginHandle*> getAllAvailablePlugins();
 };

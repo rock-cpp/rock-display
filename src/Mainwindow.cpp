@@ -452,7 +452,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 std::vector<PluginHandle const *> handles;
                 for (auto &p : pluginRepo->getPluginsForType(typeName, registry))
                 {
-                    handles.push_back(&p);
+                    handles.push_back(p);
                 }
                 for (PluginHandle *additionalPlugin: additionalPlugins)
                 {
