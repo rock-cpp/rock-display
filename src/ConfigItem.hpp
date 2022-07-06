@@ -162,7 +162,7 @@ private:
 protected:
     virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
 public:
-    EditableArray(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    EditableArray(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableArray();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
@@ -185,7 +185,7 @@ private:
     Typelib::Value value_handle;
     RTT::base::DataSourceBase::shared_ptr base_sample;
 public:
-    EditableSimple(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    EditableSimple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableSimple();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
@@ -216,7 +216,7 @@ private:
 protected:
     virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
 public:
-    EditableComplex(Typelib::Value& valueIn, TypedItem *name = nullptr, TypedItem *value = nullptr);
+    EditableComplex(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableComplex();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;

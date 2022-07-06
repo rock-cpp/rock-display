@@ -253,9 +253,8 @@ bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     return forceUpdate || updateNecessary || numElemsDisplayedChanged;
 }
 
-EditableArray::EditableArray(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+EditableArray::EditableArray(TypedItem *name, TypedItem *value)
     : Array(name, value)
-    , value_handle(valueIn)
 {
     if(!name || !value)
     {
@@ -533,9 +532,8 @@ bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
     return updateNecessary;
 }
 
-EditableSimple::EditableSimple(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+EditableSimple::EditableSimple(TypedItem *name, TypedItem *value)
     : Simple(name, value)
-    , value_handle(valueIn)
 {
     if(this->value)
         this->value->setEditable(true);
@@ -947,9 +945,8 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     return forceUpdate || updateNecessary;
 }
 
-EditableComplex::EditableComplex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
+EditableComplex::EditableComplex(TypedItem *name, TypedItem *value)
     : Complex(name, value)
-    , value_handle(valueIn)
 {
     if(!name || !value)
     {
@@ -1100,15 +1097,15 @@ std::shared_ptr< ItemBase > getEditableItem(Typelib::Value& value, ConfigItemHan
     switch(type.getCategory())
     {
         case Typelib::Type::Array:
-            itembase = std::shared_ptr<ItemBase>(new EditableArray(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableArray(nameItem, valueItem));
             break;
         case Typelib::Type::Enum:
         case Typelib::Type::Numeric:
-            itembase = std::shared_ptr<ItemBase>(new EditableSimple(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableSimple(nameItem, valueItem));
             break;
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
-            itembase = std::shared_ptr<ItemBase>(new EditableComplex(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new EditableComplex(nameItem, valueItem));
             break;
         case Typelib::Type::NullType:
         case Typelib::Type::Pointer:
