@@ -175,7 +175,7 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {    
     bool updateNecessary = this->name->isExpanded() && updateUI;
 
@@ -226,7 +226,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        childRet |= children[i]->update(arrayV, updateNecessary, forceUpdate);
+        childRet |= children[i]->update(arrayV, base_sample, updateNecessary, forceUpdate);
     }
     updateNecessary &= childRet;
     
@@ -245,7 +245,7 @@ bool Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             children.push_back(child);
         }
 
-        child->update(arrayV, true, forceUpdate);
+        child->update(arrayV, base_sample, true, forceUpdate);
         child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
@@ -274,15 +274,21 @@ Typelib::Value& EditableArray::getValueHandle()
     return value_handle;
 }
 
+RTT::base::DataSourceBase::shared_ptr EditableArray::getBaseSample()
+{
+    return base_sample;
+}
+
 std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
     return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool EditableArray::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+bool EditableArray::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {
     value_handle = valueIn;
-    return Array::update(valueIn, updateUI, forceUpdate);
+    this->base_sample = base_sample;
+    return Array::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 bool EditableArray::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
@@ -396,7 +402,7 @@ std::string getValue<int8_t>(const Typelib::Value& value)
     return valueS;
 }
 
-bool Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {
     bool updateNecessary = forceUpdate || updateUI;
     
@@ -550,10 +556,16 @@ Typelib::Value& EditableSimple::getValueHandle()
     return value_handle;
 }
 
-bool EditableSimple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+RTT::base::DataSourceBase::shared_ptr EditableSimple::getBaseSample()
+{
+    return base_sample;
+}
+
+bool EditableSimple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {
     value_handle = valueIn;
-    return Simple::update(valueIn, updateUI, forceUpdate);
+    this->base_sample = base_sample;
+    return Simple::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 template <class T>
@@ -748,10 +760,7 @@ bool EditableSimple::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Val
     return isEqual;
 }
 
-void Complex::addPlugin(const std::string& name, VizHandle *handle)
-{
-    VisualizerAdapter::addPlugin(name, handle);
-    
+#if 0
     if (!transport)
     {
         RTT::types::TypeInfoRepository::shared_ptr ti = RTT::types::TypeInfoRepository::Instance();
@@ -785,14 +794,11 @@ void Complex::addPlugin(const std::string& name, VizHandle *handle)
             LOG_WARN_S << "typeInfo for " << typeStr << " unknown..";
         }
     }
-}
+#endif
 
-Complex::Complex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
-    : ItemBase(name, value),
-      typelibType(valueIn.getType())
+Complex::Complex(TypedItem *name, TypedItem *value)
+    : ItemBase(name, value)
 {
-    transport = nullptr;
-    transportHandle = nullptr;
 }
 
 Complex::~Complex()
@@ -805,17 +811,16 @@ std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nam
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {       
     bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
-    if (!visualizers.empty() && transport)
+    if (!visualizers.empty())
     {           
-        transport->setTypelibSample(transportHandle, valueIn);
         for (auto vizHandle : visualizers)
         {
-            updateVisualizer(vizHandle.second, sample);
+            updateVisualizer(vizHandle.second, valueIn.getData(), base_sample);
         }
     }
 
@@ -856,7 +861,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 childRet = true;
             }
 
-            childRet |= children[i]->update(fieldV, updateNecessary, forceUpdate);           
+            childRet |= children[i]->update(fieldV, base_sample, updateNecessary, forceUpdate);
             i++;
         }
         updateNecessary &= childRet;
@@ -897,7 +902,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            childRet |= children[i]->update(elem, updateNecessary, forceUpdate);
+            childRet |= children[i]->update(elem, base_sample, updateNecessary, forceUpdate);
         }
         updateNecessary &= childRet; 
         
@@ -918,7 +923,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 children.push_back(child);
             }
 
-            child->update(elem, true, forceUpdate);
+            child->update(elem, base_sample, true, forceUpdate);
             child->setName(QString::number(i));
             name->appendRow(child->getRow());
         }  
@@ -943,7 +948,7 @@ bool Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 }
 
 EditableComplex::EditableComplex(Typelib::Value& valueIn, TypedItem *name, TypedItem *value)
-    : Complex(valueIn, name, value)
+    : Complex(name, value)
     , value_handle(valueIn)
 {
     if(!name || !value)
@@ -977,16 +982,21 @@ Typelib::Value& EditableComplex::getValueHandle()
     return value_handle;
 }
 
+RTT::base::DataSourceBase::shared_ptr EditableComplex::getBaseSample()
+{
+    return base_sample;
+}
 
 std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
     return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+bool EditableComplex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {
     value_handle = valueIn;
-    return Complex::update(valueIn, updateUI, forceUpdate);
+    this->base_sample = base_sample;
+    return Complex::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 bool EditableComplex::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
@@ -1064,7 +1074,7 @@ std::shared_ptr< ItemBase > getItem(Typelib::Value& value, ConfigItemHandlerRepo
             break;
         case Typelib::Type::Compound:
         case Typelib::Type::Container:
-            itembase = std::shared_ptr<ItemBase>(new Complex(value, nameItem, valueItem));
+            itembase = std::shared_ptr<ItemBase>(new Complex(nameItem, valueItem));
             break;
         case Typelib::Type::NullType:
         case Typelib::Type::Pointer:

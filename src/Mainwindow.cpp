@@ -68,7 +68,7 @@ class ImageViewVizHandle : public VizHandle
 public:
     QWidget *widget;
     QMetaMethod method;
-    virtual void updateVisualizer(RTT::base::DataSourceBase::shared_ptr data) override;
+    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
     virtual QObject *getVizkit3dPluginObject() override { return nullptr; }
     virtual QWidget *getStandaloneWidget() override { return widget; }
 };
@@ -122,9 +122,9 @@ VizHandle *ImageViewPluginHandle::createViz() const
     return ivvh;
 }
 
-void ImageViewVizHandle::updateVisualizer(RTT::base::DataSourceBase::shared_ptr data)
+void ImageViewVizHandle::updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample)
 {
-    QGenericArgument val("void *", data.get()->getRawConstPointer());
+    QGenericArgument val("void *", data);
     if (!val.data())
     {
         return;
@@ -623,7 +623,7 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
     if (viz)
     {
         viz->addPlugin(ph->pluginName, nh);
-        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle*, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle*, RTT::base::DataSourceBase::shared_ptr)));
+        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)));
     }
 }
 
@@ -720,7 +720,7 @@ void MainWindow::updateTasks()
     model->updateTasks();
 }
 
-void MainWindow::updateVisualizer(VizHandle *vizHandle, RTT::base::DataSourceBase::shared_ptr data)
+void MainWindow::updateVisualizer(VizHandle *vizHandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample)
 {
     if (!data)
     {
@@ -728,7 +728,7 @@ void MainWindow::updateVisualizer(VizHandle *vizHandle, RTT::base::DataSourceBas
     }
     //since the vizHandle knows how to pass the raw data pointer on, this signal is
     //actually not needed.
-    vizHandle->updateVisualizer(data);
+    vizHandle->updateVisualizer(data, base_sample);
 }
 
 void MainWindow::itemDataEdited(const QModelIndex &index)

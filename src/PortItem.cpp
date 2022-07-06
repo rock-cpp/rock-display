@@ -162,8 +162,8 @@ bool OutputPortItem::updataValue()
     handle->transport->refreshTypelibSample(handle->transportHandle);
     
     for (auto vizHandle: visualizers)
-    {   
-        updateVisualizer(vizHandle.second, handle->sample.get());
+    {
+        updateVisualizer(vizHandle.second, handle->sample.get()->getRawConstPointer(), handle->sample);
     }
     
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
@@ -176,10 +176,10 @@ bool OutputPortItem::updataValue()
         }
         
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
-        return item->update(val, true, true);
+        return item->update(val, handle->sample, true, true);
     }
     
-    return item->update(val, item->getName()->isExpanded());
+    return item->update(val, handle->sample, item->getName()->isExpanded());
 }
 
 const std::string& OutputPortItem::getType()
@@ -280,7 +280,7 @@ bool InputPortItem::updataValue()
 
     for (auto vizHandle: visualizers)
     {
-        updateVisualizer(vizHandle.second, handle->sample.get());
+        updateVisualizer(vizHandle.second, handle->sample.get()->getRawConstPointer(), handle->sample);
     }
 
     currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
@@ -302,10 +302,10 @@ bool InputPortItem::updataValue()
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        return item->update(currentData, true, true);
+        return item->update(currentData, handle->sample, true, true);
     }
 
-    return item->update(currentData, item->getName()->isExpanded());
+    return item->update(currentData, handle->sample, item->getName()->isExpanded());
 }
 
 const std::string& InputPortItem::getType()

@@ -238,7 +238,7 @@ bool TaskItem::updateProperties()
         else
         {
             item = propertyMap[property->getName()];
-            needsUpdate |= item->update(val, properties.isExpanded(), true);
+            needsUpdate |= item->update(val, sample, properties.isExpanded(), true);
         }
     }
     

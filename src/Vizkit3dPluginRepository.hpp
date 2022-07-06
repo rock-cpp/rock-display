@@ -20,7 +20,7 @@ class VizHandle
 {
 public:
     virtual ~VizHandle() {}
-    virtual void updateVisualizer(RTT::base::DataSourceBase::shared_ptr data) = 0;
+    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) = 0;
     virtual QObject *getVizkit3dPluginObject() = 0;
     virtual QWidget *getStandaloneWidget() = 0;
 };
@@ -30,7 +30,7 @@ class Vizkit3dVizHandle : public VizHandle
 public:
     QMetaMethod method;
     QObject *plugin;
-    virtual void updateVisualizer(RTT::base::DataSourceBase::shared_ptr data) override;
+    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
     virtual QObject *getVizkit3dPluginObject() override { return plugin; }
     virtual QWidget *getStandaloneWidget() override { return nullptr; }
 };

@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QWidgetAction>
 #include <QLabel>
-#include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <typelib/value_ops.hh>
 
 static Typelib::Value *getItemTypelibValue(QModelIndex const &mi, NameServiceModel const *model)
 {
@@ -27,6 +27,26 @@ static Typelib::Value *getItemTypelibValue(QModelIndex const &mi, NameServiceMod
         auto item = static_cast<ItemBase *>(ti->getData());
         Typelib::Value &val = item->getValueHandle();
         return &val;
+    }
+    return nullptr;
+}
+
+static RTT::base::DataSourceBase::shared_ptr getItemBaseSample(QModelIndex const &mi, NameServiceModel const *model)
+{
+    QStandardItem *item = model->itemFromIndex(mi);
+
+    TypedItem *ti = dynamic_cast<TypedItem*>(item);
+    if (!ti)
+        return nullptr;
+    if (ti->type() == ItemType::INPUTPORT)
+    {
+        auto item = static_cast<PortItem *>(ti->getData())->getItemBase();
+        return item->getBaseSample();
+    }
+    if (ti->type() == ItemType::EDITABLEITEM)
+    {
+        auto item = static_cast<ItemBase *>(ti->getData());
+        return item->getBaseSample();
     }
     return nullptr;
 }
@@ -63,6 +83,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
             if(valptr)
             {
                 Typelib::Value &val = *valptr;
+                auto base_sample = getItemBaseSample(index, model);
                 const Typelib::Type &type(val.getType());
 
                 if (type.getCategory() == Typelib::Type::Container)
@@ -79,7 +100,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                     auto &cnt = static_cast<Typelib::Container const&>(type);
 
                     QObject::connect(push, &QAction::triggered,
-                            menu, [&val,&cnt,itembase,model]()
+                            menu, [base_sample,&val,&cnt,itembase,model]()
                     {
                         const Typelib::Type &eltype = cnt.getIndirection();
 
@@ -93,7 +114,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
 
                         Typelib::destroy(el);
 
-                        itembase->update(val);
+                        itembase->update(val, base_sample);
                         model->notifyItemDataEdited(itembase->getName()->index());
                     });
                     QObject::connect(clear, &QAction::triggered,
@@ -112,6 +133,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                     const Typelib::Type &ptype(pval.getType());
                     QStandardItem *pitem = model->itemFromIndex(index.parent());
                     TypedItem *pti = dynamic_cast<TypedItem*>( pitem );
+                    auto pbase_sample = getItemBaseSample(index.parent(), model);
                     auto pitembase = static_cast<ItemBase *>(pti->getData());
 
                     if (ptype.getCategory() == Typelib::Type::Container)
@@ -127,11 +149,11 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                         auto &cnt = static_cast<Typelib::Container const&>(ptype);
 
                         QObject::connect(erase, &QAction::triggered,
-                                menu, [&val,&cnt,&pval,pitembase,model]()
+                                menu, [&val,&cnt,&pval,pbase_sample,pitembase,model]()
                         {
                             cnt.erase(pval.getData(), val);
 
-                            pitembase->update(pval);
+                            pitembase->update(pval,pbase_sample);
                             model->notifyItemDataEdited(pitembase->getName()->index());
 
                         });

@@ -12,9 +12,9 @@ VizHandle *Vizkit3dPluginHandle::createViz() const
     return newHandle;
 }
 
-void Vizkit3dVizHandle::updateVisualizer(RTT::base::DataSourceBase::shared_ptr data)
+void Vizkit3dVizHandle::updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample)
 {
-    QGenericArgument val("void *", data.get()->getRawConstPointer());
+    QGenericArgument val("void *", data);
     if (!val.data())
     {
         return;

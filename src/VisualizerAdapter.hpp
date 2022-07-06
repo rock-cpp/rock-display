@@ -31,11 +31,13 @@ public:
     {
         return visualizers.empty();
     }
-    void updateVisualizer(VizHandle *vizhandle, RTT::base::DataSourceBase::shared_ptr data)
+    /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
+     * retaining runtime type information */
+    void updateVisualizer(VizHandle *vizhandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample)
     {
-        emit requestVisualizerUpdate(vizhandle, data);
+        emit requestVisualizerUpdate(vizhandle, data, base_sample);
     }
     
 signals:
-    void requestVisualizerUpdate(VizHandle *vizhandle, RTT::base::DataSourceBase::shared_ptr data);
+    void requestVisualizerUpdate(VizHandle *vizhandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
 };
