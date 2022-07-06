@@ -50,6 +50,9 @@ protected:
      * The handlerStack is determined during getItem and getEditableItem
      */
     std::vector<ConfigItemHandler const*> handlerStack;
+
+    Typelib::Value value_handle;
+    RTT::base::DataSourceBase::shared_ptr base_sample;
 public:
     enum UsedRoles {
         ModifiedRole = Qt::UserRole + 1
@@ -74,8 +77,8 @@ public:
      * @return            ?
      */
     virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = true, bool forceUpdate = false) = 0;
-    virtual Typelib::Value& getValueHandle();
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() { return nullptr; }
+    virtual Typelib::Value& getValueHandle() { return value_handle; }
+    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() { return base_sample; }
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) { return false; }
 
     void setName(const QString &newName)
@@ -156,9 +159,6 @@ public:
 
 class EditableArray : public Array
 {
-private:
-    Typelib::Value value_handle;
-    RTT::base::DataSourceBase::shared_ptr base_sample;
 protected:
     virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
 public:
@@ -166,7 +166,6 @@ public:
     virtual ~EditableArray();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
 
@@ -181,15 +180,11 @@ public:
 
 class EditableSimple : public Simple
 {
-private:
-    Typelib::Value value_handle;
-    RTT::base::DataSourceBase::shared_ptr base_sample;
 public:
     EditableSimple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableSimple();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
     bool updateFromEdit();
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
@@ -210,9 +205,6 @@ public:
 
 class EditableComplex : public Complex
 {
-private:
-    Typelib::Value value_handle;
-    RTT::base::DataSourceBase::shared_ptr base_sample;
 protected:
     virtual std::shared_ptr<ItemBase> getItem(Typelib::Value& value, TypedItem *nameItem = nullptr, TypedItem *valueItem = nullptr) const override;
 public:
@@ -220,7 +212,6 @@ public:
     virtual ~EditableComplex();
     virtual Typelib::Value& getValueHandle() override;
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
     virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };

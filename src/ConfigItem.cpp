@@ -154,12 +154,6 @@ bool ItemBase::hasVisualizers()
     return false;
 }
 
-Typelib::Value& ItemBase::getValueHandle()
-{
-    static Typelib::Value novalue;
-    return novalue;
-}
-
 Array::Array(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {
@@ -178,6 +172,8 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
 bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {    
     bool updateNecessary = this->name->isExpanded() && updateUI;
+    value_handle = valueIn;
+    this->base_sample = base_sample;
 
     for(auto &h : handlerStack)
     {
@@ -281,13 +277,6 @@ RTT::base::DataSourceBase::shared_ptr EditableArray::getBaseSample()
 std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
     return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
-}
-
-bool EditableArray::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
-{
-    value_handle = valueIn;
-    this->base_sample = base_sample;
-    return Array::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 bool EditableArray::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
@@ -405,6 +394,9 @@ bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
 {
     bool updateNecessary = forceUpdate || updateUI;
     
+    value_handle = valueIn;
+    this->base_sample = base_sample;
+
     if (!updateNecessary)
     {
         return false;
@@ -557,13 +549,6 @@ Typelib::Value& EditableSimple::getValueHandle()
 RTT::base::DataSourceBase::shared_ptr EditableSimple::getBaseSample()
 {
     return base_sample;
-}
-
-bool EditableSimple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
-{
-    value_handle = valueIn;
-    this->base_sample = base_sample;
-    return Simple::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 template <class T>
@@ -814,6 +799,9 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     bool updateNecessary = updateUI && this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
+    value_handle = valueIn;
+    this->base_sample = base_sample;
+
     if (!visualizers.empty())
     {           
         for (auto vizHandle : visualizers)
@@ -987,13 +975,6 @@ RTT::base::DataSourceBase::shared_ptr EditableComplex::getBaseSample()
 std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
 {
     return ::getEditableItem(value, handlerrepo, nameItem, valueItem);
-}
-
-bool EditableComplex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
-{
-    value_handle = valueIn;
-    this->base_sample = base_sample;
-    return Complex::update(valueIn, base_sample, updateUI, forceUpdate);
 }
 
 bool EditableComplex::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Value& valueOld )
