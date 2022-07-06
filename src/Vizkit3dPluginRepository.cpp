@@ -41,6 +41,44 @@ VizHandle *Vizkit3dPluginHandle::createViz() const
     return newHandle;
 }
 
+/* this is not used for Vizkit3dPluginHandle because there is a faster variant that
+ * does less duplicate work.
+ */
+bool Vizkit3dPluginHandle::probe(Typelib::Type const &type, const Typelib::Registry* registry) const
+{
+    //try for a direct match first
+    std::string dottedType = convertTypelibToDottedTypeName(type.getName());
+
+    if (typeName == dottedType)
+    {
+        return true;
+    }
+
+    if(!registry)
+    {
+        return false;
+    }
+
+    //if there is a typelib registry, try using its isSame method
+
+    std::string pluginTypeName = convertDottedToTypelibTypeName(typeName);
+
+    auto pluginType = registry->get(pluginTypeName);
+    if (!pluginType)
+    {
+        //these are normal, the types for these plugins are not used in this deployment.
+        //no harm either, we do not remember a negative result from this.
+        //the scenario for a failure here would be: one registry is used for the sample and lookup here,
+        //that does not contain the typedef pluginTypeName refers to.
+        //another registry has the typedef, but now the basename already has typeToPlugins populated and
+        //the (now possible) resolution of the typedef is not found.
+        LOG_DEBUG_S << "Vizkit3dPluginRepository: could not find typelib type for " << pluginTypeName << " ..";
+        return false;
+    }
+
+    return type.isSame(*pluginType);
+}
+
 void Vizkit3dVizHandle::updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample)
 {
     QGenericArgument val("void *", data);

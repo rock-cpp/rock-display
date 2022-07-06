@@ -346,6 +346,49 @@ static const Typelib::Registry* getItemRegistry(QModelIndex const &mi, NameServi
     }
 }
 
+static const Typelib::Type* getItemTypelibType(QModelIndex const &mi, NameServiceModel *model)
+{
+    QStandardItem *item = model->itemFromIndex(mi);
+
+    TypedItem *ti = dynamic_cast<TypedItem*>(item);
+    if (!ti)
+        return nullptr;
+    if (ti->type() == ItemType::CONFIGITEM)
+    {
+        return nullptr;
+    }
+    else if(ti->type() == ItemType::OUTPUTPORT)
+    {
+        auto outputitem = static_cast<OutputPortItem*>(ti->getData());
+        RTT::types::TypeInfo const *type = outputitem->getPort()->getTypeInfo();
+        auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+        if (!transport)
+        {
+            return nullptr;
+        }
+        return transport->getRegistry().get(transport->getMarshallingType());
+    }
+    else if(ti->type() == ItemType::INPUTPORT)
+    {
+        auto inputitem = static_cast<InputPortItem*>(ti->getData());
+        RTT::types::TypeInfo const *type = inputitem->getPort()->getTypeInfo();
+        auto transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
+        if (!transport)
+        {
+            return nullptr;
+        }
+        return transport->getRegistry().get(transport->getMarshallingType());
+    }
+    else if (ti->type() == ItemType::EDITABLEITEM)
+    {
+        auto item = static_cast<ItemBase *>(ti->getData());
+        Typelib::Value &val = item->getValueHandle();
+        const Typelib::Type &type(val.getType());
+        return &type;
+    }
+    return nullptr;
+}
+
 static std::string getItemTypeName(QModelIndex const &mi, NameServiceModel *model)
 {
     QStandardItem *item = model->itemFromIndex(mi);
@@ -423,6 +466,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             case ItemType::EDITABLEITEM:
             {
                 std::string typeName = getItemTypeName(mi, model);
+                const Typelib::Type* typelibType = getItemTypelibType(mi, model);
                 const Typelib::Registry* registry = getItemRegistry(mi, model);
                 VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
 
@@ -454,13 +498,14 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 {
                     handles.push_back(p);
                 }
-                for (PluginHandle *additionalPlugin: additionalPlugins)
+                if (typelibType)
                 {
-                    ImageViewPluginHandle const * ivph = dynamic_cast<ImageViewPluginHandle const *>
-                    (additionalPlugin);
-                    if (ivph && ivph->typeName == typeName)
+                    for (PluginHandle *additionalPlugin: additionalPlugins)
                     {
-                        handles.push_back(additionalPlugin);
+                        if (additionalPlugin->probe(*typelibType, registry))
+                        {
+                            handles.push_back(additionalPlugin);
+                        }
                     }
                 }
 

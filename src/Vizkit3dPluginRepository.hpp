@@ -14,6 +14,7 @@ QT_END_NAMESPACE
 namespace Typelib
 {
     class Registry;
+    class Type;
 }
 
 class VizHandle : public QObject
@@ -41,6 +42,7 @@ public:
     std::string pluginName;
     virtual ~PluginHandle() {}
     virtual VizHandle *createViz() const = 0;
+    virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const = 0;
 };
 
 class Vizkit3dPluginHandle : public PluginHandle
@@ -51,6 +53,7 @@ public:
     std::string typeName; //this is a dotted type name, global scoped, without :: prefix
     QMetaMethod method;
     virtual VizHandle *createViz() const override;
+    virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const override;
 };
 
 /** A functor that can be used with std::sort to sort to sort PluginHandles */

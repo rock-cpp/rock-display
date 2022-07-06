@@ -1,6 +1,7 @@
 
 #include "imageviewplugin.hpp"
 #include <rock_widget_collection/RockWidgetCollection.h>
+#include <typelib/typemodel.hh>
 
 class ImageViewVizHandle : public VizHandle
 {
@@ -14,8 +15,13 @@ public:
 
 ImageViewPluginHandle::ImageViewPluginHandle()
 {
-    typeName = "/base/samples/frame/Frame"; //TODO put this in a register-function
+    typeName = "/base/samples/frame/Frame";
     pluginName = "ImageView";
+}
+
+bool ImageViewPluginHandle::probe(Typelib::Type const &type, const Typelib::Registry* registry) const
+{
+    return type.getName() == typeName;
 }
 
 VizHandle *ImageViewPluginHandle::createViz() const
