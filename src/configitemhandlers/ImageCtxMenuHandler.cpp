@@ -11,7 +11,7 @@
 #include <base/samples/Frame.hpp>
 #include <frame_helper/FrameHelper.h>
 
-static QString imageFilter = "jpg";
+static char const * imageFilter = QT_TR_NOOP("Images (*.bmp *.dib *.jpeg *.jpg *.jpe *.png *.webp *.pbm *.pgm *.ppm *. pxm *.pnm *.sr *.ras *.tiff *.tif *.exr *.hdr *.pic);;All files (*.*)");
 
 bool ImageCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex & index ) const
 {
@@ -52,14 +52,51 @@ bool ImageCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelInde
             QAction *load = menu->addAction(tr("Load image from..."));
 
             QObject::connect(load, &QAction::triggered,
-                    menu, [&val,this,model,itembase]()
+                    menu, [&val,model,itembase]()
             {
-                QString filename = QFileDialog::getOpenFileName(nullptr, tr("Load image from"), QString(), imageFilter);
+                QString filename = QFileDialog::getOpenFileName(nullptr, tr("Load image from"), QString(), tr(imageFilter));
                 base::samples::frame::Frame* frame = static_cast<base::samples::frame::Frame*>(val.getData());
                 frame_helper::FrameHelper fh;
                 fh.loadFrame(filename.toLocal8Bit().toStdString(), *frame);
 
                 model->notifyItemDataEdited(itembase->getName()->index());
+            });
+
+            return true;
+        }
+        case ItemType::OUTPUTPORT:
+        case ItemType::CONFIGITEM:
+        {
+            ItemBase *itembase = nullptr;
+            if (ti->type() == ItemType::OUTPUTPORT)
+            {
+                itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
+            }
+            if (ti->type() == ItemType::CONFIGITEM)
+            {
+                itembase = static_cast<ItemBase *>(ti->getData());
+            }
+            if (!itembase)
+                return false;
+            Typelib::Value &val = itembase->getValueHandle();
+            QLabel* label = new QLabel(QObject::tr("<b>Image</b>"), menu);
+            label->setAlignment(Qt::AlignCenter);
+            QWidgetAction* labelAction = new QWidgetAction(menu);
+            labelAction->setDefaultWidget(label);
+            menu->addAction(labelAction);
+
+            QAction *load = menu->addAction(tr("Save image to..."));
+
+            QObject::connect(load, &QAction::triggered,
+                    menu, [&val]()
+            {
+                if (!val.getData() )
+                    return; //TODO notify user
+                base::samples::frame::Frame frame = *static_cast<base::samples::frame::Frame*>(val.getData());
+
+                QString filename = QFileDialog::getSaveFileName(nullptr, tr("Save image to"), QString(), tr(imageFilter));
+                frame_helper::FrameHelper fh;
+                fh.saveFrame(filename.toLocal8Bit().toStdString(), frame);
             });
 
             return true;
@@ -74,5 +111,5 @@ bool ImageCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelInde
 
 bool ImageCtxMenuHandler::probe(Typelib::Type const &type, bool editing) const
 {
-    return editing && type.getName() == "/base/samples/frame/Frame";
+    return type.getName() == "/base/samples/frame/Frame";
 }
