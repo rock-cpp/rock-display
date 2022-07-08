@@ -16,20 +16,21 @@
 
 #include "Mainwindow.hpp"
 
-#include "ui_task_inspector_window.h"
-#include "Types.hpp"
-#include "TypedItem.hpp"
 #include <QCursor>
 #include <QCloseEvent>
 #include <rock_widget_collection/RockWidgetCollection.h>
 #include <rtt/base/DataSourceBase.hpp>
+#include <rtt/typelib/TypelibMarshallerBase.hpp>
+#include <rtt/base/DataSourceBase.hpp>
+
+#include "ui_task_inspector_window.h"
+#include "Types.hpp"
+#include "TypedItem.hpp"
 #include "NameServiceItemDelegate.hpp"
 #include "ConfigItemHandlerRepository.hpp"
 #include "ConfigItemHandler.hpp"
 #include "Vizkit3dPluginRepository.hpp"
 #include "TaskModel.hpp"
-#include <rtt/typelib/TypelibMarshallerBase.hpp>
-#include <rtt/base/DataSourceBase.hpp>
 #include "PortItem.hpp"
 #include "PropertyItem.hpp"
 #include "TaskItem.hpp"
