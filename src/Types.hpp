@@ -8,7 +8,8 @@ enum ItemType {TASK          = QStandardItem::UserType+1,   //1001
                INPUTPORT     = QStandardItem::UserType+3,
                CONFIGITEM    = QStandardItem::UserType+4,
                NAMESERVICE   = QStandardItem::UserType+5,
-               EDITABLEITEM  = QStandardItem::UserType+6 };
+               EDITABLEITEM  = QStandardItem::UserType+6,
+               PROPERTYITEM  = QStandardItem::UserType+7 };
 
 class TypedItem;
 class PluginHandle;

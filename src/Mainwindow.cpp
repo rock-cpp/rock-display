@@ -31,6 +31,7 @@
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
 #include <rtt/base/DataSourceBase.hpp>
 #include "PortItem.hpp"
+#include "PropertyItem.hpp"
 #include "TaskItem.hpp"
 #include "vizplugins/imageviewplugin.hpp"
 
@@ -715,6 +716,7 @@ void MainWindow::itemDataEdited(const QModelIndex &index)
     //This very probably is an EDITABLEITEM, so scan for the INPUTPORT
     //if it is not, or we cannot find INPUTPORT, we just bail out.
     InputPortItem *inputitem = nullptr;
+    PropertyItem *propertyitem = nullptr;
     QModelIndex pi = index;
     while(pi.isValid()) {
         TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
@@ -725,49 +727,64 @@ void MainWindow::itemDataEdited(const QModelIndex &index)
             inputitem = static_cast<InputPortItem*>(pti->getData());
             break;
         }
-        if (pti->type() != ItemType::EDITABLEITEM)
+        else if (pti->type() == ItemType::PROPERTYITEM)
+        {
+            propertyitem = static_cast<PropertyItem*>(pti->getData());
+            break;
+        }
+        else if (pti->type() == -1)
+        {
+            // continue the scan for the parent. next one would be the task.
+        }
+        else if (pti->type() != ItemType::EDITABLEITEM)
+        {
             return;
+        }
         pi = pi.parent();
     }
 
-    if(!inputitem)
-        return;
-
-    if(!inputitem->compareAndMarkData())
+    if(inputitem)
     {
-        if (changeconfirms.find(inputitem) == changeconfirms.end())
+        if(!inputitem->compareAndMarkData())
         {
-            PortChangeConfirmationWidget *wid = new PortChangeConfirmationWidget(this);
-            changeconfirms.insert(std::make_pair(inputitem, wid));
-            view->setIndexWidget(inputitem->getValueItem()->index(), wid);
-            connect(wid, &PortChangeConfirmationWidget::accepted,
-                    this, [inputitem,this,wid]()
+            if (changeconfirms.find(inputitem) == changeconfirms.end())
             {
-                inputitem->sendCurrentData();
-                inputitem->compareAndMarkData();
-                changeconfirms.erase(changeconfirms.find(inputitem));
+                PortChangeConfirmationWidget *wid = new PortChangeConfirmationWidget(this);
+                changeconfirms.insert(std::make_pair(inputitem, wid));
+                view->setIndexWidget(inputitem->getValueItem()->index(), wid);
+                connect(wid, &PortChangeConfirmationWidget::accepted,
+                        this, [inputitem,this,wid]()
+                {
+                    inputitem->sendCurrentData();
+                    inputitem->compareAndMarkData();
+                    changeconfirms.erase(changeconfirms.find(inputitem));
+                    view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
+                    wid->deleteLater();
+                });
+                connect(wid, &PortChangeConfirmationWidget::rejected,
+                        this, [inputitem,this,wid]()
+                {
+                    inputitem->restoreOldData();
+                    inputitem->compareAndMarkData();
+                    changeconfirms.erase(changeconfirms.find(inputitem));
+                    view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
+                    wid->deleteLater();
+                });
+            }
+        }
+        else
+        {
+            auto it = changeconfirms.find(inputitem);
+            if (it != changeconfirms.end()) {
                 view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
-                wid->deleteLater();
-            });
-            connect(wid, &PortChangeConfirmationWidget::rejected,
-                    this, [inputitem,this,wid]()
-            {
-                inputitem->restoreOldData();
-                inputitem->compareAndMarkData();
-                changeconfirms.erase(changeconfirms.find(inputitem));
-                view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
-                wid->deleteLater();
-            });
+                delete it->second;
+                changeconfirms.erase(it);
+            }
         }
     }
-    else
+    if (propertyitem)
     {
-        auto it = changeconfirms.find(inputitem);
-        if (it != changeconfirms.end()) {
-            view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
-            delete it->second;
-            changeconfirms.erase(it);
-        }
+        propertyitem->setCurrentData();
     }
 }
 

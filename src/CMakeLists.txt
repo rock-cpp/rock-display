@@ -9,6 +9,7 @@ SOURCES
     NameServiceItemDelegate.cpp
     ConfigItemHandler.cpp
     PortItem.cpp
+    PropertyItem.cpp
     TaskItem.cpp
     TypedItem.cpp
     Mainwindow.cpp

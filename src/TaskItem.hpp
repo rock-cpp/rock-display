@@ -15,6 +15,8 @@ namespace RTT
     }
 }
 
+class PropertyItem;
+
 class TaskItem
 {   
     
@@ -28,7 +30,7 @@ private:
     TypedItem outputPorts;
     TypedItem properties;
     std::map<std::string, PortItem *> ports;
-    std::map<std::string, std::shared_ptr<ItemBase>> propertyMap;
+    std::map<std::string, PropertyItem *> propertyMap;
     bool stateChanged;
     ConfigItemHandlerRepository *handlerrepo;
     

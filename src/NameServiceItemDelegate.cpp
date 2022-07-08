@@ -5,6 +5,7 @@
 #include "TypedItem.hpp"
 #include "ConfigItem.hpp"
 #include "PortItem.hpp"
+#include "PropertyItem.hpp"
 #include "Types.hpp"
 #include "ConfigItemHandler.hpp"
 #include <QApplication>
@@ -163,6 +164,8 @@ void NameServiceItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *
     ItemBase* itembase = nullptr;
     if (ti->type() == ItemType::INPUTPORT)
         itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
+    else if (ti->type() == ItemType::PROPERTYITEM)
+        itembase = static_cast<PropertyItem *>(ti->getData())->getItemBase().get();
     else if (ti->type() == ItemType::EDITABLEITEM)
         itembase = static_cast<ItemBase *>(ti->getData());
     else
