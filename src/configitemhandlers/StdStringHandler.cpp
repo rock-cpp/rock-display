@@ -11,7 +11,7 @@ bool StdStringHandler::convertFromTypelibValue(QStandardItem *dst, Typelib::Valu
     if (type.getCategory() != Typelib::Type::Container)
         return false;
 
-    const Typelib::Container &cont = static_cast<const Typelib::Container &>(src.getType());
+    const Typelib::Container &cont = static_cast<const Typelib::Container &>(type);
 
     if(cont.kind() != "/std/string")
         return false;
@@ -53,7 +53,7 @@ bool StdStringHandler::convertToTypelibValue(Typelib::Value &dst, QStandardItem 
     if (type.getCategory() != Typelib::Type::Container)
         return false;
 
-    const Typelib::Container &cont = static_cast<const Typelib::Container &>(dst.getType());
+    const Typelib::Container &cont = static_cast<const Typelib::Container &>(type);
 
     if(cont.kind() != "/std/string")
         return false;
@@ -75,6 +75,11 @@ bool StdStringHandler::convertToTypelibValue(Typelib::Value &dst, QStandardItem 
 
 bool StdStringHandler::probe(Typelib::Type const &type, bool editing) const
 {
-    return type.getName() == "/std/string";
+    if (type.getCategory() != Typelib::Type::Container)
+        return false;
+
+    const Typelib::Container &cont = static_cast<const Typelib::Container &>(type);
+
+    return cont.kind() == "/std/string";
 }
 
