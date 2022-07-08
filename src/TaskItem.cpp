@@ -144,7 +144,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 {
                     LOG_WARN_S << "found port item that is neither input nor output";
                     //should not happen i guess?
-                    item = new PortItem(pi->getName(), handlerrepo);
+                    item = new PortItem(portName, handlerrepo);
                 }
                 
                 ports.insert(std::make_pair(portName, item));

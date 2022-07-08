@@ -365,7 +365,7 @@ bool InputPortItem::compareAndMarkData()
 
 Typelib::Value InputPortItem::getValueHandle()
 {
-    return Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+    return currentData;
 }
 
 RTT::base::DataSourceBase::shared_ptr InputPortItem::getBaseSample()
