@@ -668,7 +668,11 @@ bool EditableSimple::updateFromEdit()
             bool *boolVal = static_cast<bool *>(value_handle.getData());
             if (!boolVal)
                 return false;
-            *boolVal = data.compare("true",Qt::CaseInsensitive) == 0;
+            bool b = data.compare("true",Qt::CaseInsensitive) == 0;
+            if (*boolVal == b)
+                return false;
+            *boolVal = b;
+            return true;
         }
         else
         {
