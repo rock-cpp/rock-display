@@ -22,6 +22,7 @@
 #include <rtt/base/DataSourceBase.hpp>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
 #include <rtt/base/DataSourceBase.hpp>
+#include <orocos_cpp/ConfigurationHelper.hpp>
 
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"
@@ -35,6 +36,8 @@
 #include "PropertyItem.hpp"
 #include "TaskItem.hpp"
 #include "vizplugins/imageviewplugin.hpp"
+#include "configuration.hpp"
+#include "ConfigurationSelectDialog.hpp"
 
 void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
 {
@@ -454,11 +457,71 @@ void MainWindow::prepareMenu(const QPoint & pos)
                 QAction *sta = menu->addAction("Start");
                 QAction *sto = menu->addAction("Stop");
                 QAction *con = menu->addAction("Configure");
+                QAction *load = menu->addAction(tr("Load Configuration from file..."));
+                QAction *save = menu->addAction(tr("Save Configuration to file..."));
 
                 connect(act, SIGNAL(triggered()), this, SLOT(activateTask()));
                 connect(sta, SIGNAL(triggered()), this, SLOT(startTask()));
                 connect(sto, SIGNAL(triggered()), this, SLOT(stopTask()));
                 connect(con, SIGNAL(triggered()), this, SLOT(configureTask()));
+                connect(load, &QAction::triggered,
+                    this, [this,titem](){
+                        QString filename = QFileDialog::getOpenFileName(this, tr("Load Configuration..."), QString(), "Configuration file (*.yaml *.yml)");
+                        if (filename.isEmpty())
+                        {
+                            return;
+                        }
+                        orocos_cpp::ConfigurationHelper helper;
+                        libConfig::MultiSectionConfiguration mcfg;
+                        mcfg.loadNoBundle(filename.toStdString(), task->getName());
+                        ConfigurationSelectDialog *csd = new ConfigurationSelectDialog(this);
+                        std::vector<std::string> sections;
+                        for(auto &c : mcfg.getSubsections())
+                        {
+                            sections.push_back(c.first);
+                        }
+                        if (sections.size() > 1)
+                        {
+                            csd->setSelectionOptions(sections);
+                            if(csd->exec() == QDialog::Rejected)
+                            {
+                                return;
+                            }
+                            sections = csd->getSelectionOptions();
+                        }
+
+                        libConfig::Configuration config = mcfg.getConfig(sections);
+                        csd->deleteLater();
+                        try
+                        {
+                            if (!helper.applyConfig(task, config))
+                            {
+                                QMessageBox::critical(this,tr("Load Configuration"),tr("Loading configuration failed"));
+                            }
+                            else
+                            {
+                                titem->updateProperties();
+                            }
+                        }
+                        catch (std::runtime_error const &e)
+                        {
+                            QMessageBox::critical(this,tr("Load Configuration"),tr("Loading configuration failed:\n%1").arg(e.what()));
+                        }
+
+                    });
+                connect(save, &QAction::triggered,
+                    this, [this,titem](){
+                        QString filename = QFileDialog::getSaveFileName(this, tr("Save Configuration..."), QString(), "Configuration file (*.yaml *.yml)");
+                        if (filename.isEmpty())
+                        {
+                            return;
+                        }
+
+                        if (!save_configuration(task, titem, filename.toStdString()))
+                        {
+                            QMessageBox::critical(this,tr("Save Configuration"),tr("Saving configuration failed"));
+                        }
+                    });
 
             }
                 break;

@@ -217,7 +217,7 @@ bool TaskItem::updateProperties()
         }
         else
         {
-            PropertyItem *item = propertyMap[property->getName()];
+            PropertyItem *item = it->second;
             item->updateProperty(property);
             needsUpdate |= item->updataValue();
         }

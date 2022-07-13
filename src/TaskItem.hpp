@@ -76,5 +76,10 @@ public:
         return this->ports;
     }
     
+    std::map<std::string, PropertyItem *> &getProperties()
+    {
+        return this->propertyMap;
+    }
+
     void reset();
 };

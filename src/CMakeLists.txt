@@ -16,12 +16,14 @@ SOURCES
     Vizkit3dPluginRepository.cpp
     ConfigItem.cpp
     VisualizerAdapter.cpp
+    configuration.cpp
     configitemhandlers/EnumHandler.cpp
     configitemhandlers/ContainerHandler.cpp
     configitemhandlers/StdStringHandler.cpp
     configitemhandlers/ImageCtxMenuHandler.cpp
     ConfigItemHandlerRepository.cpp
     vizplugins/imageviewplugin.cpp
+    ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
     TaskModelNotifier.hpp
@@ -37,9 +39,11 @@ MOC
     configitemhandlers/ImageCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
     vizplugins/imageviewplugin.hpp
+    ConfigurationSelectDialog.hpp
 HEADERS
 UI
     task_inspector_window.ui
+    ConfigurationSelectDialog.ui
 DEPS_PKGCONFIG
     orocos_cpp
     lib_config
@@ -65,4 +69,5 @@ LIBS
     Qt5::Widgets
 UI
     task_inspector_window.ui
+    ConfigurationSelectDialog.ui
 )
