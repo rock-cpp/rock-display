@@ -8,9 +8,10 @@ class ImageViewVizHandle : public VizHandle
 public:
     QWidget *widget;
     QMetaMethod method;
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
     virtual QObject *getVizkit3dPluginObject() override { return nullptr; }
     virtual QWidget *getStandaloneWidget() override { return widget; }
+public slots:
+    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
 };
 
 ImageViewPluginHandle::ImageViewPluginHandle()

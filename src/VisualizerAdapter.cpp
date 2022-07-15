@@ -3,6 +3,8 @@
 void VisualizerAdapter::addPlugin(const std::string &name, VizHandle *handle)
 {
     visualizers.insert(std::make_pair(name, handle));
+    connect(this, &VisualizerAdapter::visualizerUpdate,
+            handle, &VizHandle::updateVisualizer);
 }
 
 VizHandle *VisualizerAdapter::getVisualizer(const std::string& name)

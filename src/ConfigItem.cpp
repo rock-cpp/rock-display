@@ -806,13 +806,7 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     value_handle = valueIn;
     this->base_sample = base_sample;
 
-    if (!visualizers.empty())
-    {           
-        for (auto vizHandle : visualizers)
-        {
-            updateVisualizer(vizHandle.second, valueIn.getData(), base_sample);
-        }
-    }
+    emit visualizerUpdate(valueIn.getData(), base_sample);
 
     bool haveCustomValue = false;
 

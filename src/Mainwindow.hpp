@@ -94,7 +94,6 @@ public slots:
     void addNameService();
     void removeAllPlugins();
     void sortTasks(); //sorts by column 0
-    void updateVisualizer(VizHandle *vizhandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
     void itemDataEdited(const QModelIndex &index);
 
 private slots:

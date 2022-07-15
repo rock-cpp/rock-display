@@ -663,10 +663,9 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
     if (viz)
     {
         viz->addPlugin(ph->pluginName, nh);
-        connect(viz, SIGNAL(requestVisualizerUpdate(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)), this, SLOT(updateVisualizer(VizHandle*, void const *, RTT::base::DataSourceBase::shared_ptr)));
         if (value.getData() && base_sample)
         {
-            updateVisualizer(nh, value.getData(), base_sample);
+            nh->updateVisualizer(value.getData(), base_sample);
         }
     }
 }
@@ -762,17 +761,6 @@ void MainWindow::configureTask()
 void MainWindow::updateTasks()
 {
     model->updateTasks();
-}
-
-void MainWindow::updateVisualizer(VizHandle *vizHandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample)
-{
-    if (!data)
-    {
-        return;
-    }
-    //since the vizHandle knows how to pass the raw data pointer on, this signal is
-    //actually not needed.
-    vizHandle->updateVisualizer(data, base_sample);
 }
 
 void MainWindow::itemDataEdited(const QModelIndex &index)

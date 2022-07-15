@@ -29,15 +29,11 @@ public:
     void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
-        return !visualizers.empty();
-    }
-    /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
-     * retaining runtime type information */
-    void updateVisualizer(VizHandle *vizhandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample)
-    {
-        emit requestVisualizerUpdate(vizhandle, data, base_sample);
+        return receivers(SIGNAL(visualizerUpdate(void const *, RTT::base::DataSourceBase::shared_ptr))) != 0;
     }
     
 signals:
-    void requestVisualizerUpdate(VizHandle *vizhandle, void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
+    /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
+     * retaining runtime type information */
+    void visualizerUpdate(void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
 };

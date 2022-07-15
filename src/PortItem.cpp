@@ -161,11 +161,8 @@ bool OutputPortItem::updataValue()
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
     
-    for (auto vizHandle: visualizers)
-    {
-        updateVisualizer(vizHandle.second, handle->sample.get()->getRawConstPointer(), handle->sample);
-    }
-    
+    emit visualizerUpdate(handle->sample.get()->getRawConstPointer(), handle->sample);
+
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
     if (!item)
@@ -288,10 +285,7 @@ bool InputPortItem::updataValue()
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
 
-    for (auto vizHandle: visualizers)
-    {
-        updateVisualizer(vizHandle.second, handle->sample.get()->getRawConstPointer(), handle->sample);
-    }
+    emit visualizerUpdate(handle->sample.get()->getRawConstPointer(), handle->sample);
 
     currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 
