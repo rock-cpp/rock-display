@@ -64,7 +64,8 @@ void NameServiceItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
         itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
     else if (ti->type() == ItemType::EDITABLEITEM)
         itembase = static_cast<ItemBase *>(ti->getData());
-    else
+
+    if (!itembase)
     {
         defaultPaint(painter, option, index);
         return;
@@ -97,8 +98,11 @@ QWidget *NameServiceItemDelegate::createEditor(QWidget *parent, const QStyleOpti
         itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
     else if (ti->type() == ItemType::EDITABLEITEM)
         itembase = static_cast<ItemBase *>(ti->getData());
-    else
+
+    if(!itembase)
+    {
         return QStyledItemDelegate::createEditor(parent, option, index);
+    }
 
     for (auto &h : itembase->getHandlerStack())
     {
@@ -129,7 +133,8 @@ void NameServiceItemDelegate::setEditorData(QWidget *editor, const QModelIndex &
         itembase = static_cast<PortItem *>(ti->getData())->getItemBase().get();
     else if (ti->type() == ItemType::EDITABLEITEM)
         itembase = static_cast<ItemBase *>(ti->getData());
-    else
+
+    if(!itembase)
     {
         QStyledItemDelegate::setEditorData(editor, index);
         return;
@@ -168,7 +173,8 @@ void NameServiceItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *
         itembase = static_cast<PropertyItem *>(ti->getData())->getItemBase().get();
     else if (ti->type() == ItemType::EDITABLEITEM)
         itembase = static_cast<ItemBase *>(ti->getData());
-    else
+
+    if (!itembase)
     {
         QStyledItemDelegate::setModelData(editor, model, index);
         return;
