@@ -14,9 +14,9 @@ public:
 };
 
 ImageViewPluginHandle::ImageViewPluginHandle()
+: PluginHandle("ImageView")
 {
     typeName = "/base/samples/frame/Frame";
-    pluginName = "ImageView";
 }
 
 bool ImageViewPluginHandle::probe(Typelib::Type const &type, const Typelib::Registry* registry) const

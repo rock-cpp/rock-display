@@ -33,6 +33,11 @@ static std::string convertDottedToTypelibTypeName(std::string const &dottedTypeN
     return typelibTypeName;
 }
 
+Vizkit3dPluginHandle::Vizkit3dPluginHandle(std::string const &pluginName)
+: PluginHandle(pluginName)
+{
+}
+
 VizHandle *Vizkit3dPluginHandle::createViz() const
 {
     Vizkit3dVizHandle *newHandle = new Vizkit3dVizHandle;
@@ -144,11 +149,10 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
                 if(signature.size() > update.size() && signature.substr(0, update.size()) == update)
                 {
                     foundUpdateFunctions = true;
-                    Vizkit3dPluginHandle *handle = new Vizkit3dPluginHandle();
+                    Vizkit3dPluginHandle *handle = new Vizkit3dPluginHandle(pName.toStdString());
                     handle->factory = factory;
                     handle->libararyName = libPath;
 
-                    handle->pluginName = pName.toStdString();
                     handle->typeName = parameterList[0].data();
                     //getPluginsForType expects type names without prefix "::". moc keeps them as given.
                     handle->typeName = boost::regex_replace(handle->typeName, boost::regex("^::"), "");

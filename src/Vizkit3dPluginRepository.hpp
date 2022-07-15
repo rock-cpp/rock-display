@@ -40,6 +40,7 @@ class PluginHandle : public QObject
 {
 public:
     std::string pluginName;
+    PluginHandle(std::string const &pluginName) : pluginName(pluginName) {}
     virtual ~PluginHandle() {}
     virtual VizHandle *createViz() const = 0;
     virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const = 0;
@@ -52,6 +53,7 @@ public:
     std::string libararyName;
     std::string typeName; //this is a dotted type name, global scoped, without :: prefix
     QMetaMethod method;
+    Vizkit3dPluginHandle(std::string const &pluginName);
     virtual VizHandle *createViz() const override;
     virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const override;
 };
