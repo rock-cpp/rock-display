@@ -26,7 +26,7 @@ public:
     virtual void addPlugin(const std::string &name, VizHandle *handle);
     bool hasVisualizer(const std::string &name);
     VizHandle *getVisualizer(const std::string &name);
-    bool removeVisualizer(VizHandle *plugin);
+    void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
         return visualizers.empty();

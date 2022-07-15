@@ -21,16 +21,14 @@ bool VisualizerAdapter::hasVisualizer(const std::string& name)
     return visualizers.find(name) != visualizers.end();
 }
 
-bool VisualizerAdapter::removeVisualizer(VizHandle *plugin)
+void VisualizerAdapter::removeVisualizer(VizHandle *plugin)
 {
     for (std::map<std::string, VizHandle*>::iterator it = visualizers.begin(); it != visualizers.end(); it++)
     {
         if (it->second == plugin)
         {
             visualizers.erase(it);
-            return true;
+            return;
         }
     }
-    
-    return false;
 }
