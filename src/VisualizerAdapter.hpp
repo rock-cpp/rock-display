@@ -29,7 +29,7 @@ public:
     void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
-        return visualizers.empty();
+        return !visualizers.empty();
     }
     /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
      * retaining runtime type information */
