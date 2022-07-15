@@ -21,6 +21,7 @@ SOURCES
     configitemhandlers/ContainerHandler.cpp
     configitemhandlers/StdStringHandler.cpp
     configitemhandlers/ImageCtxMenuHandler.cpp
+    configitemhandlers/BinaryCtxMenuHandler.cpp
     ConfigItemHandlerRepository.cpp
     vizplugins/imageviewplugin.cpp
     ConfigurationSelectDialog.cpp
@@ -37,6 +38,7 @@ MOC
     configitemhandlers/ContainerHandler.hpp
     configitemhandlers/StdStringHandler.hpp
     configitemhandlers/ImageCtxMenuHandler.hpp
+    configitemhandlers/BinaryCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
     vizplugins/imageviewplugin.hpp
     ConfigurationSelectDialog.hpp
