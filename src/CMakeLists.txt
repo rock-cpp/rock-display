@@ -24,6 +24,7 @@ SOURCES
     configitemhandlers/BinaryCtxMenuHandler.cpp
     ConfigItemHandlerRepository.cpp
     vizplugins/imageviewplugin.cpp
+    vizplugins/virtualjoystickplugin.cpp
     ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
@@ -41,6 +42,8 @@ MOC
     configitemhandlers/BinaryCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
     vizplugins/imageviewplugin.hpp
+    vizplugins/virtualjoystickplugin.hpp
+    vizplugins/virtualjoystickplugin_p.hpp
     ConfigurationSelectDialog.hpp
 HEADERS
 UI

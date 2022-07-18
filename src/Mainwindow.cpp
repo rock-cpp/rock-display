@@ -36,6 +36,7 @@
 #include "PropertyItem.hpp"
 #include "TaskItem.hpp"
 #include "vizplugins/imageviewplugin.hpp"
+#include "vizplugins/virtualjoystickplugin.hpp"
 #include "configuration.hpp"
 #include "ConfigurationSelectDialog.hpp"
 
@@ -110,9 +111,9 @@ MainWindow::MainWindow(QWidget *parent) :
     pluginRepo = new Vizkit3dPluginRepository(*list);
     delete list;
     
-    ImageViewPluginHandle *handle = new ImageViewPluginHandle;
-    additionalPlugins.push_back(handle);
-    
+    additionalPlugins.push_back(new ImageViewPluginHandle);
+    additionalPlugins.push_back(new VirtualJoystickPluginHandle);
+
     std::vector<PluginHandle const *> plugins;
     for (Vizkit3dPluginHandle const *p : pluginRepo->getAllAvailablePlugins())
         plugins.push_back(p);
