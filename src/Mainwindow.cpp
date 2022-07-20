@@ -758,11 +758,6 @@ void MainWindow::configureTask()
     task->configure();
 }
 
-void MainWindow::updateTasks()
-{
-    model->updateTasks();
-}
-
 void MainWindow::itemDataEdited(const QModelIndex &index)
 {
     //This very probably is an EDITABLEITEM, so scan for the INPUTPORT

@@ -87,7 +87,6 @@ public slots:
     void startTask();
     void stopTask();
     void configureTask();
-    void updateTasks();
     void onExpanded(const QModelIndex &index);
     void onCollapsed(const QModelIndex &index);
     void setItemExpanded(const QModelIndex &index, bool expanded=false);
