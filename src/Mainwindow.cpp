@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     connect(model, SIGNAL(rowAdded()), this, SLOT(sortTasks()));
     connect(model, &NameServiceModel::itemDataEdited,
-            this, &MainWindow::itemDataEdited);
+            this, QOverload<QModelIndex const &>::of(&MainWindow::itemDataEdited));
     
     TaskModel *initialTasks = new TaskModel(handlerrepo, this);
     model->addTaskModel(initialTasks);
@@ -659,6 +659,12 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
     if (viz)
     {
         viz->addPlugin(ph->pluginName, nh);
+        connect(nh,&VizHandle::editableChanged,
+                this, [this,ti](void *data, RTT::base::DataSourceBase::shared_ptr base_sample, bool force_send) {
+                    (void)data;
+                    (void)base_sample;
+                    this->itemDataEdited(ti, force_send);
+                });
         if (value.getData() && base_sample)
         {
             nh->updateVisualizer(value.getData(), base_sample);
@@ -757,13 +763,17 @@ void MainWindow::configureTask()
 
 void MainWindow::itemDataEdited(const QModelIndex &index)
 {
-    //This very probably is an EDITABLEITEM, so scan for the INPUTPORT
-    //if it is not, or we cannot find INPUTPORT, we just bail out.
+    itemDataEdited(model->itemFromIndex(index));
+}
+
+void MainWindow::itemDataEdited(QStandardItem *qitem, bool forceSend)
+{
+    //This very probably is an EDITABLEITEM, so scan for the INPUTPORT (or PROPERTYITEM)
+    //if it is not, or we cannot find INPUTPORT (or PROPERTYITEM), we just bail out.
     InputPortItem *inputitem = nullptr;
     PropertyItem *propertyitem = nullptr;
-    QModelIndex pi = index;
-    while(pi.isValid()) {
-        TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
+    while(qitem) {
+        TypedItem *pti = dynamic_cast<TypedItem*>(qitem);
         if (!(pti))
             return;
         if (pti->type() == ItemType::INPUTPORT)
@@ -784,11 +794,18 @@ void MainWindow::itemDataEdited(const QModelIndex &index)
         {
             return;
         }
-        pi = pi.parent();
+        qitem = qitem->parent();
     }
 
     if(inputitem)
     {
+        inputitem->updataValue(true, true);
+        if (forceSend)
+        {
+            //send it now, the rest of the logic takes care of removing
+            //the confirm button box (if any) and coloring.
+            inputitem->sendCurrentData();
+        }
         if(!inputitem->compareAndMarkData())
         {
             if (changeconfirms.find(inputitem) == changeconfirms.end())

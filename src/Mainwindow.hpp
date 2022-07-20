@@ -123,6 +123,7 @@ public slots:
     void removeAllPlugins();
     void sortTasks(); //sorts by column 0
     void itemDataEdited(const QModelIndex &index);
+    void itemDataEdited(QStandardItem *qitem, bool forceSend = false);
 
 private slots:
     void filterTextEdited(QString const &text);
