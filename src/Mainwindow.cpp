@@ -291,6 +291,7 @@ MainWindow::~MainWindow()
 void MainWindow::onExpanded(const QModelIndex& index)
 {
     this->setItemExpanded(index, true);
+    model->updateTasks(true, true);
 }
 
 void MainWindow::onCollapsed(const QModelIndex& index)

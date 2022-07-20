@@ -56,7 +56,7 @@ bool TaskItem::hasVisualizers()
     return false;
 }
 
-void TaskItem::update(bool updateUI)
+void TaskItem::update(bool updateUI, bool handleOldData)
 {   
     if (!task)
     {
@@ -98,10 +98,10 @@ void TaskItem::update(bool updateUI)
         return;
     }
     
-    updatePorts(hasVis, updateUI);
+    updatePorts(hasVis, updateUI, handleOldData);
 }
 
-void TaskItem::updatePorts(bool hasVisualizers, bool updateUI)
+void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldData)
 {
     bool refreshedOutputPorts = false;
     bool refreshedInputPorts = false;
@@ -157,8 +157,8 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI)
                     outPortItem->updateOutputPortInterface(outIf);
                     refreshedOutputPorts = true;
                 }
-                
-                outPortItem->updataValue(updateUI);
+
+                outPortItem->updataValue(updateUI, handleOldData);
             }
             if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
             {
@@ -170,7 +170,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI)
                     refreshedInputPorts = true;
                 }
 
-                inPortItem->updataValue(updateUI);
+                inPortItem->updataValue(updateUI, handleOldData);
             }
         }
     }

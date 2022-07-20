@@ -61,7 +61,7 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr)
+OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), needUiUpdate(false)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
     valueItem->setType(ItemType::OUTPUTPORT);
@@ -131,7 +131,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void OutputPortItem::updataValue(bool updateUI)
+void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
 {    
     if (!handle || !reader)
     {
@@ -154,7 +154,11 @@ void OutputPortItem::updataValue(bool updateUI)
         }
     }
     
-    if (!(reader->read(handle->sample) == RTT::NewData))
+    if (reader->read(handle->sample) == RTT::NewData || handleOldData)
+    {
+        needUiUpdate = true;
+    }
+    else if (!updateUI || !needUiUpdate)
     {
         return;
     }
@@ -177,6 +181,11 @@ void OutputPortItem::updataValue(bool updateUI)
     }
     
     item->update(val, handle->sample, item->getName()->isExpanded());
+
+    if(updateUI)
+    {
+        needUiUpdate = false;
+    }
 }
 
 const std::string& OutputPortItem::getType()
@@ -271,7 +280,7 @@ void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void InputPortItem::updataValue(bool updateUI)
+void InputPortItem::updataValue(bool updateUI, bool handleOldData)
 {
     if (!handle)
     {
@@ -279,6 +288,11 @@ void InputPortItem::updataValue(bool updateUI)
     }
 
     if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() && !item->hasVisualizers())
+    {
+        return;
+    }
+
+    if (oldDataBuffer.size() != 0 && !handleOldData)
     {
         return;
     }

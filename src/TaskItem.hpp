@@ -38,7 +38,7 @@ public:
     TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo);
     virtual ~TaskItem();
     bool updateState(bool updateUI = true);
-    void updatePorts(bool hasVisualizers=false, bool updateUI = true);
+    void updatePorts(bool hasVisualizers=false, bool updateUI = true, bool handleOldData = false);
     void updateProperties(bool updateUI = true);
     
     void setRefreshPorts(bool refresh=true)
@@ -47,7 +47,12 @@ public:
         this->refreshInputPorts = refresh;
     }
 
-    void update(bool updateUI = true);
+    /*
+     * @param updateUI       set to true if this call should and is allowed to change UI.
+     *                       if set to false, this will not touch any QStandardItem.
+     * @param handleOldData  set to true to bypass logic checking for changed data.
+     */
+    void update(bool updateUI = true, bool handleOldData = false);
     bool hasVisualizers();
     
     void updateTaskContext(RTT::corba::TaskContextProxy* _task)

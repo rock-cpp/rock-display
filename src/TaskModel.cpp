@@ -138,11 +138,11 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     updateTaskItem(item, true);
 }
 
-void TaskModel::updateTaskItem(TaskItem *item, bool updateUI)
+void TaskModel::updateTaskItem(TaskItem *item, bool updateUI, bool handleOldData)
 {
     try
     {
-        item->update(updateUI);
+        item->update(updateUI, handleOldData);
     }
     catch (const CORBA::TRANSIENT& ex)
     {
@@ -171,12 +171,12 @@ QList< QStandardItem* > TaskModel::getRow()
     return {&nameItem, &statusItem};
 }
 
-void TaskModel::updateTaskItems(bool updateUI)
+void TaskModel::updateTaskItems(bool updateUI, bool handleOldData)
 {
     assert(qApp->thread() == QThread::currentThread() || !updateUI);
     for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
     {
-        updateTaskItem(itemIter->second, updateUI);
+        updateTaskItem(itemIter->second, updateUI, handleOldData);
     }
 }
 

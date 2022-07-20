@@ -67,11 +67,12 @@ class OutputPortItem : public PortItem
 {
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
+    bool needUiUpdate;
     
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~OutputPortItem();
-    void updataValue(bool updateUI = true);
+    void updataValue(bool updateUI = true, bool handleOldData = false);
     
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();
@@ -93,7 +94,7 @@ class InputPortItem : public PortItem
 public:
     InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~InputPortItem();
-    void updataValue(bool updateUI = true);
+    void updataValue(bool updateUI = true, bool handleOldData = false);
     bool compareAndMarkData();
 
     void updateInputPortInterface(RTT::base::InputPortInterface* port);

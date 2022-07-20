@@ -37,11 +37,11 @@ void NameServiceModel::stop()
     emit stopNotifier();
 }
 
-void NameServiceModel::updateTasks(bool updateUI)
+void NameServiceModel::updateTasks(bool updateUI, bool handleOldData)
 {
     for (TaskModel *task: taskModels)
     {
-        task->updateTaskItems(updateUI);
+        task->updateTaskItems(updateUI, handleOldData);
     }
 }
 
