@@ -20,7 +20,6 @@ NameServiceModel::~NameServiceModel()
 
 void NameServiceModel::taskModelDataChanged(const QModelIndex &i, const QModelIndex &j)
 {
-    emit dataChanged(i, j);
 }
 
 void NameServiceModel::addTaskModel(TaskModel* task)
