@@ -140,10 +140,7 @@ void TaskModel::updateTaskItem(TaskItem *item)
 {
     try
     {
-        if (item->update())
-        {
-            emit dataChanged(item->updateLeft(), item->updateRight());
-        }
+        item->update();
     }
     catch (const CORBA::TRANSIENT& ex)
     {

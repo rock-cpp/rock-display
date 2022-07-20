@@ -47,7 +47,6 @@ public:
     void waitForTerminate();
     
 signals:
-    void dataChanged(const QModelIndex &i, const QModelIndex &j);
     /**Is emitted every time a new task is added */
     void taskAdded(const TaskItem* taskItem);
     
