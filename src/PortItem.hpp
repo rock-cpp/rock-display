@@ -71,7 +71,7 @@ class OutputPortItem : public PortItem
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~OutputPortItem();
-    bool updataValue();
+    void updataValue();
     
     void updateOutputPortInterface(RTT::base::OutputPortInterface* port);
     const std::string &getType();
@@ -93,7 +93,7 @@ class InputPortItem : public PortItem
 public:
     InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~InputPortItem();
-    bool updataValue();
+    void updataValue();
     bool compareAndMarkData();
 
     void updateInputPortInterface(RTT::base::InputPortInterface* port);

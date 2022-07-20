@@ -131,16 +131,16 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-bool OutputPortItem::updataValue()
+void OutputPortItem::updataValue()
 {    
     if (!handle || !reader)
     {
-        return false;
+        return;
     }
     
     if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() && !item->hasVisualizers())
     {
-        return false;
+        return;
     }
     
     if (!reader->connected())
@@ -150,13 +150,13 @@ bool OutputPortItem::updataValue()
         if(!reader->connectTo(handle->port, policy))
         {
             LOG_ERROR_S << "OutputPortItem: Error could not connect reader to port " + handle->port->getName() + " of task " + handle->port->getInterface()->getOwner()->getName();
-            return false;
+            return;
         }
     }
     
     if (!(reader->read(handle->sample) == RTT::NewData))
     {
-        return false;
+        return;
     }
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
@@ -173,10 +173,10 @@ bool OutputPortItem::updataValue()
         }
         
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
-        return item->update(val, handle->sample, true, true);
+        item->update(val, handle->sample, true, true);
     }
     
-    return item->update(val, handle->sample, item->getName()->isExpanded());
+    item->update(val, handle->sample, item->getName()->isExpanded());
 }
 
 const std::string& OutputPortItem::getType()
@@ -271,16 +271,16 @@ void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-bool InputPortItem::updataValue()
+void InputPortItem::updataValue()
 {
     if (!handle)
     {
-        return false;
+        return;
     }
 
     if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() && !item->hasVisualizers())
     {
-        return false;
+        return;
     }
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
@@ -306,10 +306,10 @@ bool InputPortItem::updataValue()
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        return item->update(currentData, handle->sample, true, true);
+        item->update(currentData, handle->sample, true, true);
     }
 
-    return item->update(currentData, handle->sample, item->getName()->isExpanded());
+    item->update(currentData, handle->sample, item->getName()->isExpanded());
 }
 
 const std::string& InputPortItem::getType()
