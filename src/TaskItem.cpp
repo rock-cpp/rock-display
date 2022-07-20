@@ -56,7 +56,7 @@ bool TaskItem::hasVisualizers()
     return false;
 }
 
-void TaskItem::update()
+void TaskItem::update(bool updateUI)
 {   
     if (!task)
     {
@@ -83,12 +83,12 @@ void TaskItem::update()
     }
     
     // check for task state update
-    stateChanged = updateState();
+    stateChanged = updateState(updateUI);
     
     // check for property update
     if (propertyMap.empty() || stateChanged)
     {
-        updateProperties();
+        updateProperties(updateUI);
     }
 
     // check for port update
@@ -98,10 +98,10 @@ void TaskItem::update()
         return;
     }
     
-    updatePorts(hasVis);
+    updatePorts(hasVis, updateUI);
 }
 
-void TaskItem::updatePorts(bool hasVisualizers)
+void TaskItem::updatePorts(bool hasVisualizers, bool updateUI)
 {
     bool refreshedOutputPorts = false;
     bool refreshedInputPorts = false;
@@ -158,7 +158,7 @@ void TaskItem::updatePorts(bool hasVisualizers)
                     refreshedOutputPorts = true;
                 }
                 
-                outPortItem->updataValue();
+                outPortItem->updataValue(updateUI);
             }
             if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
             {
@@ -170,7 +170,7 @@ void TaskItem::updatePorts(bool hasVisualizers)
                     refreshedInputPorts = true;
                 }
 
-                inPortItem->updataValue();
+                inPortItem->updataValue(updateUI);
             }
         }
     }
@@ -185,7 +185,7 @@ void TaskItem::updatePorts(bool hasVisualizers)
     }
 }
 
-void TaskItem::updateProperties()
+void TaskItem::updateProperties(bool updateUI)
 {   
     RTT::PropertyBag *taskProperties = task->properties();
     
@@ -199,7 +199,7 @@ void TaskItem::updateProperties()
             PropertyItem *item = new PropertyItem(property, handlerrepo);
 
             propertyMap[property->getName()] = item;
-            item->updataValue();
+            item->updataValue(updateUI);
             
             properties.appendRow(item->getRow());
         }
@@ -207,12 +207,12 @@ void TaskItem::updateProperties()
         {
             PropertyItem *item = it->second;
             item->updateProperty(property);
-            item->updataValue();
+            item->updataValue(updateUI);
         }
     }
 }
 
-bool TaskItem::updateState()
+bool TaskItem::updateState(bool updateUI)
 {
     std::string stateString = "";
     RTT::base::TaskCore::TaskState state = task->getTaskState();

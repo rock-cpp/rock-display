@@ -30,7 +30,7 @@ class PropertyItem : public QObject
 public:
     PropertyItem(RTT::base::PropertyBase *property, ConfigItemHandlerRepository *handlerrepo);
     virtual ~PropertyItem();
-    void updataValue();
+    void updataValue(bool updateUI = true);
     QList<QStandardItem *> getRow();
     std::shared_ptr<ItemBase> getItemBase()
     {

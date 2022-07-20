@@ -131,7 +131,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void OutputPortItem::updataValue()
+void OutputPortItem::updataValue(bool updateUI)
 {    
     if (!handle || !reader)
     {
@@ -271,7 +271,7 @@ void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void InputPortItem::updataValue()
+void InputPortItem::updataValue(bool updateUI)
 {
     if (!handle)
     {

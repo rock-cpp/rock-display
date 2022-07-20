@@ -145,7 +145,9 @@ MainWindow::MainWindow(QWidget *parent) :
     
     uiUpdateTimer = new QTimer(this);
     connect(uiUpdateTimer, &QTimer::timeout,
-            model, &NameServiceModel::updateTasks);
+            model, [this](){
+                model->updateTasks(true);
+            });
     uiUpdateTimer->start(20);
     
     nameServiceDialog = new AddNameServiceDialog();
@@ -500,7 +502,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                             }
                             else
                             {
-                                titem->updateProperties();
+                                titem->updateProperties(true);
                             }
                         }
                         catch (std::runtime_error const &e)

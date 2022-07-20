@@ -171,7 +171,7 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
 
 void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {    
-    updateUI &= name->isExpanded();
+    bool childrenUpdateUI = updateUI && name->isExpanded();
     value_handle = valueIn;
     this->base_sample = base_sample;
 
@@ -219,7 +219,7 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        children[i]->update(arrayV, base_sample, updateUI, forceUpdate);
+        children[i]->update(arrayV, base_sample, childrenUpdateUI, forceUpdate);
     }
     
     for (int i = currentRows; i < numElemsToDisplay; i++)
@@ -237,7 +237,7 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
             children.push_back(child);
         }
 
-        child->update(arrayV, base_sample, true, forceUpdate);
+        child->update(arrayV, base_sample, childrenUpdateUI, forceUpdate);
         child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
@@ -790,7 +790,7 @@ std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nam
 
 void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {       
-    updateUI &= this->name->isExpanded();
+    bool childrenUpdateUI = updateUI && name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
     value_handle = valueIn;
@@ -833,7 +833,7 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
                 name->appendRow(newVal->getRow());
             }
 
-            children[i]->update(fieldV, base_sample, updateUI, forceUpdate);
+            children[i]->update(fieldV, base_sample, childrenUpdateUI, forceUpdate);
             i++;
         }
     }
@@ -872,7 +872,7 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            children[i]->update(elem, base_sample, updateUI, forceUpdate);
+            children[i]->update(elem, base_sample, childrenUpdateUI, forceUpdate);
         }
         
         // case new vector size is bigger

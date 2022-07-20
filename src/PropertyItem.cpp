@@ -58,7 +58,7 @@ void PropertyItem::updateProperty(RTT::base::PropertyBase* property)
     this->type = transport->getRegistry().get(transport->getMarshallingType());
 }
 
-void PropertyItem::updataValue()
+void PropertyItem::updataValue(bool updateUI)
 {
     transport->refreshTypelibSample(transportHandle);
 

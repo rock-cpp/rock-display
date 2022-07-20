@@ -30,13 +30,13 @@ class TaskModel : public QObject
     ConfigItemHandlerRepository *handlerrepo;
     TaskModelNotifier *notifier;
     QThread *notifierThread;
-    
-    void updateTaskItem(TaskItem *item);
+
+    void updateTaskItem(TaskItem *item, bool updateUI = true);
     
 public:
     explicit TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0, const std::string &nameServiceIP = {});
     virtual ~TaskModel();
-    void updateTaskItems();
+    void updateTaskItems(bool updateUI = true);
     QList<QStandardItem *> getRow();
     
     QStandardItem &getTasks()

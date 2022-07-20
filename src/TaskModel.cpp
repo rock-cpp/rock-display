@@ -89,6 +89,8 @@ void TaskModel::updateTasksStatus(const std::string& status)
 
 void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)
 {
+    //this runs inside the GUI thread
+    assert(qApp->thread() == QThread::currentThread());
     TaskItem *item = nullptr;
     
     std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
@@ -133,14 +135,14 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
         item->updateTaskContext(task);
     }
     
-    updateTaskItem(item);
+    updateTaskItem(item, true);
 }
 
-void TaskModel::updateTaskItem(TaskItem *item)
+void TaskModel::updateTaskItem(TaskItem *item, bool updateUI)
 {
     try
     {
-        item->update();
+        item->update(updateUI);
     }
     catch (const CORBA::TRANSIENT& ex)
     {
@@ -169,11 +171,12 @@ QList< QStandardItem* > TaskModel::getRow()
     return {&nameItem, &statusItem};
 }
 
-void TaskModel::updateTaskItems()
+void TaskModel::updateTaskItems(bool updateUI)
 {
+    assert(qApp->thread() == QThread::currentThread() || !updateUI);
     for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
     {
-        updateTaskItem(itemIter->second);
+        updateTaskItem(itemIter->second, updateUI);
     }
 }
 
