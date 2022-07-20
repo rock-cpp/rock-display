@@ -88,19 +88,6 @@ signals:
     void requestNameServiceAdd(const std::string &nameServiceIP);
 };
 
-class PortChangeConfirmationWidget : public QWidget
-{
-    Q_OBJECT
-
-public:
-    PortChangeConfirmationWidget(QWidget* parent = nullptr);
-
-signals:
-    void accepted();
-    void rejected();
-
-};
-
 class MyVizkit3DWidget : public vizkit3d::Vizkit3DWidget
 {
 protected:
@@ -158,7 +145,7 @@ private:
     ConfigItemHandlerRepository *handlerrepo;
     AddNameServiceDialog *nameServiceDialog;
 
-    std::map<InputPortItem*,PortChangeConfirmationWidget*> changeconfirms;
+    std::map<InputPortItem*,QWidget*> changeconfirms;
 
     void cleanup();
     std::vector<std::pair<VizHandle *, TypedItem *>> activePlugins;

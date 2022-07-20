@@ -234,27 +234,6 @@ void AddNameServiceDialog::accept()
     addNameService();
 }
 
-PortChangeConfirmationWidget::PortChangeConfirmationWidget(QWidget *parent)
-    : QWidget(parent)
-{
-    QPushButton *acceptBtn = new QPushButton(tr("Accept"), this);
-    QPushButton *rejectBtn = new QPushButton(tr("Reject"), this);
-
-    connect(acceptBtn, &QPushButton::clicked,
-            this, &PortChangeConfirmationWidget::accepted);
-    connect(rejectBtn, &QPushButton::clicked,
-            this, &PortChangeConfirmationWidget::rejected);
-
-    QHBoxLayout *lt = new QHBoxLayout(this);
-    lt->addWidget(acceptBtn);
-    lt->addWidget(rejectBtn);
-    lt->addStretch();
-
-    setLayout(lt);
-
-    setAutoFillBackground(true);
-}
-
 void MainWindow::removeAllPlugins()
 {
     while (!activePlugins.empty())
@@ -813,26 +792,30 @@ void MainWindow::itemDataEdited(const QModelIndex &index)
         {
             if (changeconfirms.find(inputitem) == changeconfirms.end())
             {
-                PortChangeConfirmationWidget *wid = new PortChangeConfirmationWidget(this);
-                changeconfirms.insert(std::make_pair(inputitem, wid));
-                view->setIndexWidget(inputitem->getValueItem()->index(), wid);
-                connect(wid, &PortChangeConfirmationWidget::accepted,
-                        this, [inputitem,this,wid]()
+                QDialogButtonBox *box = new QDialogButtonBox(this);
+                box->addButton(tr("Accept"), QDialogButtonBox::AcceptRole);
+                box->addButton(tr("Reject"), QDialogButtonBox::RejectRole);
+                box->setAutoFillBackground(true);
+
+                changeconfirms.insert(std::make_pair(inputitem, static_cast<QWidget*>(box)));
+                view->setIndexWidget(inputitem->getValueItem()->index(), box);
+                connect(box, &QDialogButtonBox::accepted,
+                        this, [inputitem, this, box]
                 {
                     inputitem->sendCurrentData();
                     inputitem->compareAndMarkData();
                     changeconfirms.erase(changeconfirms.find(inputitem));
                     view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
-                    wid->deleteLater();
+                    box->deleteLater();
                 });
-                connect(wid, &PortChangeConfirmationWidget::rejected,
-                        this, [inputitem,this,wid]()
+                connect(box, &QDialogButtonBox::rejected,
+                        this, [inputitem, this, box]
                 {
                     inputitem->restoreOldData();
                     inputitem->compareAndMarkData();
                     changeconfirms.erase(changeconfirms.find(inputitem));
                     view->setIndexWidget(inputitem->getValueItem()->index(), nullptr);
-                    wid->deleteLater();
+                    box->deleteLater();
                 });
             }
         }
