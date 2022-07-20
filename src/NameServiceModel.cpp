@@ -18,15 +18,10 @@ NameServiceModel::~NameServiceModel()
     }
 }
 
-void NameServiceModel::taskModelDataChanged(const QModelIndex &i, const QModelIndex &j)
-{
-}
-
 void NameServiceModel::addTaskModel(TaskModel* task)
 {
     taskModels.push_back(task);
     appendRow(task->getRow());
-    connect(task, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(taskModelDataChanged(const QModelIndex &, const QModelIndex &)));
     connect(this, SIGNAL(stopNotifier()), task, SLOT(stopNotifier()), Qt::DirectConnection);
     connect(task, SIGNAL(taskAdded(const TaskItem*)), this, SLOT(taskAdded(const TaskItem*)));
 }

@@ -26,8 +26,6 @@ public:
         emit itemDataEdited(i);
     }
 
-private slots:
-    void taskModelDataChanged(const QModelIndex &i, const QModelIndex &j);
 public slots:
     void stop();
     void addNameService(const std::string &nameServiceIP);
