@@ -150,7 +150,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     nameServiceDialog = new AddNameServiceDialog();
     connect(nameServiceDialog, SIGNAL(requestNameServiceAdd(const std::string &)), model, SLOT(addNameService(const std::string &)));
-    initialTasks->notifierThread->start();
+    initialTasks->startNotifier();
     
     view->expand(initialTasks->getRow().first()->index());
     view->expand(initialTasks->getTasks().index());

@@ -180,3 +180,12 @@ void TaskModel::updateTaskItems()
     }
 }
 
+void TaskModel::stopNotifier()
+{
+    notifier->stopNotifier();
+}
+
+void TaskModel::startNotifier()
+{
+    notifierThread->start();
+}

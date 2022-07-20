@@ -28,6 +28,8 @@ class TaskModel : public QObject
 
     std::map<std::string, TaskItem *> nameToItem;
     ConfigItemHandlerRepository *handlerrepo;
+    TaskModelNotifier *notifier;
+    QThread *notifierThread;
     
     void updateTaskItem(TaskItem *item);
     
@@ -35,9 +37,7 @@ public:
     explicit TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0, const std::string &nameServiceIP = {});
     virtual ~TaskModel();
     void updateTaskItems();
-    TaskModelNotifier *notifier;
     QList<QStandardItem *> getRow();
-    QThread *notifierThread;
     
     QStandardItem &getTasks()
     {
@@ -55,5 +55,7 @@ public slots:
     void onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect);
     void updateNameServiceStatus(const std::string &status);
     void updateTasksStatus(const std::string &status);
+    void stopNotifier();
+    void startNotifier();
 };
 

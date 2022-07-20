@@ -28,8 +28,7 @@ void NameServiceModel::addTaskModel(TaskModel* task)
     taskModels.push_back(task);
     appendRow(task->getRow());
     connect(task, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(taskModelDataChanged(const QModelIndex &, const QModelIndex &)));
-    //FIXME why is the notifier connected here, nobody except the taskmodel should know about it
-    connect(this, SIGNAL(stopNotifier()), task->notifier, SLOT(stopNotifier()), Qt::DirectConnection);
+    connect(this, SIGNAL(stopNotifier()), task, SLOT(stopNotifier()), Qt::DirectConnection);
     connect(task, SIGNAL(taskAdded(const TaskItem*)), this, SLOT(taskAdded(const TaskItem*)));
 }
 
@@ -69,5 +68,5 @@ void NameServiceModel::addNameService(const std::string& nameServiceIP)
 
     TaskModel *newModel = new TaskModel(handlerrepo, this, nameServiceIP);
     addTaskModel(newModel);
-    newModel->notifierThread->start();
+    newModel->startNotifier();
 }
