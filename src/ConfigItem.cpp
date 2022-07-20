@@ -180,10 +180,10 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
         if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
         {
             h->convertFromTypelibValue(value, valueIn, codec);
-            if (h->flags() & ConfigItemHandler::Flags::HideFields)
-            {
-                return;
-            }
+        }
+        if (h->flags() & ConfigItemHandler::Flags::HideFields)
+        {
+            return;
         }
     }
 
@@ -806,10 +806,10 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
         {
             h->convertFromTypelibValue(value, valueIn, codec);
             haveCustomValue = true;
-            if (h->flags() & ConfigItemHandler::Flags::HideFields)
-            {
-                return;
-            }
+        }
+        if (h->flags() & ConfigItemHandler::Flags::HideFields)
+        {
+            return;
         }
     }
 
