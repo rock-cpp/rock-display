@@ -39,22 +39,18 @@ TaskModel::TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent, 
     }
     
     qRegisterMetaType<std::string>("std::string");
-
+    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
+                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)));
+    
     notifierThread = new QThread();
     
-    notifier->moveToThread(notifierThread);
-
-    connect(notifier, SIGNAL(updateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
-                      SLOT(onUpdateTask(RTT::corba::TaskContextProxy*, const std::string &, bool)),
-                      Qt::QueuedConnection
-           );
-
-    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()), Qt::DirectConnection);
+    connect(notifierThread, SIGNAL(started()), notifier, SLOT(run()));
     connect(notifier, SIGNAL(finished()), notifierThread, SLOT(quit()));
     connect(notifierThread, SIGNAL(finished()), notifierThread, SLOT(deleteLater()));
-    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::QueuedConnection);
-    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::QueuedConnection);
+    connect(notifier, SIGNAL(updateNameServiceStatus(const std::string&)), this, SLOT(updateNameServiceStatus(const std::string &)), Qt::DirectConnection);
+    connect(notifier, SIGNAL(updateTasksStatus(const std::string&)), this, SLOT(updateTasksStatus(const std::string &)), Qt::DirectConnection);
     
+    notifier->moveToThread(notifierThread);
 }
 
 TaskModel::~TaskModel()
@@ -70,6 +66,7 @@ TaskModel::~TaskModel()
 
 void TaskModel::waitForTerminate()
 {
+    //this runs inside a helper thread
     notifierThread->quit();
     if (notifierThread->wait(500))
     {
