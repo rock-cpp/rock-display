@@ -90,19 +90,24 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
     assert(qApp->thread() == QThread::currentThread());
     TaskItem *item = nullptr;
     
-    std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
-    if (itemIt == nameToItem.end())
     {
-        item = new TaskItem(task, handlerrepo);
-        nameToItem.insert(std::make_pair(taskName, item));
-        tasks.appendRow(item->getRow());
-        emit taskAdded(item);
+        std::lock_guard<std::mutex> g(nameToItemMutex);
+        std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
+        if (itemIt == nameToItem.end())
+        {
+            item = new TaskItem(task, handlerrepo);
+            nameToItem.insert(std::make_pair(taskName, item));
+            tasks.appendRow(item->getRow());
+            emit taskAdded(item);
+        }
+        else
+        {
+            item = itemIt->second;
+        }
     }
-    else
-    {     
-        item = itemIt->second;
-    }
-    
+    //the lock can be dropped because TaskItems will never be deconstructed while
+    //(non-GUI) threads still run.
+
     if (!task || reconnect)
     {
         bool enabled = false;
@@ -171,9 +176,23 @@ QList< QStandardItem* > TaskModel::getRow()
 void TaskModel::updateTaskItems(bool updateUI, bool handleOldData)
 {
     assert(qApp->thread() == QThread::currentThread() || !updateUI);
-    for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+    std::vector<TaskItem *>items;
     {
-        updateTaskItem(itemIter->second, updateUI, handleOldData);
+        std::lock_guard<std::mutex> g(nameToItemMutex);
+        for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
+        {
+            items.push_back(itemIter->second);
+        }
+    }
+    //the lock can be dropped because TaskItems will never be deconstructed while
+    //(non-GUI) threads still run.
+    //this has been extracted to keep the potential of concurrent access in the contained
+    //items. that kind of concurrent access is always possible, but much rarer when only
+    //initiated by user action. if the copy above turns out to be a performance issue,
+    //just move the updateTaskItem back under the lock.
+    for(auto &item : items)
+    {
+        updateTaskItem(item, updateUI, handleOldData);
     }
 }
 

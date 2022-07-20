@@ -40,7 +40,10 @@ void TaskItem::reset()
         }
     }
     
-    task = nullptr;
+    {
+        std::lock_guard<std::mutex> g(taskMutex);
+        task = nullptr;
+    }
 }
 
 bool TaskItem::hasVisualizers()
@@ -58,22 +61,29 @@ bool TaskItem::hasVisualizers()
 
 void TaskItem::update(bool updateUI, bool handleOldData)
 {   
-    if (!task)
     {
-        return;
-    }
+        taskMutex.lock();
+        if (!task)
+        {
+            taskMutex.unlock();
+            return;
+        }
     
-    if (!task->server() || task->server()->_is_nil())
-    {
-        LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
-        reset();
-        return;
+        if (!task->server() || task->server()->_is_nil())
+        {
+            LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
+            taskMutex.unlock();
+            reset();
+            return;
+        }
+        taskMutex.unlock();
     }
 
     if (updateUI && nameItem.text().isEmpty())
     {
         try
         {
+            std::lock_guard<std::mutex> g(taskMutex);
             nameItem.setText(task->getName().c_str());
         }
         catch (...)
@@ -108,6 +118,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
     
     if (ports.empty() || hasVisualizers || (updateUI && (outputPorts.isExpanded() || inputPorts.isExpanded())))
     {
+        std::lock_guard<std::mutex> g(taskMutex);
         const RTT::DataFlowInterface *dfi = task->ports();
 
         for (RTT::base::PortInterface *pi : dfi->getPorts())
@@ -162,7 +173,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
             if ((item->hasVisualizers() || (updateUI && outputPorts.isExpanded())) && outIf)
             {
                 OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
-                
+
                 if (refreshOutputPorts)
                 {
                     outPortItem->updateOutputPortInterface(outIf);
@@ -198,6 +209,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
 
 void TaskItem::updateProperties(bool updateUI)
 {   
+    std::lock_guard<std::mutex> g(taskMutex);
     RTT::PropertyBag *taskProperties = task->properties();
     
     for (std::size_t i=0; i<taskProperties->size(); i++)
@@ -238,6 +250,7 @@ bool TaskItem::updateState(bool updateUI)
         return false;
     }
     std::string stateString = "";
+    std::lock_guard<std::mutex> g(taskMutex);
     RTT::base::TaskCore::TaskState state = task->getTaskState();
     switch(state)
     {

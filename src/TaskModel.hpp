@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QStandardItem>
+#include <mutex>
 #include "TypedItem.hpp"
 
 namespace RTT
@@ -27,6 +28,7 @@ class TaskModel : public QObject
     QStandardItem tasks;
 
     std::map<std::string, TaskItem *> nameToItem;
+    std::mutex nameToItemMutex;
     ConfigItemHandlerRepository *handlerrepo;
     TaskModelNotifier *notifier;
     QThread *notifierThread;

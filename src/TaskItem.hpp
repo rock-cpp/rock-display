@@ -22,6 +22,7 @@ class TaskItem
     
 private:
     RTT::corba::TaskContextProxy *task;
+    std::mutex taskMutex;
     TypedItem nameItem;
     TypedItem statusItem;
     bool refreshOutputPorts;

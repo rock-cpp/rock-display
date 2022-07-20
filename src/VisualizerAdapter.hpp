@@ -13,6 +13,7 @@ class VisualizerAdapter : public QObject
     
 protected:
     std::map<std::string, VizHandle*> visualizers;
+    std::mutex visualizerMutex;
     
 public:
     VisualizerAdapter()
@@ -29,9 +30,9 @@ public:
     void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
+        std::lock_guard<std::mutex> g(visualizerMutex);
         return receivers(SIGNAL(visualizerUpdate(void const *, RTT::base::DataSourceBase::shared_ptr))) != 0;
     }
-    
 signals:
     /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
      * retaining runtime type information */

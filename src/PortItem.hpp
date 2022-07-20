@@ -2,6 +2,7 @@
 
 #include "ConfigItem.hpp"
 #include "VisualizerAdapter.hpp"
+#include <mutex>
 
 QT_BEGIN_NAMESPACE
 class QStandardItem;
@@ -27,6 +28,7 @@ protected:
     TypedItem *valueItem;
     std::string typeInfo;
     ConfigItemHandlerRepository *handlerrepo;
+    std::mutex itemsMutex;
 
 public:
     PortItem(const std::string &name, ConfigItemHandlerRepository *handlerrepo);
@@ -68,7 +70,7 @@ class OutputPortItem : public PortItem
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
     bool needUiUpdate;
-    
+
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);
     virtual ~OutputPortItem();

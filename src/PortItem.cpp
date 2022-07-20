@@ -164,6 +164,8 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
 
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
+    std::lock_guard<std::mutex> g(itemsMutex);
+
     if (!item && updateUI)
     {   
         while (nameItem->rowCount() > 0)
@@ -303,6 +305,8 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         oldData = Typelib::Value(oldDataBuffer.data(), type);
         Typelib::copy(oldData, currentData);
     }
+
+    std::lock_guard<std::mutex> g(itemsMutex);
 
     if (!item && updateUI)
     {

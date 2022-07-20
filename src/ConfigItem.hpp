@@ -40,6 +40,7 @@ protected:
     
     std::vector<std::shared_ptr<ItemBase> > children;
     ConfigItemHandlerRepository *handlerrepo;
+    std::mutex itemsMutex;
     
     /** Stack of handlers associated with this item.
      *
@@ -83,6 +84,7 @@ public:
 
     void setName(const QString &newName)
     {
+        std::lock_guard<std::mutex> g(itemsMutex);
         name->setText(newName);
     }
     
@@ -93,6 +95,7 @@ public:
     
     void setType(int newType)
     {
+        std::lock_guard<std::mutex> g(itemsMutex);
         this->name->setType(newType);
         this->value->setType(newType);
     }
