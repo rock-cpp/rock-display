@@ -100,10 +100,10 @@ public:
         this->value->setType(newType);
     }
     
-    std::vector<std::shared_ptr<ItemBase> > const &getChildren() const
+    /*std::vector<std::shared_ptr<ItemBase> > const &getChildren() const
     {
         return this->children;
-    }
+    }*/
     
     TypedItem *getName()
     {
