@@ -56,59 +56,53 @@ bool TaskItem::hasVisualizers()
     return false;
 }
 
-bool TaskItem::update()
+void TaskItem::update()
 {   
     if (!task)
     {
-        return false;
+        return;
     }
     
     if (!task->server() || task->server()->_is_nil())
     {
         LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
         reset();
-        return false;
+        return;
     }
     
-    bool needsUpdate = false;
     if (nameItem.text().isEmpty())
     {
         try
         {
             nameItem.setText(task->getName().c_str());
-            needsUpdate = true;
         }
         catch (...)
         {
-            return false;
+            return;
         }
     }
     
     // check for task state update
     stateChanged = updateState();
-    needsUpdate |= stateChanged;
     
     // check for property update
     if (propertyMap.empty() || stateChanged)
     {
-        needsUpdate |= updateProperties();
+        updateProperties();
     }
 
     // check for port update
     bool hasVis = hasVisualizers();
     if (!hasVis && !nameItem.isExpanded())
     {
-        return needsUpdate;
+        return;
     }
     
-    needsUpdate |= updatePorts(hasVis);
-
-    return needsUpdate;
+    updatePorts(hasVis);
 }
 
-bool TaskItem::updatePorts(bool hasVisualizers)
+void TaskItem::updatePorts(bool hasVisualizers)
 {
-    bool needsUpdate = false;
     bool refreshedOutputPorts = false;
     bool refreshedInputPorts = false;
     
@@ -148,7 +142,6 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                 }
                 
                 ports.insert(std::make_pair(portName, item));
-                needsUpdate = true;
             }
             else
             {   
@@ -165,7 +158,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                     refreshedOutputPorts = true;
                 }
                 
-                needsUpdate |= outPortItem->updataValue();
+                outPortItem->updataValue();
             }
             if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
             {
@@ -177,7 +170,7 @@ bool TaskItem::updatePorts(bool hasVisualizers)
                     refreshedInputPorts = true;
                 }
 
-                needsUpdate |= inPortItem->updataValue();
+                inPortItem->updataValue();
             }
         }
     }
@@ -190,14 +183,10 @@ bool TaskItem::updatePorts(bool hasVisualizers)
     {
         refreshInputPorts = false;
     }
-    
-    return needsUpdate;
 }
 
-bool TaskItem::updateProperties()
+void TaskItem::updateProperties()
 {   
-    bool needsUpdate = false;
-
     RTT::PropertyBag *taskProperties = task->properties();
     
     for (std::size_t i=0; i<taskProperties->size(); i++)
@@ -213,17 +202,14 @@ bool TaskItem::updateProperties()
             item->updataValue();
             
             properties.appendRow(item->getRow());
-            needsUpdate = true;
         }
         else
         {
             PropertyItem *item = it->second;
             item->updateProperty(property);
-            needsUpdate |= item->updataValue();
+            item->updataValue();
         }
     }
-    
-    return needsUpdate;
 }
 
 bool TaskItem::updateState()

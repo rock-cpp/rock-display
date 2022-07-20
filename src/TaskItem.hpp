@@ -38,8 +38,8 @@ public:
     TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo);
     virtual ~TaskItem();
     bool updateState();
-    bool updatePorts(bool hasVisualizers=false);
-    bool updateProperties();
+    void updatePorts(bool hasVisualizers=false);
+    void updateProperties();
     
     void setRefreshPorts(bool refresh=true)
     {
@@ -47,7 +47,7 @@ public:
         this->refreshInputPorts = refresh;
     }
 
-    bool update();
+    void update();
     bool hasVisualizers();
     
     void updateTaskContext(RTT::corba::TaskContextProxy* _task)
