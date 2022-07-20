@@ -76,7 +76,7 @@ public:
      * @param forceUpdate ?
      * @return            ?
      */
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = true, bool forceUpdate = false) = 0;
+    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = true, bool forceUpdate = false) = 0;
     virtual Typelib::Value& getValueHandle() { return value_handle; }
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() { return base_sample; }
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) { return false; }
@@ -154,7 +154,7 @@ public:
     Array(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false);
+    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableArray : public Array
@@ -175,7 +175,7 @@ public:
     Simple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Simple();
     
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false);
+    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableSimple : public Simple
@@ -200,7 +200,7 @@ public:
     Complex(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
-    virtual bool update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false);
+    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableComplex : public Complex

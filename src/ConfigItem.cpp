@@ -169,9 +169,9 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {    
-    bool updateNecessary = this->name->isExpanded() && updateUI;
+    updateUI &= name->isExpanded();
     value_handle = valueIn;
     this->base_sample = base_sample;
 
@@ -179,10 +179,10 @@ bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     {
         if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
         {
-            updateNecessary |= h->convertFromTypelibValue(value, valueIn, codec);
+            h->convertFromTypelibValue(value, valueIn, codec);
             if (h->flags() & ConfigItemHandler::Flags::HideFields)
             {
-                return forceUpdate || updateNecessary;
+                return;
             }
         }
     }
@@ -202,11 +202,9 @@ bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     
     if (name->rowCount() < 0)
     {
-        return false;
+        return;
     }
     int currentRows = name->rowCount();
-    
-    bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
     
     if (currentRows > numElemsToDisplay)
     {
@@ -218,13 +216,11 @@ bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
         currentRows = numElemsToDisplay;
     }
     
-    bool childRet = false;
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        childRet |= children[i]->update(arrayV, base_sample, updateNecessary, forceUpdate);
+        children[i]->update(arrayV, base_sample, updateUI, forceUpdate);
     }
-    updateNecessary &= childRet;
     
     for (int i = currentRows; i < numElemsToDisplay; i++)
     {
@@ -245,8 +241,6 @@ bool Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
         child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
-    
-    return forceUpdate || updateNecessary || numElemsDisplayedChanged;
 }
 
 EditableArray::EditableArray(TypedItem *name, TypedItem *value)
@@ -390,23 +384,22 @@ std::string getValue<int8_t>(const Typelib::Value& value)
     return valueS;
 }
 
-bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {
-    bool updateNecessary = forceUpdate || updateUI;
-    
     value_handle = valueIn;
     this->base_sample = base_sample;
 
-    if (!updateNecessary)
+    if (!(forceUpdate || updateUI))
     {
-        return false;
+        return;
     }
 
     for(auto &h : handlerStack)
     {
         if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
         {
-            return h->convertFromTypelibValue(value, valueIn, codec);
+            h->convertFromTypelibValue(value, valueIn, codec);
+            return;
         }
     }
 
@@ -467,7 +460,7 @@ bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
                             break;
                         default:
                             LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
-                            return false;
+                            return;
                     }
                     break;
                 case Typelib::Numeric::UInt:
@@ -488,20 +481,20 @@ bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
                             break;
                         default:
                             LOG_ERROR_S << "Error, got integer of unexpected size " << numeric.getSize();
-                            return false;
+                            return;
                     }
                 }
                     break;
                 case Typelib::Numeric::NumberOfValidCategories:
                     LOG_ERROR_S << "Internal Error: Got invalid Category";
-                    return false;
+                    return;
             }
         }
     }
     else
     {
         LOG_WARN_S << "got unsupported type..";
-        return false;
+        return;
     }
     
     if (valueS != oldValue)
@@ -513,15 +506,12 @@ bool Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
             
             if (state.invalidChars > 0)
             {
-                return updateNecessary;
+                return;
             }
             
             value->setText(text);
-            return true;
         }
     }
-    
-    return updateNecessary;
 }
 
 EditableSimple::EditableSimple(TypedItem *name, TypedItem *value)
@@ -798,9 +788,9 @@ std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nam
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
 {       
-    bool updateNecessary = updateUI && this->name->isExpanded();
+    updateUI &= this->name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
     value_handle = valueIn;
@@ -814,11 +804,11 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     {
         if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
         {
-            updateNecessary |= h->convertFromTypelibValue(value, valueIn, codec);
+            h->convertFromTypelibValue(value, valueIn, codec);
             haveCustomValue = true;
             if (h->flags() & ConfigItemHandler::Flags::HideFields)
             {
-                return forceUpdate || updateNecessary;
+                return;
             }
         }
     }
@@ -830,7 +820,6 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     {
         const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(type);
         uint8_t *data = static_cast<uint8_t *>(valueIn.getData());
-        bool childRet = false;
         size_t i = 0;
         for (const Typelib::Field &field: comp.getFields())
         {
@@ -842,13 +831,11 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
                 newVal->setName(field.getName().c_str());
                 children.push_back(newVal);
                 name->appendRow(newVal->getRow());
-                childRet = true;
             }
 
-            childRet |= children[i]->update(fieldV, base_sample, updateNecessary, forceUpdate);
+            children[i]->update(fieldV, base_sample, updateUI, forceUpdate);
             i++;
         }
-        updateNecessary &= childRet;
     }
     else
     {
@@ -880,15 +867,13 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
             currentRows = numElemsToDisplay;
         }
         
-        bool childRet = false;
         // update old (displayed) items
         // children size at this step is min(currentRows, numElemsToDisplay)
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            childRet |= children[i]->update(elem, base_sample, updateNecessary, forceUpdate);
+            children[i]->update(elem, base_sample, updateUI, forceUpdate);
         }
-        updateNecessary &= childRet; 
         
         // case new vector size is bigger
         // append new rows
@@ -924,11 +909,7 @@ bool Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
                 value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
             }
         }
-        
-        updateNecessary |= numElemsDisplayedChanged;
     }
-    
-    return forceUpdate || updateNecessary;
 }
 
 EditableComplex::EditableComplex(TypedItem *name, TypedItem *value)
