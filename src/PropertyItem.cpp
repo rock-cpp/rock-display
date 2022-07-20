@@ -64,7 +64,7 @@ void PropertyItem::updataValue(bool updateUI)
 
     currentData = Typelib::Value(transport->getTypelibSample(transportHandle), *(type));
 
-    if (!item)
+    if (!item && updateUI)
     {
         while (nameItem->rowCount() > 0)
         {
@@ -72,10 +72,10 @@ void PropertyItem::updataValue(bool updateUI)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, sample, true, true);
+        item->update(currentData, sample, updateUI, true);
     }
 
-    item->update(currentData, sample, item->getName()->isExpanded());
+    item->update(currentData, sample, updateUI && item->getName()->isExpanded());
 }
 
 const std::string& PropertyItem::getType()

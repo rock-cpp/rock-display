@@ -177,7 +177,7 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
 
     for(auto &h : handlerStack)
     {
-        if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
+        if (updateUI && (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue))
         {
             h->convertFromTypelibValue(value, valueIn, codec);
         }
@@ -188,7 +188,10 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     }
 
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
-    this->value->setText(array.getName().c_str());
+    if(updateUI)
+    {
+        this->value->setText(array.getName().c_str());
+    }
     
     void *data = valueIn.getData();
     
@@ -204,9 +207,9 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     {
         return;
     }
-    int currentRows = name->rowCount();
+    int currentRows = updateUI?name->rowCount():children.size();
     
-    if (currentRows > numElemsToDisplay)
+    if (updateUI && currentRows > numElemsToDisplay)
     {
         while (name->rowCount() > numElemsToDisplay)
         {   
@@ -222,6 +225,10 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
         children[i]->update(arrayV, base_sample, childrenUpdateUI, forceUpdate);
     }
     
+    if (!updateUI)
+    {
+        return;
+    }
     for (int i = currentRows; i < numElemsToDisplay; i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
@@ -389,7 +396,7 @@ void Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_p
     value_handle = valueIn;
     this->base_sample = base_sample;
 
-    if (!(forceUpdate || updateUI))
+    if (!updateUI)
     {
         return;
     }
@@ -804,7 +811,10 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
     {
         if (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue)
         {
-            h->convertFromTypelibValue(value, valueIn, codec);
+            if (updateUI)
+            {
+                h->convertFromTypelibValue(value, valueIn, codec);
+            }
             haveCustomValue = true;
         }
         if (h->flags() & ConfigItemHandler::Flags::HideFields)
@@ -813,8 +823,10 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
         }
     }
 
-    if (!haveCustomValue)
+    if (!haveCustomValue && updateUI)
+    {
         this->value->setText(valueIn.getType().getName().c_str());
+    }
 
     if (type.getCategory() == Typelib::Type::Compound)
     {
@@ -827,6 +839,10 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
             
             if (children.size() <= i)
             {
+                if(!updateUI)
+                {
+                    break;
+                }
                 std::shared_ptr<ItemBase> newVal = getItem(fieldV);
                 newVal->setName(field.getName().c_str());
                 children.push_back(newVal);
@@ -852,12 +868,12 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
             areMaxElemsDiplayed = true;
         }
         
-        int currentRows = name->rowCount();
+        int currentRows = updateUI?name->rowCount():children.size();
         
         // check if number of displayed items changed
         bool numElemsDisplayedChanged = (numElemsToDisplay != currentRows);
         
-        if (currentRows > numElemsToDisplay)
+        if (currentRows > numElemsToDisplay && updateUI)
         {
             while (name->rowCount() > numElemsToDisplay)
             {   
@@ -875,38 +891,41 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
             children[i]->update(elem, base_sample, childrenUpdateUI, forceUpdate);
         }
         
-        // case new vector size is bigger
-        // append new rows
-        for(int i = currentRows; i < numElemsToDisplay; i++)
+        if (updateUI)
         {
-            Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            std::shared_ptr<ItemBase> child = nullptr;
-            
-            if (static_cast<int>(children.size()) > i)
+            // case new vector size is bigger
+            // append new rows
+            for(int i = currentRows; i < numElemsToDisplay; i++)
             {
-                child = children[i];
-            }
-            else
-            {
-                child = getItem(elem);
-                children.push_back(child);
+                Typelib::Value elem = cont.getElement(valueIn.getData(), i);
+                std::shared_ptr<ItemBase> child = nullptr;
+
+                if (static_cast<int>(children.size()) > i)
+                {
+                    child = children[i];
+                }
+                else
+                {
+                    child = getItem(elem);
+                    children.push_back(child);
+                }
+
+                child->update(elem, base_sample, true, forceUpdate);
+                child->setName(QString::number(i));
+                name->appendRow(child->getRow());
             }
 
-            child->update(elem, base_sample, true, forceUpdate);
-            child->setName(QString::number(i));
-            name->appendRow(child->getRow());
-        }  
-        
-        if (numElemsDisplayedChanged)
-        {
-            if (areMaxElemsDiplayed)
+            if (numElemsDisplayedChanged)
             {
-                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsToDisplay)
-                    + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
-            }
-            else
-            {
-                value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+                if (areMaxElemsDiplayed)
+                {
+                    value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsToDisplay)
+                        + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
+                }
+                else
+                {
+                    value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
+                }
             }
         }
     }

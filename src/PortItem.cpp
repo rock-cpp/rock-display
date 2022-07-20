@@ -164,7 +164,7 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
 
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
-    if (!item)
+    if (!item && updateUI)
     {   
         while (nameItem->rowCount() > 0)
         {
@@ -172,10 +172,12 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
         
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
-        item->update(val, handle->sample, true, true);
+        item->update(val, handle->sample, updateUI, true);
     }
-    
-    item->update(val, handle->sample, true);
+    else if (item)
+    {
+        item->update(val, handle->sample, updateUI);
+    }
 
     if(updateUI)
     {
@@ -302,7 +304,7 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         Typelib::copy(oldData, currentData);
     }
 
-    if (!item)
+    if (!item && updateUI)
     {
         while (nameItem->rowCount() > 0)
         {
@@ -310,10 +312,10 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, handle->sample, true, true);
+        item->update(currentData, handle->sample, updateUI, true);
     }
 
-    item->update(currentData, handle->sample, true);
+    item->update(currentData, handle->sample, updateUI);
 }
 
 const std::string& InputPortItem::getType()

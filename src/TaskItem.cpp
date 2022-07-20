@@ -69,8 +69,8 @@ void TaskItem::update(bool updateUI, bool handleOldData)
         reset();
         return;
     }
-    
-    if (nameItem.text().isEmpty())
+
+    if (updateUI && nameItem.text().isEmpty())
     {
         try
         {
@@ -93,7 +93,7 @@ void TaskItem::update(bool updateUI, bool handleOldData)
 
     // check for port update
     bool hasVis = hasVisualizers();
-    if (!hasVis && !nameItem.isExpanded())
+    if (!hasVis && (!updateUI || !nameItem.isExpanded()))
     {
         return;
     }
@@ -106,7 +106,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
     bool refreshedOutputPorts = false;
     bool refreshedInputPorts = false;
     
-    if (ports.empty() || hasVisualizers || outputPorts.isExpanded() || inputPorts.isExpanded())
+    if (ports.empty() || hasVisualizers || (updateUI && (outputPorts.isExpanded() || inputPorts.isExpanded())))
     {
         const RTT::DataFlowInterface *dfi = task->ports();
 
@@ -119,6 +119,12 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
             PortItem *item = nullptr;
             if (it == ports.end())
             {
+                if(!updateUI)
+                {
+                    //we cannot add rows/items when not updateing UI, so postpone doing so to when
+                    //updateUI is set.
+                    continue;
+                }
                 if (outIf)
                 {
                     item = new OutputPortItem(outIf, handlerrepo);
@@ -148,7 +154,12 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
                 item = it->second;
             }
 
-            if ((item->hasVisualizers() || outputPorts.isExpanded()) && outIf)
+            if (!item)
+            {
+                continue;
+            }
+
+            if ((item->hasVisualizers() || (updateUI && outputPorts.isExpanded())) && outIf)
             {
                 OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
                 
@@ -160,7 +171,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
 
                 outPortItem->updataValue(updateUI, handleOldData);
             }
-            if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
+            if ((item->hasVisualizers() || (updateUI && inputPorts.isExpanded())) && inIf)
             {
                 InputPortItem *inPortItem = static_cast<InputPortItem *>(item);
 
@@ -196,6 +207,12 @@ void TaskItem::updateProperties(bool updateUI)
         auto it = propertyMap.find(property->getName());
         if (it == propertyMap.end())
         {
+            if(!updateUI)
+            {
+                //we cannot add rows/items when not updateing UI, so postpone doing so to when
+                //updateUI is set.
+                continue;
+            }
             PropertyItem *item = new PropertyItem(property, handlerrepo);
 
             propertyMap[property->getName()] = item;
@@ -214,6 +231,12 @@ void TaskItem::updateProperties(bool updateUI)
 
 bool TaskItem::updateState(bool updateUI)
 {
+    if(!updateUI)
+    {
+        //currently, we cannot test if the state changed without looking at the GUI pieces.
+        //with !updateUI, we may be running on a non-GUI thread.
+        return false;
+    }
     std::string stateString = "";
     RTT::base::TaskCore::TaskState state = task->getTaskState();
     switch(state)
