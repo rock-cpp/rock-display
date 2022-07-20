@@ -19,16 +19,22 @@ namespace Typelib
 
 class VizHandle : public QObject
 {
+    Q_OBJECT
 public:
     virtual ~VizHandle() {}
     virtual QObject *getVizkit3dPluginObject() = 0;
     virtual QWidget *getStandaloneWidget() = 0;
 public slots:
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) = 0;
+    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample){}
+    /* this sample can be kept around for editing purposes */
+    virtual void updateEditable(void *data, RTT::base::DataSourceBase::shared_ptr base_sample){}
+signals:
+    void editableChanged(void *data, RTT::base::DataSourceBase::shared_ptr base_sample,bool force_send = false);
 };
 
 class Vizkit3dVizHandle : public VizHandle
 {
+    Q_OBJECT
 public:
     QMetaMethod method;
     QObject *plugin;

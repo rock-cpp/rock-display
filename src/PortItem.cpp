@@ -294,6 +294,7 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
     handle->transport->refreshTypelibSample(handle->transportHandle);
 
     emit visualizerUpdate(handle->sample.get()->getRawConstPointer(), handle->sample);
+    emit editableUpdate(handle->sample.get()->getRawPointer(), handle->sample);
 
     currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 

@@ -662,6 +662,7 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
         if (value.getData() && base_sample)
         {
             nh->updateVisualizer(value.getData(), base_sample);
+            nh->updateEditable(value.getData(), base_sample);
         }
     }
 }

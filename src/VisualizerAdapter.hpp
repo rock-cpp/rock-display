@@ -34,7 +34,10 @@ public:
         return receivers(SIGNAL(visualizerUpdate(void const *, RTT::base::DataSourceBase::shared_ptr))) != 0;
     }
 signals:
-    /* alternatively, one could pass around "Typelib::Value" instead of "void const *",
+    /* *Update are used to pass data from the items/ports/properties to plugins
+     *
+     * alternatively, one could pass around "Typelib::Value" instead of "void const *",
      * retaining runtime type information */
     void visualizerUpdate(void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
+    void editableUpdate(void * data, RTT::base::DataSourceBase::shared_ptr base_sample);
 };
