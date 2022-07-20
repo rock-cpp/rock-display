@@ -138,11 +138,6 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         return;
     }
     
-    if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() && !item->hasVisualizers())
-    {
-        return;
-    }
-    
     if (!reader->connected())
     {
         RTT::ConnPolicy policy(RTT::ConnPolicy::data());
@@ -180,7 +175,7 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         item->update(val, handle->sample, true, true);
     }
     
-    item->update(val, handle->sample, item->getName()->isExpanded());
+    item->update(val, handle->sample, true);
 
     if(updateUI)
     {
@@ -287,11 +282,6 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         return;
     }
 
-    if (!hasVisualizers() && item && !dynamic_cast<Simple *>(item.get()) && !item->getName()->isExpanded() && !item->hasVisualizers())
-    {
-        return;
-    }
-
     if (oldDataBuffer.size() != 0 && !handleOldData)
     {
         return;
@@ -323,7 +313,7 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         item->update(currentData, handle->sample, true, true);
     }
 
-    item->update(currentData, handle->sample, item->getName()->isExpanded());
+    item->update(currentData, handle->sample, true);
 }
 
 const std::string& InputPortItem::getType()
