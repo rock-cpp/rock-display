@@ -984,6 +984,13 @@ Typelib::Value& EditableComplex::getValueHandle()
     return value_handle;
 }
 
+void EditableComplex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+{
+    emit editableUpdate(valueIn.getData(), base_sample);
+
+    Complex::update(valueIn, base_sample, updateUI, forceUpdate);
+}
+
 RTT::base::DataSourceBase::shared_ptr EditableComplex::getBaseSample()
 {
     return base_sample;

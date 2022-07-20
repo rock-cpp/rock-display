@@ -217,4 +217,5 @@ public:
     virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
     virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
+    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
 };
