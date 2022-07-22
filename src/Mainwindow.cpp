@@ -590,7 +590,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                     connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
                     signalMapper->setMapping(act, new DataContainer(handle, ti));
 
-                    connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handleOutputPort(QObject*)));
+                    connect(signalMapper, SIGNAL(mapped(QObject*)), this, SLOT(handlePort(QObject*)));
                 }
                 
                 if (handles.size() == 0)
@@ -648,7 +648,7 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
         value = pi->getValueHandle();
         base_sample = pi->getBaseSample();
     }
-    else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::CONFIGITEM)
+    else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::EDITABLEITEM)
     {
         ItemBase * item = static_cast<ItemBase *>(ti->getData());
         viz = item;
@@ -711,7 +711,7 @@ void MainWindow::removePlugin(VizHandle *plugin, TypedItem *ti)
     }
 }
 
-void MainWindow::handleOutputPort(QObject *obj)
+void MainWindow::handlePort(QObject *obj)
 {
     DataContainer *d = static_cast<DataContainer*>(obj);
     TypedItem *ti = d->getItem();
@@ -719,11 +719,11 @@ void MainWindow::handleOutputPort(QObject *obj)
     
     VisualizerAdapter *viz = nullptr;
         
-    if (ti->type() == ItemType::OUTPUTPORT)
+    if (ti->type() == ItemType::OUTPUTPORT || ti->type() == ItemType::INPUTPORT)
     {
         viz = static_cast<PortItem *>(ti->getData());
     }
-    else if (ti->type() == ItemType::CONFIGITEM)
+    else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::EDITABLEITEM)
     {
         viz = static_cast<ItemBase *>(ti->getData());
     }

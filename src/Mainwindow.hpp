@@ -110,7 +110,7 @@ public:
     
 public slots:
     void prepareMenu(const QPoint &pos);
-    void handleOutputPort(QObject *obj);
+    void handlePort(QObject *obj);
     void openPlugin(QObject *obj);
     void activateTask();
     void startTask();
