@@ -42,6 +42,7 @@ MOC
     configitemhandlers/BinaryCtxMenuHandler.hpp
     ConfigItemHandlerRepository.hpp
     vizplugins/imageviewplugin.hpp
+    vizplugins/imageviewplugin_p.hpp
     vizplugins/virtualjoystickplugin.hpp
     vizplugins/virtualjoystickplugin_p.hpp
     ConfigurationSelectDialog.hpp

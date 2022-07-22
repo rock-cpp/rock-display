@@ -1,18 +1,8 @@
 
 #include "imageviewplugin.hpp"
+#include "imageviewplugin_p.hpp"
 #include <rock_widget_collection/RockWidgetCollection.h>
 #include <typelib/typemodel.hh>
-
-class ImageViewVizHandle : public VizHandle
-{
-public:
-    QWidget *widget;
-    QMetaMethod method;
-    virtual QObject *getVizkit3dPluginObject() override { return nullptr; }
-    virtual QWidget *getStandaloneWidget() override { return widget; }
-public slots:
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
-};
 
 ImageViewPluginHandle::ImageViewPluginHandle()
 : PluginHandle("ImageView")
