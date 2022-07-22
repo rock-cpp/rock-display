@@ -58,6 +58,7 @@ VizHandle *ImageViewPluginHandle::createViz() const
 
     ImageViewVizHandle *ivvh = new ImageViewVizHandle;
 
+    imView->installEventFilter(ivvh);
 
     ivvh->method = found_method;
     ivvh->widget = imView;
@@ -74,6 +75,14 @@ void ImageViewVizHandle::updateVisualizer(void const *data, RTT::base::DataSourc
 
     method.invoke(widget, val);
 }
+
+bool ImageViewVizHandle::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::Close) {
+        emit closing(this);
+    }
+    return false;
+}
+
 
 /*
  * at the end, this should be no more complicated than the ruby part:

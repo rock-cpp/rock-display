@@ -42,6 +42,8 @@ VizHandle *VirtualJoystickPluginHandle::createViz() const
     connect(vjoy, SIGNAL(axisChanged(double,double)),
             vjvh, SLOT(axisChanged(double,double)));
 
+    vjoy->installEventFilter(vjvh);
+
     vjvh->widget = vjoy;
     vjvh->data = nullptr;
     return vjvh;
@@ -63,3 +65,11 @@ void VirtualJoystickVizHandle::axisChanged(double x, double y)
         emit editableChanged(data, base_sample, true);
     }
 }
+
+bool VirtualJoystickVizHandle::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::Close) {
+        emit closing(this);
+    }
+    return false;
+}
+

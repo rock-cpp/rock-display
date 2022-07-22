@@ -30,6 +30,7 @@ public slots:
     virtual void updateEditable(void *data, RTT::base::DataSourceBase::shared_ptr base_sample){}
 signals:
     void editableChanged(void *data, RTT::base::DataSourceBase::shared_ptr base_sample,bool force_send = false);
+    void closing(VizHandle *vh);
 };
 
 class Vizkit3dVizHandle : public VizHandle

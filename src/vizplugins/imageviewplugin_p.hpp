@@ -13,5 +13,7 @@ public:
     virtual QWidget *getStandaloneWidget() override { return widget; }
 public slots:
     virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
+protected:
+    virtual bool eventFilter(QObject *obj, QEvent *event) override;
 };
 

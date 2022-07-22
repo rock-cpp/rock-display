@@ -666,6 +666,10 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
                     (void)base_sample;
                     this->itemDataEdited(ti, force_send);
                 });
+        connect(nh, &VizHandle::closing,
+                this, [this,ti](VizHandle *nh) {
+                    removePlugin(nh,ti);
+                });
         if (value.getData() && base_sample)
         {
             nh->updateVisualizer(value.getData(), base_sample);
