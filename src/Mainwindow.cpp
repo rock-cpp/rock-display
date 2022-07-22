@@ -303,10 +303,8 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     }
 }
 
-static const Typelib::Registry* getItemRegistry(QModelIndex const &mi, NameServiceModel *model)
+static const Typelib::Registry* getItemRegistry(QStandardItem *item)
 {
-    QStandardItem *item = model->itemFromIndex(mi);
-
     TypedItem *ti = dynamic_cast<TypedItem*>(item);
     if (!ti)
         return nullptr;
@@ -316,9 +314,8 @@ static const Typelib::Registry* getItemRegistry(QModelIndex const &mi, NameServi
         case ItemType::INPUTPORT:
         case ItemType::EDITABLEITEM:
         {
-            QModelIndex pi = mi;
-            while(pi.isValid()) {
-                TypedItem *pti = dynamic_cast<TypedItem*>(model->itemFromIndex(pi));
+            while(item) {
+                TypedItem *pti = dynamic_cast<TypedItem*>(item);
                 if (!(pti))
                     break;
                 if (pti->type() == ItemType::OUTPUTPORT || pti->type() == ItemType::INPUTPORT)
@@ -340,7 +337,7 @@ static const Typelib::Registry* getItemRegistry(QModelIndex const &mi, NameServi
                 }
                 if (pti->type() != ItemType::CONFIGITEM && pti->type() != ItemType::EDITABLEITEM)
                     break;
-                pi = pi.parent();
+                item = item->parent();
             }
             return nullptr;
         }
@@ -530,7 +527,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
             {
                 std::string typeName = getItemTypeName(mi, model);
                 const Typelib::Type* typelibType = getItemTypelibType(mi, model);
-                const Typelib::Registry* registry = getItemRegistry(mi, model);
+                const Typelib::Registry* registry = getItemRegistry(model->itemFromIndex(mi));
                 VisualizerAdapter *viz = static_cast<ItemBase*>(ti->getData());
 
                 ItemBase* itembase = nullptr;

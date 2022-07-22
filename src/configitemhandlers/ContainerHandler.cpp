@@ -9,10 +9,8 @@
 #include <QLabel>
 #include <typelib/value_ops.hh>
 
-static Typelib::Value *getItemTypelibValue(QModelIndex const &mi, NameServiceModel const *model)
+static Typelib::Value *getItemTypelibValue(QStandardItem *item)
 {
-    QStandardItem *item = model->itemFromIndex(mi);
-
     TypedItem *ti = dynamic_cast<TypedItem*>(item);
     if (!ti)
         return nullptr;
@@ -31,10 +29,8 @@ static Typelib::Value *getItemTypelibValue(QModelIndex const &mi, NameServiceMod
     return nullptr;
 }
 
-static RTT::base::DataSourceBase::shared_ptr getItemBaseSample(QModelIndex const &mi, NameServiceModel const *model)
+static RTT::base::DataSourceBase::shared_ptr getItemBaseSample(QStandardItem *item)
 {
-    QStandardItem *item = model->itemFromIndex(mi);
-
     TypedItem *ti = dynamic_cast<TypedItem*>(item);
     if (!ti)
         return nullptr;
@@ -78,12 +74,12 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
             }
             if (!itembase)
                 return false;
-            auto valptr = getItemTypelibValue(index, model);
-            auto pvalptr = getItemTypelibValue(index.parent(), model);
+            auto valptr = getItemTypelibValue(item);
+            auto pvalptr = getItemTypelibValue(item->parent());
             if(valptr)
             {
                 Typelib::Value &val = *valptr;
-                auto base_sample = getItemBaseSample(index, model);
+                auto base_sample = getItemBaseSample(item);
                 const Typelib::Type &type(val.getType());
 
                 if (type.getCategory() == Typelib::Type::Container)
@@ -133,7 +129,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                     const Typelib::Type &ptype(pval.getType());
                     QStandardItem *pitem = model->itemFromIndex(index.parent());
                     TypedItem *pti = dynamic_cast<TypedItem*>( pitem );
-                    auto pbase_sample = getItemBaseSample(index.parent(), model);
+                    auto pbase_sample = getItemBaseSample(pitem);
                     auto pitembase = static_cast<ItemBase *>(pti->getData());
 
                     if (ptype.getCategory() == Typelib::Type::Container)
