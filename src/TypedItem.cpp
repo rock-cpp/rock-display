@@ -46,6 +46,8 @@ bool TypedItem::operator<(const QStandardItem& other) const
 {
     QModelIndex index = other.index();
     int depth = 0;
+    //prevents sorting of items with more than 4 parents by claiming that
+    //they are all equal. this prevents sorting actual value backed items.
     while (index.parent().isValid())
     {
         index = index.parent();
