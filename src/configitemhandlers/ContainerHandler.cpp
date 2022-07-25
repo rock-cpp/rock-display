@@ -123,11 +123,11 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                     return true;
                 }
 
-                if(index.parent().isValid() && pvalptr)
+                if(item->parent() && pvalptr)
                 {
                     Typelib::Value &pval = *pvalptr;
                     const Typelib::Type &ptype(pval.getType());
-                    QStandardItem *pitem = model->itemFromIndex(index.parent());
+                    QStandardItem *pitem = item->parent();
                     TypedItem *pti = dynamic_cast<TypedItem*>( pitem );
                     auto pbase_sample = getItemBaseSample(pitem);
                     auto pitembase = static_cast<ItemBase *>(pti->getData());
