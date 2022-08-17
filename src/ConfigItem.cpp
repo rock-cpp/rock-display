@@ -50,14 +50,17 @@ std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
             
             if(file.filename().string().find("typekit") != std::string::npos)
             {                
-                // be aware of order of parsed fields
-                std::vector<std::string> result, fields{"prefix", "project_name", "type_registry"};
-                if(orocos_cpp::PkgConfigHelper::parsePkgConfig(file.filename().string(), fields, result))
-                {
-                    if(orocos_cpp::PkgConfigHelper::solveString(result.at(2), "${prefix}", result.at(0)))
+
+                std::map<std::string,std::string> pkgcfg_variables, pkgcfg_properties;
+                if(orocos_cpp::PkgConfigHelper::parsePkgConfig(file.filename().string(), pkgcfg_variables, pkgcfg_properties) &&
+                    pkgcfg_variables.count("prefix") != 0 &&
+                    pkgcfg_variables.count("project_name") != 0 &&
+                    pkgcfg_variables.count("type_registry") != 0) {
+
+                    if(orocos_cpp::PkgConfigHelper::solveString(pkgcfg_variables["type_registry"], "${prefix}", pkgcfg_variables["prefix"]))
                     {
-                        std::string typeKitPath = result.at(2);
-                        
+                        std::string typeKitPath = pkgcfg_variables["type_registry"];
+
                         std::ifstream in(typeKitPath);
                         if(in.bad())
                         {
