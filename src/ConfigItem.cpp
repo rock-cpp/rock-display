@@ -76,6 +76,15 @@ bool ItemBase::hasVisualizers()
     return false;
 }
 
+ssize_t ItemBase::indexOf(ItemBase *childitem) const {
+    for(unsigned int i = 0; i < children.size(); i++) {
+        if(children[i].get() == childitem) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 Array::Array(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
 {

@@ -117,6 +117,8 @@ public:
     }
 
     static std::map<std::string, std::string> lookupMarshalledTypelistTypes();
+
+    ssize_t indexOf(ItemBase *childitem) const;
 };
 
 /** Returns a static ItemBase config item
