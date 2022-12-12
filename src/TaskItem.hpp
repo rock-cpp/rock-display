@@ -34,6 +34,7 @@ private:
     std::map<std::string, PropertyItem *> propertyMap;
     bool stateChanged;
     ConfigItemHandlerRepository *handlerrepo;
+    void synchronizeTask();
     
 public:
     TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo);

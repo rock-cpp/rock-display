@@ -4,6 +4,7 @@
 #include <lib_config/TypelibConfiguration.hpp>
 #include <base-logging/Logging.hpp>
 #include "PropertyItem.hpp"
+#include <rtt/transports/corba/RemotePorts.hpp>
 
 TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo)
     : task(_task),
@@ -59,6 +60,42 @@ bool TaskItem::hasVisualizers()
     return false;
 }
 
+void TaskItem::synchronizeTask()
+{
+    /*task->synchronize();
+     *
+     * synchronize is protected, only gets published in concrete proxies
+     *
+     * we open code the fetchPorts() part here. we can do everything except give
+     * port ownership to the task object, which is not a big problem for us.
+     *
+     * synchronize also checks up on operations, properties and attributes and
+     * recurses into the providers and requesters
+     *
+     */
+    auto parent = task->provides();
+    auto dfact = task->server()->getProvider("this");
+    RTT::corba::CDataFlowInterface::CPortDescriptions_var objs = dfact->getPortDescriptions();
+    for (size_t i = 0; i < objs->length(); ++i)
+    {
+        RTT::corba::CPortDescription port = objs[i];
+        if (parent->getPort(port.name.in()))
+            continue; // already added.
+        auto type_info = RTT::detail::TypeInfoRepository::Instance()->type(port.type_name.in());
+        if (type_info)
+        {
+            RTT::base::PortInterface *new_port;
+            if (port.type == RTT::corba::CInput)
+                new_port = new RTT::corba::RemoteInputPort(type_info, dfact, port.name.in(), RTT::corba::TaskContextProxy::ProxyPOA());
+            else
+                new_port = new RTT::corba::RemoteOutputPort(type_info, dfact, port.name.in(), RTT::corba::TaskContextProxy::ProxyPOA());
+
+            parent->addPort(*new_port);
+            //the new_port is still owned by us, but we leak it for now.
+        }
+    }
+}
+
 void TaskItem::update(bool updateUI, bool handleOldData)
 {   
     {
@@ -98,6 +135,7 @@ void TaskItem::update(bool updateUI, bool handleOldData)
     // check for property update
     if (propertyMap.empty() || stateChanged)
     {
+        synchronizeTask();
         updateProperties(updateUI);
     }
 
