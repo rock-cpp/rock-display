@@ -6,32 +6,14 @@
 #include <algorithm>
 #include <QObject>
 #include <rtt/base/DataSourceBase.hpp>
-
-QT_BEGIN_NAMESPACE
-class QWidget;
-QT_END_NAMESPACE
+#include "VizHandle.hpp"
+#include "PluginHandle.hpp"
 
 namespace Typelib
 {
     class Registry;
     class Type;
 }
-
-class VizHandle : public QObject
-{
-    Q_OBJECT
-public:
-    virtual ~VizHandle() {}
-    virtual QObject *getVizkit3dPluginObject() = 0;
-    virtual QWidget *getStandaloneWidget() = 0;
-public slots:
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample){}
-    /* this sample can be kept around for editing purposes */
-    virtual void updateEditable(void *data, RTT::base::DataSourceBase::shared_ptr base_sample){}
-signals:
-    void editableChanged(void *data, RTT::base::DataSourceBase::shared_ptr base_sample,bool force_send = false);
-    void closing(VizHandle *vh);
-};
 
 class Vizkit3dVizHandle : public VizHandle
 {
@@ -43,16 +25,6 @@ public:
     virtual QWidget *getStandaloneWidget() override { return nullptr; }
 public slots:
     virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
-};
-
-class PluginHandle : public QObject
-{
-public:
-    std::string pluginName;
-    PluginHandle(std::string const &pluginName) : pluginName(pluginName) {}
-    virtual ~PluginHandle() {}
-    virtual VizHandle *createViz() const = 0;
-    virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const = 0;
 };
 
 class Vizkit3dPluginHandle : public PluginHandle

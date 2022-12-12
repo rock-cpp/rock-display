@@ -35,6 +35,8 @@ MOC
     Mainwindow.hpp
     Types.hpp
     VisualizerAdapter.hpp
+    VizHandle.hpp
+    PluginHandle.hpp
     configitemhandlers/EnumHandler.hpp
     configitemhandlers/ContainerHandler.hpp
     configitemhandlers/StdStringHandler.hpp
