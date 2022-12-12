@@ -61,7 +61,7 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), needUiUpdate(false)
+OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
     valueItem->setType(ItemType::OUTPUTPORT);
@@ -131,7 +131,7 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
+void OutputPortItem::updataValue(bool handleOldData)
 {    
     if (!handle || !reader)
     {
@@ -149,11 +149,7 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
     }
     
-    if (reader->read(handle->sample) == RTT::NewData || handleOldData)
-    {
-        needUiUpdate = true;
-    }
-    else if (!updateUI || !needUiUpdate)
+    if (reader->read(handle->sample) != RTT::NewData && !handleOldData)
     {
         return;
     }
@@ -166,7 +162,7 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
     
     std::lock_guard<std::mutex> g(itemsMutex);
 
-    if (!item && updateUI)
+    if (!item)
     {   
         while (nameItem->rowCount() > 0)
         {
@@ -174,16 +170,11 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
         
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
-        item->update(val, updateUI, true);
+        item->update(val, true, true);
     }
     else if (item)
     {
-        item->update(val, updateUI);
-    }
-
-    if(updateUI)
-    {
-        needUiUpdate = false;
+        item->update(val, true);
     }
 }
 
@@ -274,7 +265,7 @@ void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
-void InputPortItem::updataValue(bool updateUI, bool handleOldData)
+void InputPortItem::updataValue(bool handleOldData)
 {
     if (!handle)
     {
@@ -304,7 +295,7 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
 
     std::lock_guard<std::mutex> g(itemsMutex);
 
-    if (!item && updateUI)
+    if (!item)
     {
         while (nameItem->rowCount() > 0)
         {
@@ -312,10 +303,10 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, updateUI, true);
+        item->update(currentData, true, true);
     }
 
-    item->update(currentData, updateUI);
+    item->update(currentData, true);
 }
 
 const std::string& InputPortItem::getType()

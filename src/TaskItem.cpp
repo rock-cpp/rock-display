@@ -41,10 +41,7 @@ void TaskItem::reset()
         }
     }
     
-    {
-        std::lock_guard<std::mutex> g(taskMutex);
-        task = nullptr;
-    }
+    task = nullptr;
 }
 
 bool TaskItem::hasVisualizers()
@@ -96,7 +93,7 @@ void TaskItem::synchronizeTask()
     }
 }
 
-void TaskItem::update(bool updateUI, bool handleOldData)
+void TaskItem::update(bool handleOldData)
 {   
     {
         taskMutex.lock();
@@ -116,7 +113,7 @@ void TaskItem::update(bool updateUI, bool handleOldData)
         taskMutex.unlock();
     }
 
-    if (updateUI && nameItem.text().isEmpty())
+    if (nameItem.text().isEmpty())
     {
         try
         {
@@ -130,31 +127,31 @@ void TaskItem::update(bool updateUI, bool handleOldData)
     }
     
     // check for task state update
-    stateChanged = updateState(updateUI);
+    stateChanged = updateState();
     
     // check for property update
     if (propertyMap.empty() || stateChanged)
     {
         synchronizeTask();
-        updateProperties(updateUI);
+        updateProperties();
     }
 
     // check for port update
     bool hasVis = hasVisualizers();
-    if (!hasVis && (!updateUI || !nameItem.isExpanded()))
+    if (!hasVis && !nameItem.isExpanded())
     {
         return;
     }
     
-    updatePorts(hasVis, updateUI, handleOldData);
+    updatePorts(hasVis, handleOldData);
 }
 
-void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldData)
+void TaskItem::updatePorts(bool hasVisualizers, bool handleOldData)
 {
     bool refreshedOutputPorts = false;
     bool refreshedInputPorts = false;
     
-    if (ports.empty() || hasVisualizers || (updateUI && (outputPorts.isExpanded() || inputPorts.isExpanded())))
+    if (ports.empty() || hasVisualizers || outputPorts.isExpanded() || inputPorts.isExpanded())
     {
         std::lock_guard<std::mutex> g(taskMutex);
         const RTT::DataFlowInterface *dfi = task->ports();
@@ -168,12 +165,6 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
             PortItem *item = nullptr;
             if (it == ports.end())
             {
-                if(!updateUI)
-                {
-                    //we cannot add rows/items when not updateing UI, so postpone doing so to when
-                    //updateUI is set.
-                    continue;
-                }
                 if (outIf)
                 {
                     item = new OutputPortItem(outIf, handlerrepo);
@@ -208,7 +199,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
                 continue;
             }
 
-            if ((item->hasVisualizers() || (updateUI && outputPorts.isExpanded())) && outIf)
+            if ((item->hasVisualizers() || outputPorts.isExpanded()) && outIf)
             {
                 OutputPortItem *outPortItem = static_cast<OutputPortItem *>(item);
 
@@ -218,9 +209,9 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
                     refreshedOutputPorts = true;
                 }
 
-                outPortItem->updataValue(updateUI, handleOldData);
+                outPortItem->updataValue(handleOldData);
             }
-            if ((item->hasVisualizers() || (updateUI && inputPorts.isExpanded())) && inIf)
+            if ((item->hasVisualizers() || inputPorts.isExpanded()) && inIf)
             {
                 InputPortItem *inPortItem = static_cast<InputPortItem *>(item);
 
@@ -230,7 +221,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
                     refreshedInputPorts = true;
                 }
 
-                inPortItem->updataValue(updateUI, handleOldData);
+                inPortItem->updataValue(handleOldData);
             }
         }
     }
@@ -245,7 +236,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool updateUI, bool handleOldDat
     }
 }
 
-void TaskItem::updateProperties(bool updateUI)
+void TaskItem::updateProperties()
 {   
     std::lock_guard<std::mutex> g(taskMutex);
     RTT::PropertyBag *taskProperties = task->properties();
@@ -257,16 +248,10 @@ void TaskItem::updateProperties(bool updateUI)
         auto it = propertyMap.find(property->getName());
         if (it == propertyMap.end())
         {
-            if(!updateUI)
-            {
-                //we cannot add rows/items when not updateing UI, so postpone doing so to when
-                //updateUI is set.
-                continue;
-            }
             PropertyItem *item = new PropertyItem(property, handlerrepo);
 
             propertyMap[property->getName()] = item;
-            item->updataValue(updateUI);
+            item->updataValue();
             
             properties.appendRow(item->getRow());
         }
@@ -274,19 +259,13 @@ void TaskItem::updateProperties(bool updateUI)
         {
             PropertyItem *item = it->second;
             item->updateProperty(property);
-            item->updataValue(updateUI);
+            item->updataValue();
         }
     }
 }
 
-bool TaskItem::updateState(bool updateUI)
+bool TaskItem::updateState()
 {
-    if(!updateUI)
-    {
-        //currently, we cannot test if the state changed without looking at the GUI pieces.
-        //with !updateUI, we may be running on a non-GUI thread.
-        return false;
-    }
     std::string stateString = "";
     std::lock_guard<std::mutex> g(taskMutex);
     RTT::base::TaskCore::TaskState state = task->getTaskState();

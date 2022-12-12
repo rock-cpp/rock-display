@@ -58,13 +58,13 @@ void PropertyItem::updateProperty(RTT::base::PropertyBase* property)
     this->type = transport->getRegistry().get(transport->getMarshallingType());
 }
 
-void PropertyItem::updataValue(bool updateUI)
+void PropertyItem::updataValue()
 {
     transport->refreshTypelibSample(transportHandle);
 
     currentData = Typelib::Value(transport->getTypelibSample(transportHandle), *(type));
 
-    if (!item && updateUI)
+    if (!item)
     {
         while (nameItem->rowCount() > 0)
         {
@@ -72,10 +72,10 @@ void PropertyItem::updataValue(bool updateUI)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, updateUI, true);
+        item->update(currentData, true, true);
     }
 
-    item->update(currentData, updateUI && item->getName()->isExpanded());
+    item->update(currentData, item->getName()->isExpanded());
 }
 
 const std::string& PropertyItem::getType()

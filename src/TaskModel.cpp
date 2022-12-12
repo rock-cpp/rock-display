@@ -137,14 +137,14 @@ void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::stri
         item->updateTaskContext(task);
     }
     
-    updateTaskItem(item, true);
+    updateTaskItem(item);
 }
 
-void TaskModel::updateTaskItem(TaskItem *item, bool updateUI, bool handleOldData)
+void TaskModel::updateTaskItem(TaskItem *item, bool handleOldData)
 {
     try
     {
-        item->update(updateUI, handleOldData);
+        item->update(handleOldData);
     }
     catch (const CORBA::TRANSIENT& ex)
     {
@@ -173,9 +173,8 @@ QList< QStandardItem* > TaskModel::getRow()
     return {&nameItem, &statusItem};
 }
 
-void TaskModel::updateTaskItems(bool updateUI, bool handleOldData)
+void TaskModel::updateTaskItems(bool handleOldData)
 {
-    assert(qApp->thread() == QThread::currentThread() || !updateUI);
     std::vector<TaskItem *>items;
     {
         std::lock_guard<std::mutex> g(nameToItemMutex);
@@ -192,7 +191,7 @@ void TaskModel::updateTaskItems(bool updateUI, bool handleOldData)
     //just move the updateTaskItem back under the lock.
     for(auto &item : items)
     {
-        updateTaskItem(item, updateUI, handleOldData);
+        updateTaskItem(item, handleOldData);
     }
 }
 

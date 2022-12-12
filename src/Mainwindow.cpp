@@ -147,7 +147,7 @@ MainWindow::MainWindow(QWidget *parent) :
     uiUpdateTimer = new QTimer(this);
     connect(uiUpdateTimer, &QTimer::timeout,
             model, [this](){
-                model->updateTasks(true);
+                model->updateTasks();
             });
     uiUpdateTimer->start(20);
 
@@ -269,7 +269,7 @@ MainWindow::~MainWindow()
 void MainWindow::onExpanded(const QModelIndex& index)
 {
     this->setItemExpanded(index, true);
-    model->updateTasks(true, true);
+    model->updateTasks(true);
 }
 
 void MainWindow::onCollapsed(const QModelIndex& index)
@@ -478,7 +478,7 @@ void MainWindow::prepareMenu(const QPoint & pos)
                             }
                             else
                             {
-                                titem->updateProperties(true);
+                                titem->updateProperties();
                             }
                         }
                         catch (std::runtime_error const &e)
@@ -781,7 +781,7 @@ void MainWindow::itemDataEdited(QStandardItem *qitem, bool forceSend)
 
     if(inputitem)
     {
-        inputitem->updataValue(true, true);
+        inputitem->updataValue(true);
         if (forceSend)
         {
             //send it now, the rest of the logic takes care of removing

@@ -46,13 +46,12 @@ void NameServiceModel::stop()
     emit stopNotifier();
 }
 
-void NameServiceModel::updateTasks(bool updateUI, bool handleOldData)
+void NameServiceModel::updateTasks(bool handleOldData)
 {
-    assert(qApp->thread() == QThread::currentThread() || !updateUI);
     std::lock_guard<std::mutex> g(taskModelsMutex);
     for (TaskModel *task: taskModels)
     {
-        task->updateTaskItems(updateUI, handleOldData);
+        task->updateTaskItems(handleOldData);
     }
 }
 

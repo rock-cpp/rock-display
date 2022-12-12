@@ -21,7 +21,7 @@ public:
     virtual ~NameServiceModel();
     void addTaskModel(TaskModel *task);
 
-    void updateTasks(bool updateUI = true, bool handleOldData = false);
+    void updateTasks(bool handleOldData = false);
     void waitForTerminate();
 
     void notifyItemDataEdited(const QModelIndex &i) const
