@@ -45,6 +45,5 @@ public:
     void setCurrentData();
 
     virtual Typelib::Value getValueHandle();
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample();
 };
 

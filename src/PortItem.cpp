@@ -160,7 +160,7 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
     
-    emit visualizerUpdate(handle->sample.get()->getRawConstPointer(), handle->sample);
+    emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
 
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
@@ -174,11 +174,11 @@ void OutputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
         
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
-        item->update(val, handle->sample, updateUI, true);
+        item->update(val, updateUI, true);
     }
     else if (item)
     {
-        item->update(val, handle->sample, updateUI);
+        item->update(val, updateUI);
     }
 
     if(updateUI)
@@ -195,11 +195,6 @@ const std::string& OutputPortItem::getType()
 Typelib::Value OutputPortItem::getValueHandle()
 {
     return Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
-}
-
-RTT::base::DataSourceBase::shared_ptr OutputPortItem::getBaseSample()
-{
-    return handle->sample;
 }
 
 InputPortItem::InputPortItem(RTT::base::InputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), writer(nullptr)
@@ -293,8 +288,8 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
 
-    emit visualizerUpdate(handle->sample.get()->getRawConstPointer(), handle->sample);
-    emit editableUpdate(handle->sample.get()->getRawPointer(), handle->sample);
+    emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
+    emit editableUpdate(handle->sample.get()->getRawPointer());
 
     currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 
@@ -317,10 +312,10 @@ void InputPortItem::updataValue(bool updateUI, bool handleOldData)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, handle->sample, updateUI, true);
+        item->update(currentData, updateUI, true);
     }
 
-    item->update(currentData, handle->sample, updateUI);
+    item->update(currentData, updateUI);
 }
 
 const std::string& InputPortItem::getType()
@@ -373,7 +368,3 @@ Typelib::Value InputPortItem::getValueHandle()
     return currentData;
 }
 
-RTT::base::DataSourceBase::shared_ptr InputPortItem::getBaseSample()
-{
-    return handle->sample;
-}

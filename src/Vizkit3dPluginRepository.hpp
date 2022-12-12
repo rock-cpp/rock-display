@@ -24,7 +24,7 @@ public:
     virtual QObject *getVizkit3dPluginObject() override { return plugin; }
     virtual QWidget *getStandaloneWidget() override { return nullptr; }
 public slots:
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
+    virtual void updateVisualizer(void const *data) override;
 };
 
 class Vizkit3dPluginHandle : public PluginHandle

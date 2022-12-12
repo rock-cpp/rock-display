@@ -49,10 +49,9 @@ VizHandle *VirtualJoystickPluginHandle::createViz() const
     return vjvh;
 }
 
-void VirtualJoystickVizHandle::updateEditable(void *data, RTT::base::DataSourceBase::shared_ptr base_sample)
+void VirtualJoystickVizHandle::updateEditable(void *data)
 {
     this->data = data;
-    this->base_sample = base_sample;
 }
 
 void VirtualJoystickVizHandle::axisChanged(double x, double y)
@@ -62,7 +61,7 @@ void VirtualJoystickVizHandle::axisChanged(double x, double y)
         value->translation = x;
         value->rotation = (x == 0 && y == 0)?0:-abs(y) * atan2(y, abs(x));
 
-        emit editableChanged(data, base_sample, true);
+        emit editableChanged(data, true);
     }
 }
 

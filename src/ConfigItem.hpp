@@ -3,7 +3,6 @@
 #include "TypedItem.hpp"
 #include "VisualizerAdapter.hpp"
 #include <typelib/value.hh>
-#include <rtt/base/DataSourceBase.hpp>
 
 QT_BEGIN_NAMESPACE
 class QTextCodec;
@@ -53,7 +52,6 @@ protected:
     std::vector<ConfigItemHandler const*> handlerStack;
 
     Typelib::Value value_handle;
-    RTT::base::DataSourceBase::shared_ptr base_sample;
 public:
     enum UsedRoles {
         ModifiedRole = Qt::UserRole + 1
@@ -71,15 +69,12 @@ public:
     
     /*
      * @param valueIn     the value to be handled by the item
-     * @param base_sample A reference to the full Sample that valueIn is part of.
-     *                    This can be used to keep the sample and thus the data in valueIn alive.
      * @param updateUI    ?
      * @param forceUpdate ?
      * @return            ?
      */
-    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = true, bool forceUpdate = false) = 0;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
     virtual Typelib::Value& getValueHandle() { return value_handle; }
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() { return base_sample; }
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) { return false; }
 
     void setName(const QString &newName)
@@ -157,7 +152,7 @@ public:
     Array(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
-    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableArray : public Array
@@ -168,7 +163,6 @@ public:
     EditableArray(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableArray();
     virtual Typelib::Value& getValueHandle() override;
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
 
@@ -178,7 +172,7 @@ public:
     Simple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Simple();
     
-    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableSimple : public Simple
@@ -187,7 +181,6 @@ public:
     EditableSimple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableSimple();
     virtual Typelib::Value& getValueHandle() override;
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
     bool updateFromEdit();
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
 };
@@ -203,7 +196,7 @@ public:
     Complex(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
-    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };
 
 class EditableComplex : public Complex
@@ -214,8 +207,7 @@ public:
     EditableComplex(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~EditableComplex();
     virtual Typelib::Value& getValueHandle() override;
-    virtual RTT::base::DataSourceBase::shared_ptr getBaseSample() override;
     virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
-    virtual void update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
 };

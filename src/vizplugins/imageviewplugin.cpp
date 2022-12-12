@@ -65,7 +65,7 @@ VizHandle *ImageViewPluginHandle::createViz() const
     return ivvh;
 }
 
-void ImageViewVizHandle::updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample)
+void ImageViewVizHandle::updateVisualizer(void const *data)
 {
     QGenericArgument val("void *", data);
     if (!val.data())

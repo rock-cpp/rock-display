@@ -621,40 +621,36 @@ void MainWindow::addPlugin(PluginHandle const *ph, TypedItem* ti)
 
     VisualizerAdapter *viz = nullptr;
     Typelib::Value value;
-    RTT::base::DataSourceBase::shared_ptr base_sample;
     
     if (ti->type() == ItemType::OUTPUTPORT || ti->type() == ItemType::INPUTPORT)
     {
         PortItem *pi = static_cast<PortItem *>(ti->getData());
         viz = pi;
         value = pi->getValueHandle();
-        base_sample = pi->getBaseSample();
     }
     else if (ti->type() == ItemType::CONFIGITEM || ti->type() == ItemType::EDITABLEITEM)
     {
         ItemBase * item = static_cast<ItemBase *>(ti->getData());
         viz = item;
         value = item->getValueHandle();
-        base_sample = item->getBaseSample();
     }
         
     if (viz)
     {
         viz->addPlugin(ph->pluginName, nh);
         connect(nh,&VizHandle::editableChanged,
-                this, [this,ti](void *data, RTT::base::DataSourceBase::shared_ptr base_sample, bool force_send) {
+                this, [this,ti](void *data, bool force_send) {
                     (void)data;
-                    (void)base_sample;
                     this->itemDataEdited(ti, force_send);
                 });
         connect(nh, &VizHandle::closing,
                 this, [this,ti](VizHandle *nh) {
                     removePlugin(nh,ti);
                 });
-        if (value.getData() && base_sample)
+        if (value.getData())
         {
-            nh->updateVisualizer(value.getData(), base_sample);
-            nh->updateEditable(value.getData(), base_sample);
+            nh->updateVisualizer(value.getData());
+            nh->updateEditable(value.getData());
         }
     }
 }

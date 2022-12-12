@@ -3,7 +3,6 @@
 #include "Vizkit3dPluginRepository.hpp"
 #include <qobject.h>
 #include <map>
-#include <rtt/base/DataSourceBase.hpp>
 
 class VizHandle;
 
@@ -31,13 +30,13 @@ public:
     virtual bool hasVisualizers()
     {
         std::lock_guard<std::mutex> g(visualizerMutex);
-        return receivers(SIGNAL(visualizerUpdate(void const *, RTT::base::DataSourceBase::shared_ptr))) != 0;
+        return receivers(SIGNAL(visualizerUpdate(void const *))) != 0;
     }
 signals:
     /* *Update are used to pass data from the items/ports/properties to plugins
      *
      * alternatively, one could pass around "Typelib::Value" instead of "void const *",
      * retaining runtime type information */
-    void visualizerUpdate(void const * data, RTT::base::DataSourceBase::shared_ptr base_sample);
-    void editableUpdate(void * data, RTT::base::DataSourceBase::shared_ptr base_sample);
+    void visualizerUpdate(void const * data);
+    void editableUpdate(void * data);
 };

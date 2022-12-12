@@ -84,7 +84,7 @@ bool Vizkit3dPluginHandle::probe(Typelib::Type const &type, const Typelib::Regis
     return type.isSame(*pluginType);
 }
 
-void Vizkit3dVizHandle::updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample)
+void Vizkit3dVizHandle::updateVisualizer(void const *data)
 {
     QGenericArgument val("void *", data);
     if (!val.data())

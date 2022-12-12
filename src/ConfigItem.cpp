@@ -175,11 +175,10 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {    
     bool childrenUpdateUI = updateUI && name->isExpanded();
     value_handle = valueIn;
-    this->base_sample = base_sample;
 
     std::lock_guard<std::mutex> g(itemsMutex);
 
@@ -232,7 +231,7 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        children[i]->update(arrayV, base_sample, childrenUpdateUI, forceUpdate);
+        children[i]->update(arrayV, childrenUpdateUI, forceUpdate);
     }
     
     if (!updateUI)
@@ -254,7 +253,7 @@ void Array::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_pt
             children.push_back(child);
         }
 
-        child->update(arrayV, base_sample, childrenUpdateUI, forceUpdate);
+        child->update(arrayV, childrenUpdateUI, forceUpdate);
         child->setName(QString::number(i));
         ASSERT_GUI_THREAD();
         name->appendRow(child->getRow());
@@ -279,11 +278,6 @@ EditableArray::~EditableArray()
 Typelib::Value& EditableArray::getValueHandle()
 {
     return value_handle;
-}
-
-RTT::base::DataSourceBase::shared_ptr EditableArray::getBaseSample()
-{
-    return base_sample;
 }
 
 std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
@@ -404,10 +398,9 @@ std::string getValue<int8_t>(const Typelib::Value& value)
     return valueS;
 }
 
-void Simple::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {
     value_handle = valueIn;
-    this->base_sample = base_sample;
 
     if (!updateUI)
     {
@@ -555,11 +548,6 @@ EditableSimple::~EditableSimple()
 Typelib::Value& EditableSimple::getValueHandle()
 {
     return value_handle;
-}
-
-RTT::base::DataSourceBase::shared_ptr EditableSimple::getBaseSample()
-{
-    return base_sample;
 }
 
 template <class T>
@@ -809,15 +797,14 @@ std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nam
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {       
     bool childrenUpdateUI = updateUI && name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
 
     value_handle = valueIn;
-    this->base_sample = base_sample;
 
-    emit visualizerUpdate(valueIn.getData(), base_sample);
+    emit visualizerUpdate(valueIn.getData());
 
     std::lock_guard<std::mutex> g(itemsMutex);
 
@@ -867,7 +854,7 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
                 name->appendRow(newVal->getRow());
             }
 
-            children[i]->update(fieldV, base_sample, childrenUpdateUI, forceUpdate);
+            children[i]->update(fieldV, childrenUpdateUI, forceUpdate);
             i++;
         }
     }
@@ -907,7 +894,7 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            children[i]->update(elem, base_sample, childrenUpdateUI, forceUpdate);
+            children[i]->update(elem, childrenUpdateUI, forceUpdate);
         }
         
         if (updateUI)
@@ -929,7 +916,7 @@ void Complex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_
                     children.push_back(child);
                 }
 
-                child->update(elem, base_sample, true, forceUpdate);
+                child->update(elem, true, forceUpdate);
                 child->setName(QString::number(i));
                 ASSERT_GUI_THREAD();
                 name->appendRow(child->getRow());
@@ -987,16 +974,11 @@ Typelib::Value& EditableComplex::getValueHandle()
     return value_handle;
 }
 
-void EditableComplex::update(Typelib::Value& valueIn, RTT::base::DataSourceBase::shared_ptr base_sample, bool updateUI, bool forceUpdate)
+void EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {
-    emit editableUpdate(valueIn.getData(), base_sample);
+    emit editableUpdate(valueIn.getData());
 
-    Complex::update(valueIn, base_sample, updateUI, forceUpdate);
-}
-
-RTT::base::DataSourceBase::shared_ptr EditableComplex::getBaseSample()
-{
-    return base_sample;
+    Complex::update(valueIn, updateUI, forceUpdate);
 }
 
 std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const

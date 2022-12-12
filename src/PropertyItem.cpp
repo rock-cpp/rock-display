@@ -72,10 +72,10 @@ void PropertyItem::updataValue(bool updateUI)
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, sample, updateUI, true);
+        item->update(currentData, updateUI, true);
     }
 
-    item->update(currentData, sample, updateUI && item->getName()->isExpanded());
+    item->update(currentData, updateUI && item->getName()->isExpanded());
 }
 
 const std::string& PropertyItem::getType()
@@ -91,11 +91,6 @@ Typelib::Value &PropertyItem::getCurrentData()
 Typelib::Value PropertyItem::getValueHandle()
 {
     return Typelib::Value(transport->getTypelibSample(transportHandle), *(type));
-}
-
-RTT::base::DataSourceBase::shared_ptr PropertyItem::getBaseSample()
-{
-    return sample;
 }
 
 void PropertyItem::setCurrentData()

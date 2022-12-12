@@ -12,7 +12,7 @@ public:
     virtual QObject *getVizkit3dPluginObject() override { return nullptr; }
     virtual QWidget *getStandaloneWidget() override { return widget; }
 public slots:
-    virtual void updateVisualizer(void const *data, RTT::base::DataSourceBase::shared_ptr base_sample) override;
+    virtual void updateVisualizer(void const *data) override;
 protected:
     virtual bool eventFilter(QObject *obj, QEvent *event) override;
 };
