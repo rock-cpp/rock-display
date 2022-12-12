@@ -25,6 +25,7 @@ SOURCES
     ConfigItemHandlerRepository.cpp
     vizplugins/imageviewplugin.cpp
     vizplugins/virtualjoystickplugin.cpp
+    vizplugins/vizkitplugin.cpp
     ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
@@ -47,6 +48,8 @@ MOC
     vizplugins/imageviewplugin_p.hpp
     vizplugins/virtualjoystickplugin.hpp
     vizplugins/virtualjoystickplugin_p.hpp
+    vizplugins/vizkitplugin.hpp
+    vizplugins/vizkitplugin_p.hpp
     ConfigurationSelectDialog.hpp
 HEADERS
 UI
