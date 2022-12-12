@@ -28,47 +28,6 @@ class Vizkit3dPluginRepository;
 class PluginHandle;
 class VizHandle;
 
-class UIUpdater : public QObject
-{
-    Q_OBJECT
-
-public:
-    UIUpdater(NameServiceModel *model)
-        : model(model)
-    {
-    }
-    
-    virtual ~UIUpdater()
-    {
-    }
-    
-signals:
-    void finished();
-    
-public slots:
-    void run()
-    {
-        isRunning = true;
-            
-        while (isRunning)
-        {
-            model->updateTasks(false);
-            usleep(1000);
-        }
-        
-        model->waitForTerminate();
-        emit finished();
-    }
-    
-    void stop()
-    {
-        isRunning = false;
-    }
-    
-private:
-    NameServiceModel *model;
-    bool isRunning;
-};
 
 class AddNameServiceDialog : public QDialog
 {
@@ -130,15 +89,12 @@ private slots:
 
 signals:
     void stopNotifier();
-    void stopUIUpdater();
     
 private:
     MyVizkit3DWidget widget3d;
     std::vector<PluginHandle*> additionalPlugins;
     Ui::MainWindow *ui;
     QTimer *uiUpdateTimer;
-    QThread *taskUpdater;
-    UIUpdater *uiUpdater;
     QTreeView *view;
     NameServiceModel *model;
     RTT::corba::TaskContextProxy *task;
