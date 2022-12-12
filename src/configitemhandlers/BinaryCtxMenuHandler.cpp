@@ -9,6 +9,7 @@
 #include <QWidgetAction>
 #include <QLabel>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <typelib/value_ops.hh>
 
 bool BinaryCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex & index ) const
@@ -89,14 +90,16 @@ bool BinaryCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelInd
             labelAction->setDefaultWidget(label);
             menu->addAction(labelAction);
 
-            QAction *load = menu->addAction(tr("Save binary data to..."));
+            QAction *save = menu->addAction(tr("Save binary data to..."));
 
-            QObject::connect(load, &QAction::triggered,
+            QObject::connect(save, &QAction::triggered,
                     menu, [&val]()
             {
-                if (!val.getData() )
-                    return; //TODO notify user
-                std::vector< boost::uint8_t > data = Typelib::dump(val);
+                if (!val.getData() ) {
+                    QMessageBox::information(nullptr, tr("Save binary data to..."), tr("No sample has been received, yet. Please try again once data has been received."));
+                    return;
+                }
+                std::vector< uint8_t > data = Typelib::dump(val);
 
                 QString filename = QFileDialog::getSaveFileName(nullptr, tr("Save binary data to"), QString(), tr("Binary (*.bin);;All files (*.*)"));
 

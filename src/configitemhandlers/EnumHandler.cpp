@@ -179,7 +179,11 @@ bool EnumHandler::convertFromTypelibValue(QStandardItem *dst, Typelib::Value con
     {
         const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>(src.getType());
         Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(src.getData()));
-        valueS = enumT.get(*intVal);
+        try {
+            valueS = enumT.get(*intVal);
+        } catch(Typelib::Enum::ValueNotFound const &e) {
+            valueS = "bad value";
+        }
     }
     else
     {

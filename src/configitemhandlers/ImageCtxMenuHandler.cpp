@@ -8,6 +8,7 @@
 #include <QWidgetAction>
 #include <QLabel>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <base/samples/Frame.hpp>
 #include <frame_helper/FrameHelper.h>
 
@@ -90,8 +91,10 @@ bool ImageCtxMenuHandler::addContextMenuEntries ( QMenu * menu, const QModelInde
             QObject::connect(load, &QAction::triggered,
                     menu, [&val]()
             {
-                if (!val.getData() )
-                    return; //TODO notify user
+                if (!val.getData() ) {
+                    QMessageBox::information(nullptr, tr("Save image to..."), tr("No sample has been received, yet. Please try again once data has been received."));
+                    return;
+                }
                 base::samples::frame::Frame frame = *static_cast<base::samples::frame::Frame*>(val.getData());
 
                 QString filename = QFileDialog::getSaveFileName(nullptr, tr("Save image to"), QString(), tr(imageFilter));
