@@ -1,7 +1,6 @@
 #pragma once
 #include <QStandardItemModel>
 #include <vector>
-#include <mutex>
 
 class TaskModel;
 class TaskItem;
@@ -13,8 +12,6 @@ class NameServiceModel : public QStandardItemModel
 
     std::vector<TaskModel *> taskModels;
     ConfigItemHandlerRepository *handlerrepo;
-
-    std::mutex taskModelsMutex;
 
 public:
     explicit NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0);

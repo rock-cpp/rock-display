@@ -96,28 +96,23 @@ void TaskItem::synchronizeTask()
 void TaskItem::update(bool handleOldData)
 {   
     {
-        taskMutex.lock();
         if (!task)
         {
-            taskMutex.unlock();
             return;
         }
     
         if (!task->server() || task->server()->_is_nil())
         {
             LOG_WARN_S << "TaskItem::update(): disconnect of task " << task->getName();
-            taskMutex.unlock();
             reset();
             return;
         }
-        taskMutex.unlock();
     }
 
     if (nameItem.text().isEmpty())
     {
         try
         {
-            std::lock_guard<std::mutex> g(taskMutex);
             nameItem.setText(task->getName().c_str());
         }
         catch (...)
@@ -153,7 +148,6 @@ void TaskItem::updatePorts(bool hasVisualizers, bool handleOldData)
     
     if (ports.empty() || hasVisualizers || outputPorts.isExpanded() || inputPorts.isExpanded())
     {
-        std::lock_guard<std::mutex> g(taskMutex);
         const RTT::DataFlowInterface *dfi = task->ports();
 
         for (RTT::base::PortInterface *pi : dfi->getPorts())
@@ -238,7 +232,6 @@ void TaskItem::updatePorts(bool hasVisualizers, bool handleOldData)
 
 void TaskItem::updateProperties()
 {   
-    std::lock_guard<std::mutex> g(taskMutex);
     RTT::PropertyBag *taskProperties = task->properties();
     
     for (std::size_t i=0; i<taskProperties->size(); i++)
@@ -267,7 +260,6 @@ void TaskItem::updateProperties()
 bool TaskItem::updateState()
 {
     std::string stateString = "";
-    std::lock_guard<std::mutex> g(taskMutex);
     RTT::base::TaskCore::TaskState state = task->getTaskState();
     switch(state)
     {

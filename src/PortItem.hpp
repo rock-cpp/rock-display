@@ -2,7 +2,6 @@
 
 #include "ConfigItem.hpp"
 #include "VisualizerAdapter.hpp"
-#include <mutex>
 
 QT_BEGIN_NAMESPACE
 class QStandardItem;
@@ -28,7 +27,6 @@ protected:
     TypedItem *valueItem;
     std::string typeInfo;
     ConfigItemHandlerRepository *handlerrepo;
-    std::mutex itemsMutex;
 
 public:
     PortItem(const std::string &name, ConfigItemHandlerRepository *handlerrepo);

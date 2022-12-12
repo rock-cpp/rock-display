@@ -21,8 +21,6 @@
 #include "ConfigItemHandler.hpp"
 #include "ConfigItemHandlerRepository.hpp"
 
-#define ASSERT_GUI_THREAD() assert(qApp->thread() == QThread::currentThread())
-
 std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
 {
     std::map<std::string, std::string> marshalled2Typelib;
@@ -148,7 +146,6 @@ bool ItemBase::hasVisualizers()
         return true;
     }
     
-    std::lock_guard<std::mutex> g(itemsMutex);
     for (auto child: children)
     {
         if (child->hasVisualizers())
@@ -180,8 +177,6 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     bool childrenUpdateUI = updateUI && name->isExpanded();
     value_handle = valueIn;
 
-    std::lock_guard<std::mutex> g(itemsMutex);
-
     for(auto &h : handlerStack)
     {
         if (updateUI && (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue))
@@ -197,7 +192,6 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueIn.getType());
     if(updateUI)
     {
-        ASSERT_GUI_THREAD();
         this->value->setText(array.getName().c_str());
     }
     
@@ -221,7 +215,6 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     {
         while (name->rowCount() > numElemsToDisplay)
         {   
-            ASSERT_GUI_THREAD();
             name->takeRow(name->rowCount() -1);
         }
         
@@ -255,7 +248,6 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 
         child->update(arrayV, childrenUpdateUI, forceUpdate);
         child->setName(QString::number(i));
-        ASSERT_GUI_THREAD();
         name->appendRow(child->getRow());
     }
 }
@@ -290,7 +282,6 @@ bool EditableArray::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Valu
     bool isEqual = true;
 
     const Typelib::Array &array = static_cast<const Typelib::Array &>(valueCurrent.getType());
-    ASSERT_GUI_THREAD();
     this->value->setText(array.getName().c_str());
 
     void *dataCurrent = valueCurrent.getData();
@@ -300,7 +291,6 @@ bool EditableArray::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Valu
 
     size_t numElems = array.getDimension();
 
-    std::lock_guard<std::mutex> g(itemsMutex);
     if (children.size() < numElems)
     {
         isEqual &= Typelib::compare(valueCurrent, valueOld);
@@ -522,7 +512,6 @@ void Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 return;
             }
             
-            ASSERT_GUI_THREAD();
             value->setText(text);
         }
     }
@@ -806,8 +795,6 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 
     emit visualizerUpdate(valueIn.getData());
 
-    std::lock_guard<std::mutex> g(itemsMutex);
-
     bool haveCustomValue = false;
 
     for(auto &h : handlerStack)
@@ -828,7 +815,6 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 
     if (!haveCustomValue && updateUI)
     {
-        ASSERT_GUI_THREAD();
         this->value->setText(valueIn.getType().getName().c_str());
     }
 
@@ -850,7 +836,6 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 std::shared_ptr<ItemBase> newVal = getItem(fieldV);
                 newVal->setName(field.getName().c_str());
                 children.push_back(newVal);
-                ASSERT_GUI_THREAD();
                 name->appendRow(newVal->getRow());
             }
 
@@ -882,7 +867,6 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         {
             while (name->rowCount() > numElemsToDisplay)
             {   
-                ASSERT_GUI_THREAD();
                 name->takeRow(name->rowCount() -1);
             }
             
@@ -918,7 +902,6 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 
                 child->update(elem, true, forceUpdate);
                 child->setName(QString::number(i));
-                ASSERT_GUI_THREAD();
                 name->appendRow(child->getRow());
             }
 
@@ -926,13 +909,11 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             {
                 if (areMaxElemsDiplayed)
                 {
-                    ASSERT_GUI_THREAD();
                     value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(numElemsToDisplay)
                         + std::string(" of ") + std::to_string(size) + std::string(" elements displayed]") ).c_str());
                 }
                 else
                 {
-                    ASSERT_GUI_THREAD();
                     value->setText(std::string(valueIn.getType().getName() + std::string(" [") + std::to_string(size) + std::string(" elements]")).c_str());
                 }
             }
@@ -991,7 +972,6 @@ bool EditableComplex::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Va
     const Typelib::Type &type(valueCurrent.getType());
     bool isEqual = true;
 
-    std::lock_guard<std::mutex> g(itemsMutex);
     if (type.getCategory() == Typelib::Type::Compound)
     {
 

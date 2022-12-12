@@ -12,7 +12,6 @@ class VisualizerAdapter : public QObject
     
 protected:
     std::map<std::string, VizHandle*> visualizers;
-    std::mutex visualizerMutex;
     
 public:
     VisualizerAdapter()
@@ -29,7 +28,6 @@ public:
     void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
-        std::lock_guard<std::mutex> g(visualizerMutex);
         return receivers(SIGNAL(visualizerUpdate(void const *))) != 0;
     }
 signals:

@@ -26,7 +26,6 @@ void NameServiceModel::addTaskModel(TaskModel* task)
 {
     //this runs inside the GUI thread
     assert(qApp->thread() == QThread::currentThread());
-    std::lock_guard<std::mutex> g(taskModelsMutex);
     taskModels.push_back(task);
     appendRow(task->getRow());
     connect(this, SIGNAL(stopNotifier()), task, SLOT(stopNotifier()), Qt::DirectConnection);
@@ -48,7 +47,6 @@ void NameServiceModel::stop()
 
 void NameServiceModel::updateTasks(bool handleOldData)
 {
-    std::lock_guard<std::mutex> g(taskModelsMutex);
     for (TaskModel *task: taskModels)
     {
         task->updateTaskItems(handleOldData);
@@ -58,7 +56,6 @@ void NameServiceModel::updateTasks(bool handleOldData)
 void NameServiceModel::waitForTerminate()
 {
     //this runs inside a worker thread
-    std::lock_guard<std::mutex> g(taskModelsMutex);
     for (TaskModel *task: taskModels)
     {
         task->waitForTerminate();
