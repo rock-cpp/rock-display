@@ -62,7 +62,6 @@ public:
     virtual ~ItemBase();
     
     QTextCodec *codec;
-    static std::map<std::string, std::string> marshalled2Typelib;
     
     virtual bool hasVisualizers();
     

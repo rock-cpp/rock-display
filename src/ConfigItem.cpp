@@ -23,91 +23,6 @@
 #include <QApplication>
 #include <QThread>
 
-std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
-{
-    std::map<std::string, std::string> marshalled2Typelib;
-    const char *pkgCfgPaths = getenv("PKG_CONFIG_PATH");
-    
-    if(!pkgCfgPaths)
-    {
-        return marshalled2Typelib;
-    }
-    
-    std::vector<std::string> paths;
-    boost::split(paths, pkgCfgPaths, boost::is_any_of(":"));
-
-    for(const std::string& path : paths)
-    {
-        if(!boost::filesystem::exists(boost::filesystem::path(path)))
-        {
-            LOG_WARN_S << "skipping nonexisting pkg-config path: " << path;
-            continue;
-        }
-        
-        for(auto it = boost::filesystem::directory_iterator(path); it != boost::filesystem::directory_iterator(); it++)
-        {
-            const boost::filesystem::path file = it->path();
-            
-            if(file.filename().string().find("typekit") != std::string::npos)
-            {                
-
-                std::map<std::string,std::string> pkgcfg_variables, pkgcfg_properties;
-                if(orocos_cpp::PkgConfigHelper::parsePkgConfig(file.filename().string(), pkgcfg_variables, pkgcfg_properties) &&
-                    pkgcfg_variables.count("prefix") != 0 &&
-                    pkgcfg_variables.count("project_name") != 0 &&
-                    pkgcfg_variables.count("type_registry") != 0) {
-
-                    if(orocos_cpp::PkgConfigHelper::solveString(pkgcfg_variables["type_registry"], "${prefix}", pkgcfg_variables["prefix"]))
-                    {
-                        std::string typeKitPath = pkgcfg_variables["type_registry"];
-
-                        std::ifstream in(typeKitPath);
-                        if(in.bad())
-                        {
-                            throw std::runtime_error("ItemBase::lookupMarshalledTypelistTypes(): failed to open file " + file.filename().string());
-                        }
-                        
-                        TiXmlDocument doc(typeKitPath.c_str());
-                        if (!doc.LoadFile())
-                        {
-                            LOG_WARN_S << "ItemBase::lookupMarshalledTypelistTypes(): tinyxml could not load " << typeKitPath;
-                            continue;
-                        }
-                        
-                        TiXmlElement* typelibElem = doc.FirstChildElement("typelib");
-                        if (!typelibElem)
-                        {
-                            throw std::runtime_error("ItemBase::lookupMarshalledTypelistTypes(): no 'typelib' element in " + typeKitPath);
-                        }
-                        
-                        for (TiXmlElement* sub = typelibElem->FirstChildElement("opaque"); sub; sub = sub->NextSiblingElement("opaque"))
-                        {
-                            std::string marshalAs;
-                            std::string name;
-                            sub->QueryStringAttribute("marshal_as", &marshalAs);
-                            sub->QueryStringAttribute("name", &name);
-                            LOG_INFO_S << "type " << name << " marshalled as " << marshalAs;
-                            marshalled2Typelib[marshalAs] = name;
-                        }
-                    }
-                    else
-                    {
-                        LOG_WARN_S << "error: couldn't solve pkg-config strings from file " << file.string();
-                    }
-                }
-                else
-                {
-                    LOG_WARN_S << "error: couldn't parse pkg-config fields from file " << file.string();
-                }   
-            }   
-        }
-    }
-    
-    return marshalled2Typelib;
-}
-
-std::map<std::string, std::string> ItemBase::marshalled2Typelib = lookupMarshalledTypelistTypes();
-
 ItemBase::ItemBase()
     : VisualizerAdapter(),
       name(new TypedItem()),
@@ -738,42 +653,6 @@ bool EditableSimple::compareAndMark ( Typelib::Value& valueCurrent, Typelib::Val
 
     return isEqual;
 }
-
-#if 0
-    if (!transport)
-    {
-        RTT::types::TypeInfoRepository::shared_ptr ti = RTT::types::TypeInfoRepository::Instance();
-        std::string typeStr = typelibType.getName();
-        
-        // HACK: resolve typelib type for marshalling types ending with '_m'
-        if (boost::algorithm::ends_with(typeStr, "_m"))
-        {
-            marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-2);
-        }
-        else if (boost::algorithm::ends_with(typeStr, "_m>"))
-        {
-            marshalled2Typelib[typeStr] = typeStr.substr(0, typeStr.size()-3) + ">";
-        }
-        
-        if (marshalled2Typelib.find(typeStr) != marshalled2Typelib.end())
-        {
-            LOG_INFO_S << "lookup type " << marshalled2Typelib[typeStr] << " for marshalled type " << typeStr;
-            typeStr = marshalled2Typelib[typeStr];
-        }
-        
-        RTT::types::TypeInfo* typeInfo = ti->type(typeStr);
-        if (typeInfo)
-        {
-            transport = dynamic_cast<orogen_transports::TypelibMarshallerBase*>(typeInfo->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
-            transportHandle = transport->createSample();
-            sample = transport->getDataSource(transportHandle);
-        }
-        else
-        {
-            LOG_WARN_S << "typeInfo for " << typeStr << " unknown..";
-        }
-    }
-#endif
 
 Complex::Complex(TypedItem *name, TypedItem *value)
     : ItemBase(name, value)
