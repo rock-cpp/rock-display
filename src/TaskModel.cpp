@@ -7,6 +7,7 @@
 #include <base-logging/Logging.hpp>
 #include <omniORB4/CORBA.h>
 #include "TaskModelNotifier.hpp"
+#include <QThread>
 
 TaskModel::TaskModel(ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos, QObject* parent, const std::string &nameServiceIP)
     : QObject(parent),
@@ -87,12 +88,9 @@ void TaskModel::updateTasksStatus(const std::string& status)
 
 void TaskModel::onUpdateTask(RTT::corba::TaskContextProxy* task, const std::string &taskName, bool reconnect)
 {
-    //this runs inside the GUI thread
-    assert(qApp->thread() == QThread::currentThread());
     TaskItem *item = nullptr;
     
     {
-        std::lock_guard<std::mutex> g(nameToItemMutex);
         std::map<std::string, TaskItem*>::iterator itemIt = nameToItem.find(taskName);
         if (itemIt == nameToItem.end())
         {
@@ -176,23 +174,9 @@ QList< QStandardItem* > TaskModel::getRow()
 
 void TaskModel::updateTaskItems(bool handleOldData)
 {
-    std::vector<TaskItem *>items;
+    for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
     {
-        std::lock_guard<std::mutex> g(nameToItemMutex);
-        for (auto itemIter = nameToItem.begin(); itemIter != nameToItem.end(); itemIter++)
-        {
-            items.push_back(itemIter->second);
-        }
-    }
-    //the lock can be dropped because TaskItems will never be deconstructed while
-    //(non-GUI) threads still run.
-    //this has been extracted to keep the potential of concurrent access in the contained
-    //items. that kind of concurrent access is always possible, but much rarer when only
-    //initiated by user action. if the copy above turns out to be a performance issue,
-    //just move the updateTaskItem back under the lock.
-    for(auto &item : items)
-    {
-        updateTaskItem(item, handleOldData);
+        updateTaskItem(itemIter->second, handleOldData);
     }
 }
 

@@ -1,8 +1,11 @@
 #pragma once
 
 #include <QStandardItem>
-#include <mutex>
 #include "TypedItem.hpp"
+
+QT_BEGIN_NAMESPACE
+class QThread;
+QT_END_NAMESPACE
 
 namespace RTT
 {
@@ -34,7 +37,6 @@ class TaskModel : public QObject
     QStandardItem tasks;
 
     std::map<std::string, TaskItem *> nameToItem;
-    std::mutex nameToItemMutex;
     ConfigItemHandlerRepository *handlerrepo;
     orocos_cpp::OrocosCpp &orocos;
     TaskModelNotifier *notifier;
