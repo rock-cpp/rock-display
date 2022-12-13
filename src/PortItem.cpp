@@ -168,8 +168,6 @@ void OutputPortItem::updataValue(bool handleOldData)
     {
         return;
     }
-    handle->transport->refreshTypelibSample(handle->transportHandle);
-    
     emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
 
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
