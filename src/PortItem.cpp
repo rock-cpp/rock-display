@@ -128,6 +128,10 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
     handle->transportHandle = handle->transport->createSample();
     handle->sample = handle->transport->getDataSource(handle->transportHandle);
 
+    //the marshalling type can be found in handle->transport->getTypelibSample(),
+    //  with the type name given in handle->transport->getMarshallingType()
+    //the native type can be found in handle->transport->getOrocosSample(),
+    //  with the type name given in type->getTypeName() (or rather any of type->getTypeNames() )
     handle->type = handle->transport->getRegistry().get(handle->transport->getMarshallingType());
 }
 
