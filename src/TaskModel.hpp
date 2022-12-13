@@ -12,6 +12,11 @@ namespace RTT
     }
 }
 
+namespace orocos_cpp
+{
+    class OrocosCpp;
+}
+
 class TaskModelNotifier;
 class TaskItem;
 class ConfigItemHandlerRepository;
@@ -30,13 +35,14 @@ class TaskModel : public QObject
     std::map<std::string, TaskItem *> nameToItem;
     std::mutex nameToItemMutex;
     ConfigItemHandlerRepository *handlerrepo;
+    orocos_cpp::OrocosCpp &orocos;
     TaskModelNotifier *notifier;
     QThread *notifierThread;
 
     void updateTaskItem(TaskItem *item, bool handleOldData = false);
     
 public:
-    explicit TaskModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0, const std::string &nameServiceIP = {});
+    explicit TaskModel(ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos, QObject* parent = 0, const std::string &nameServiceIP = {});
     virtual ~TaskModel();
     void updateTaskItems(bool handleOldData = false);
     QList<QStandardItem *> getRow();

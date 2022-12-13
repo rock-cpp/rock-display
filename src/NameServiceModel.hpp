@@ -6,15 +6,20 @@ class TaskModel;
 class TaskItem;
 class ConfigItemHandlerRepository;
 
+namespace orocos_cpp {
+class OrocosCpp;
+}
+
 class NameServiceModel : public QStandardItemModel
 {
     Q_OBJECT
 
     std::vector<TaskModel *> taskModels;
     ConfigItemHandlerRepository *handlerrepo;
+    orocos_cpp::OrocosCpp &orocos;
 
 public:
-    explicit NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent = 0);
+    explicit NameServiceModel(ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos, QObject* parent = 0);
     virtual ~NameServiceModel();
     void addTaskModel(TaskModel *task);
 

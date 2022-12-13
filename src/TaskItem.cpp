@@ -1,19 +1,29 @@
 #include <rtt/transports/corba/TaskContextProxy.hpp>
+#include <orocos_cpp/orocos_cpp.hpp>
+
 #include "TaskItem.hpp"
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
 #include <lib_config/TypelibConfiguration.hpp>
 #include <base-logging/Logging.hpp>
 #include "PropertyItem.hpp"
+#include <rtt/OperationCaller.hpp>
+#include <rtt/InputPort.hpp>
+#include <orocos_cpp/TypeRegistry.hpp>
+#include <orocos_cpp_base/OrocosHelpers.hpp>
 #include <rtt/transports/corba/RemotePorts.hpp>
 
-TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo)
+TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos)
     : task(_task),
       nameItem(ItemType::TASK),
       statusItem(ItemType::TASK),
       refreshOutputPorts(true),
       refreshInputPorts(true),
       stateChanged(false),
-      handlerrepo(handlerrepo)
+      handlerrepo(handlerrepo),
+      orocos(orocos),
+      stateEnum(nullptr),
+      queriedStateEnum(false),
+      state_reader(nullptr)
 {
     inputPorts.setText("InputPorts");
     outputPorts.setText("OutputPorts");
@@ -24,6 +34,23 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerReposit
     nameItem.setData(this);
     statusItem.setData(this);
     statusItem.setText("");
+
+    //running an operation "getModelName", this fetches the model name from the remote task.
+    if (task->operations()->hasMember("getModelName"))
+    {
+        RTT::OperationInterfacePart *_getModelName = task->getOperation("getModelName");
+        if (_getModelName)
+        {
+            RTT::OperationCaller< ::std::string() >  caller(_getModelName);
+            taskModelName = caller();
+
+            nameItem.appendRow(
+            {
+                new QStandardItem(QString("TaskModel")),
+                new QStandardItem(QString::fromStdString(taskModelName))
+            });
+        }
+    }
 }
 
 TaskItem::~TaskItem()
@@ -129,6 +156,35 @@ void TaskItem::update(bool handleOldData)
     {
         synchronizeTask();
         updateProperties();
+    }
+
+    if(refreshOutputPorts)
+    {
+        if(state_reader && state_reader->connected())
+        {
+            //simply disconnect the state_reader when we have to maybe reconnect
+            //because the task went away and came back
+            state_reader->disconnect();
+        }
+    }
+
+    if (!state_reader)
+    {
+        const RTT::DataFlowInterface *dfi = task->ports();
+
+        RTT::base::OutputPortInterface *state_port = dynamic_cast<RTT::base::OutputPortInterface *>(dfi->getPort("state"));
+
+        if (state_port)
+        {
+            state_reader = dynamic_cast<RTT::InputPort<int32_t> *>(state_port->antiClone());
+            if (!state_reader)
+            {
+                throw std::runtime_error("Error, could not get reader for port " + state_port->getName());
+            }
+            RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
+            state_reader->setName(getFreePortName(clientTask, state_port));
+            clientTask->addPort(*state_reader);
+        }
     }
 
     // check for port update
@@ -260,35 +316,80 @@ void TaskItem::updateProperties()
 bool TaskItem::updateState()
 {
     std::string stateString = "";
-    RTT::base::TaskCore::TaskState state = task->getTaskState();
-    switch(state)
+
+    Typelib::Enum const *stateEnum = getStateEnum();
+
+    if (!stateEnum || !state_reader)
     {
-        case RTT::base::TaskCore::Exception:
-            stateString = "Exception";
-            break;
-        case RTT::base::TaskCore::FatalError:
-            stateString = "FatalError";
-            break;
-        case RTT::base::TaskCore::Init:
-            stateString = "Init";
-            break;
-        case RTT::base::TaskCore::PreOperational:
-            stateString = "PreOperational";
-            break;
-        case RTT::base::TaskCore::Running:
-            stateString = "Running";
-            break;
-        case RTT::base::TaskCore::RunTimeError:
-            stateString = "RunTimeError";
-            break;
-        case RTT::base::TaskCore::Stopped:
-            stateString = "Stopped";
-            break;
+        //display RTT state
+        RTT::base::TaskCore::TaskState state = task->getTaskState();
+        switch (state)
+        {
+            case RTT::base::TaskCore::Exception:
+                stateString = "Exception";
+                break;
+            case RTT::base::TaskCore::FatalError:
+                stateString = "FatalError";
+                break;
+            case RTT::base::TaskCore::Init:
+                stateString = "Init";
+                break;
+            case RTT::base::TaskCore::PreOperational:
+                stateString = "PreOperational";
+                break;
+            case RTT::base::TaskCore::Running:
+                stateString = "Running";
+                break;
+            case RTT::base::TaskCore::RunTimeError:
+                stateString = "RunTimeError";
+                break;
+            case RTT::base::TaskCore::Stopped:
+                stateString = "Stopped";
+                break;
+        }
+    } else {
+        if (!state_reader->connected())
+        {
+            const RTT::DataFlowInterface *dfi = task->ports();
+
+            RTT::base::OutputPortInterface *state_port = dynamic_cast<RTT::base::OutputPortInterface *>(dfi->getPort("state"));
+
+            if(state_port)
+            {
+                //reuse the existing reader
+                RTT::ConnPolicy policy(RTT::ConnPolicy::data());
+                policy.pull = true;
+                state_reader->connectTo(state_port, policy);
+            }
+        }
+
+        int32_t state;
+        if (state_reader->read(state) != RTT::NoData)
+        {
+            //display state from the port
+            try
+            {
+                stateString = stateEnum->get(state);
+                std::string componentName = taskModelName.substr(taskModelName.find_last_of("::") + 1);
+                if (stateString.find(componentName + "_") != std::string::npos)
+                {
+                    stateString = stateString.substr(componentName.size() + 1);
+                }
+            }
+            catch (Typelib::Enum::ValueNotFound const &e)
+            {
+                stateString = "Out of Range";
+            }
+        }
+        else
+        {
+            stateString = "No Data";
+        }
     }
     
     if (statusItem.text().toStdString() != stateString)
     {
-        statusItem.setText(stateString.c_str());
+        statusItem.setText(QString::fromStdString(stateString));
         return true;
     }
 
@@ -313,4 +414,27 @@ QModelIndex TaskItem::updateRight()
 RTT::corba::TaskContextProxy* TaskItem::getTaskContext()
 {
     return task;
+}
+
+Typelib::Enum const *TaskItem::getStateEnum() {
+    if (stateEnum || queriedStateEnum || taskModelName.empty())
+        return stateEnum;
+
+    orocos_cpp::TypeRegistry &orocos_treg = *orocos.type_registry;
+
+    std::string typekitName = taskModelName.substr(0, taskModelName.find(":"));
+
+    orocos_treg.loadTypeRegistry(typekitName);
+
+    QString state_type_name = QString("%1_STATES").arg(QString::fromStdString(taskModelName).replace("::", "/"));
+    if (!state_type_name.startsWith("/"))
+    {
+        state_type_name.prepend("/");
+    }
+
+    Typelib::Type const *t = orocos_treg.getTypeModel(state_type_name.toStdString());
+    stateEnum = dynamic_cast<Typelib::Enum const *>(t);
+    queriedStateEnum = true;
+
+    return stateEnum;
 }

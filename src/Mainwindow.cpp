@@ -64,7 +64,7 @@ void MyVizkit3DWidget::closeEvent(QCloseEvent *ev)
         QApplication::quit();
 }
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(orocos_cpp::OrocosCpp &orocos, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -90,13 +90,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     handlerrepo = new ConfigItemHandlerRepository;
 
-    model = new NameServiceModel(handlerrepo, this);
+    model = new NameServiceModel(handlerrepo, orocos, this);
     connect(this, SIGNAL(stopNotifier()), model, SLOT(stop()));
     connect(model, SIGNAL(rowAdded()), this, SLOT(sortTasks()));
     connect(model, &NameServiceModel::itemDataEdited,
             this, QOverload<QModelIndex const &>::of(&MainWindow::itemDataEdited));
     
-    TaskModel *initialTasks = new TaskModel(handlerrepo, this);
+    TaskModel *initialTasks = new TaskModel(handlerrepo, orocos, this);
     model->addTaskModel(initialTasks);
 
     qRegisterMetaType<std::string>("std::string");

@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     base::logging::Logger::getInstance()->configure(base::logging::DEBUG, stdout);
 
     QApplication app(argc, argv);
-    MainWindow w;
+    MainWindow w(orocos);
     w.show();
 
     return app.exec();

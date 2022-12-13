@@ -13,9 +13,19 @@ namespace RTT
     {
         class TaskContextProxy;
     }
+    namespace base
+    {
+        class OutputPortInterface;
+    }
+    template<typename T> class InputPort;
 }
 
 class PropertyItem;
+
+namespace orocos_cpp
+{
+class OrocosCpp;
+}
 
 class TaskItem
 {   
@@ -33,10 +43,17 @@ private:
     std::map<std::string, PropertyItem *> propertyMap;
     bool stateChanged;
     ConfigItemHandlerRepository *handlerrepo;
+    orocos_cpp::OrocosCpp &orocos;
+    std::string taskModelName;
+    Typelib::Enum const *stateEnum;
+    bool queriedStateEnum;
+    RTT::InputPort<int32_t> *state_reader;
+
+    Typelib::Enum const * getStateEnum();
     void synchronizeTask();
     
 public:
-    TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo);
+    TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos);
     virtual ~TaskItem();
     bool updateState();
     void updatePorts(bool hasVisualizers=false, bool handleOldData = false);

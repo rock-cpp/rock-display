@@ -15,9 +15,12 @@ namespace RTT
         class InputPortInterface;
         class PortInterface;
     }
+    class TaskContext;
 }
 
 class TypedItem;
+
+std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortInterface* portIf);
 
 class PortItem : public VisualizerAdapter
 {

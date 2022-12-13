@@ -59,7 +59,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(orocos_cpp::OrocosCpp &orocos, QWidget *parent = 0);
     ~MainWindow();
     
     Vizkit3dPluginRepository *getPluginRepo()

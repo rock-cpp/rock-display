@@ -6,8 +6,8 @@
 #include <QApplication>
 #endif
 
-NameServiceModel::NameServiceModel(ConfigItemHandlerRepository *handlerrepo, QObject* parent)
-    : QStandardItemModel(parent), handlerrepo(handlerrepo)
+NameServiceModel::NameServiceModel(ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos, QObject* parent)
+    : QStandardItemModel(parent), handlerrepo(handlerrepo), orocos(orocos)
 {
     setColumnCount(2);
     setHorizontalHeaderLabels(QStringList( {"Name","Value"}));
@@ -69,7 +69,7 @@ void NameServiceModel::addNameService(const std::string& nameServiceIP)
         return;
     }
 
-    TaskModel *newModel = new TaskModel(handlerrepo, this, nameServiceIP);
+    TaskModel *newModel = new TaskModel(handlerrepo, orocos, this, nameServiceIP);
     addTaskModel(newModel);
     newModel->startNotifier();
 }
