@@ -205,3 +205,8 @@ void TaskModel::startNotifier()
 {
     notifierThread->start();
 }
+
+orocos_cpp::NameService *TaskModel::getNameService()
+{
+    return notifier->getNameService();
+}

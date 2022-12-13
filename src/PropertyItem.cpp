@@ -56,6 +56,7 @@ void PropertyItem::updateProperty(RTT::base::PropertyBase* property)
     transport->readDataSource(*propertyDataSource, transportHandle);
 
     this->type = transport->getRegistry().get(transport->getMarshallingType());
+    this->property = property;
 }
 
 void PropertyItem::updataValue()
@@ -83,6 +84,11 @@ void PropertyItem::updataValue()
 const std::string& PropertyItem::getType()
 {
     return typeInfo;
+}
+
+RTT::base::PropertyBase* PropertyItem::getProperty()
+{
+    return property;
 }
 
 Typelib::Value &PropertyItem::getCurrentData()

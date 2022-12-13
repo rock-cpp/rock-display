@@ -26,6 +26,7 @@ class PropertyItem : public QObject
     RTT::base::DataSourceBase::shared_ptr sample;
     orogen_transports::TypelibMarshallerBase::Handle *transportHandle;
     RTT::base::DataSourceBase::shared_ptr propertyDataSource;
+    RTT::base::PropertyBase *property;
 
 public:
     PropertyItem(RTT::base::PropertyBase *property, ConfigItemHandlerRepository *handlerrepo);
@@ -39,6 +40,7 @@ public:
 
     void updateProperty(RTT::base::PropertyBase* property);
     const std::string &getType();
+    RTT::base::PropertyBase* getProperty();
     Typelib::Value &getCurrentData();
 
     void reset();

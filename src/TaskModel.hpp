@@ -14,6 +14,7 @@ namespace RTT
 
 namespace orocos_cpp
 {
+    class NameService;
     class OrocosCpp;
 }
 
@@ -46,6 +47,7 @@ public:
     virtual ~TaskModel();
     void updateTaskItems(bool handleOldData = false);
     QList<QStandardItem *> getRow();
+    orocos_cpp::NameService *getNameService();
     
     QStandardItem &getTasks()
     {
