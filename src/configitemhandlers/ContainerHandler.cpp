@@ -77,14 +77,14 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                     auto &cnt = static_cast<Typelib::Container const&>(type);
 
                     QObject::connect(push, &QAction::triggered,
-                            menu, [&val,&cnt,itembase,model]()
+                                     menu, [&val, &cnt, itembase, model]()
                     {
                         const Typelib::Type &eltype = cnt.getIndirection();
 
                         //create new element and its storage
                         std::vector<uint8_t> elbuf;
                         elbuf.resize(eltype.getSize());
-                        Typelib::init(elbuf.data(), Typelib::layout_of(eltype) );
+                        Typelib::init(elbuf.data(), Typelib::layout_of(eltype));
                         Typelib::Value el(elbuf.data(), eltype);
 
                         cnt.push(val.getData(), el);
@@ -125,7 +125,7 @@ bool ContainerHandler::addContextMenuEntries ( QMenu * menu, const QModelIndex &
                         auto &cnt = static_cast<Typelib::Container const&>(ptype);
 
                         QObject::connect(erase, &QAction::triggered,
-                                menu, [&val,&cnt,&pval,pitembase,model]()
+                                         menu, [&val, &cnt, &pval, pitembase, model]()
                         {
                             cnt.erase(pval.getData(), val);
 

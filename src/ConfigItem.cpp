@@ -12,7 +12,6 @@
 #include "Types.hpp"
 #include <base-logging/Logging.hpp>
 #include <boost/regex.hpp>
-#include <orocos_cpp/TypeRegistry.hpp>
 #include <orocos_cpp/PkgConfigHelper.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -20,6 +19,9 @@
 #include <tinyxml.h>
 #include "ConfigItemHandler.hpp"
 #include "ConfigItemHandlerRepository.hpp"
+#include <QTextCodec>
+#include <QApplication>
+#include <QThread>
 
 std::map<std::string, std::string> ItemBase::lookupMarshalledTypelistTypes()
 {

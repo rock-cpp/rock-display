@@ -161,7 +161,7 @@ void OutputPortItem::updataValue(bool handleOldData)
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
     
     if (!item)
-    {   
+    {
         while (nameItem->rowCount() > 0)
         {
             nameItem->takeRow(0);

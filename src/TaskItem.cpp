@@ -170,7 +170,7 @@ void TaskItem::updatePorts(bool hasVisualizers, bool handleOldData)
                     auto inPortItem = new InputPortItem(inIf, handlerrepo);
                     item = inPortItem;
                     inputPorts.appendRow(item->getRow());
-                    //the QStandardModel becomes confused when items are added later when there were none
+                    //the QStandardModel gets confused when items are added later when there were none
                     //at the start.
                     item->getNameItem()->appendRow({new QStandardItem(QString("no elements(yet)")), new QStandardItem()});
                 }

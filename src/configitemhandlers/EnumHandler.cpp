@@ -4,6 +4,7 @@
 #include <QStandardItem>
 #include <QTextCodec>
 #include <QComboBox>
+#include <QTimer>
 #include <base-logging/Logging.hpp>
 #include "../NameServiceModel.hpp"
 #include "../TypedItem.hpp"
