@@ -170,7 +170,7 @@ void OutputPortItem::updataValue(bool handleOldData)
         item = getItem(val, handlerrepo, this->nameItem, this->valueItem);
         item->update(val, true, true);
     }
-    else if (item)
+    else
     {
         item->update(val, true);
     }
@@ -301,8 +301,10 @@ void InputPortItem::updataValue(bool handleOldData)
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
         item->update(currentData, true, true);
     }
-
-    item->update(currentData, true);
+    else
+    {
+        item->update(currentData, true);
+    }
 }
 
 const std::string& InputPortItem::getType()

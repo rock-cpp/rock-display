@@ -74,8 +74,10 @@ void PropertyItem::updataValue()
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
         item->update(currentData, true, true);
     }
-
-    item->update(currentData, item->getName()->isExpanded());
+    else
+    {
+        item->update(currentData, true);
+    }
 }
 
 const std::string& PropertyItem::getType()
