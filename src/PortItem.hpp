@@ -48,7 +48,7 @@ public:
         return valueItem;
     }
     
-    virtual bool hasVisualizers()
+    virtual bool hasVisualizers() override
     {
         if (VisualizerAdapter::hasVisualizers() || (item && item->hasVisualizers()))
         {
