@@ -32,6 +32,7 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerReposit
     nameItem.appendRow(&outputPorts);
     nameItem.appendRow(&properties);
     nameItem.setData(this);
+    nameItem.setText(QString::fromStdString(task->getName()));
     statusItem.setData(this);
     statusItem.setText("");
 
