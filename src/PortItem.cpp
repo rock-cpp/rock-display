@@ -183,6 +183,10 @@ const std::string& OutputPortItem::getType()
 
 Typelib::Value OutputPortItem::getValueHandle()
 {
+    if (!handle || !handle->transport || !handle->type)
+    {
+        return Typelib::Value();
+    }
     return Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 }
 
