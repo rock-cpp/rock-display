@@ -69,6 +69,7 @@ class OutputPortItem : public PortItem
 {
     PortHandle *handle;
     RTT::base::InputPortInterface *reader;
+    bool haveOldData;
 
 public:
     OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo);

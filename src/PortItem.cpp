@@ -61,7 +61,7 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr)
+OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), haveOldData(false)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
     valueItem->setType(ItemType::OUTPUTPORT);
@@ -148,12 +148,26 @@ void OutputPortItem::updataValue(bool handleOldData)
             return;
         }
     }
-    
-    if (reader->read(handle->sample) != RTT::NewData && !handleOldData)
+
+    if (reader->read(handle->sample) == RTT::NewData)
+    {
+        //convert the native, Orocos sample back to its marshallable and inspectable Typelib form
+        handle->transport->refreshTypelibSample(handle->transportHandle);
+
+        haveOldData = true;
+    }
+    else if (handleOldData && haveOldData)
+    {
+    }
+    else
     {
         return;
     }
 
+    if(!haveOldData)
+    {
+        return;
+    }
     handle->transport->refreshTypelibSample(handle->transportHandle);
     
     emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
