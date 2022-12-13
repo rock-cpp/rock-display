@@ -7,7 +7,7 @@ TypedItem::TypedItem(int type) : QStandardItem(nullptr), _type(type), userData(n
     setText("");
 }
 
-TypedItem::TypedItem() : QStandardItem(nullptr), _type(-1), userData(nullptr)
+TypedItem::TypedItem() : QStandardItem(nullptr), _type(-1), userData(nullptr), expanded(false)
 {
     setEditable(false);
     setText("");

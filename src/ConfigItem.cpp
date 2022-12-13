@@ -112,6 +112,7 @@ ItemBase::ItemBase()
     : VisualizerAdapter(),
       name(new TypedItem()),
       value(new TypedItem()),
+      handlerrepo(nullptr),
       codec(QTextCodec::codecForName("UTF-8"))
 {
     name->setType(ItemType::CONFIGITEM);
@@ -123,6 +124,7 @@ ItemBase::ItemBase()
 ItemBase::ItemBase(TypedItem *name, TypedItem *value)
     : VisualizerAdapter(),
       name(name), value(value),
+      handlerrepo(nullptr),
       codec(QTextCodec::codecForName("UTF-8"))
 {
     if (!name || !value)
