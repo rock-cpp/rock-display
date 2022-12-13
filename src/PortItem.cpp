@@ -281,10 +281,10 @@ void InputPortItem::updataValue(bool handleOldData)
 
     handle->transport->refreshTypelibSample(handle->transportHandle);
 
+    currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
+
     emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
     emit editableUpdate(handle->sample.get()->getRawPointer());
-
-    currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 
     if (oldDataBuffer.size() == 0)
     {
