@@ -1,5 +1,8 @@
 rock_find_qt5(REQUIRED Gui Core Widgets)
 
+find_package(PkgConfig)
+
+pkg_check_modules(TRANSFORMER_TYPEKIT IMPORTED_TARGET transformer-typekit-gnulinux)
 
 rock_library(rock-display
 SOURCES
@@ -13,7 +16,6 @@ SOURCES
     TaskItem.cpp
     TypedItem.cpp
     Mainwindow.cpp
-    Vizkit3dPluginRepository.cpp
     ConfigItem.cpp
     VisualizerAdapter.cpp
     configuration.cpp
@@ -26,6 +28,8 @@ SOURCES
     vizplugins/imageviewplugin.cpp
     vizplugins/virtualjoystickplugin.cpp
     vizplugins/vizkitplugin.cpp
+    vizplugins/vizkit3dplugins.cpp
+    vizplugins/Vizkit3dPluginRepository.cpp
     ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
@@ -50,6 +54,9 @@ MOC
     vizplugins/virtualjoystickplugin_p.hpp
     vizplugins/vizkitplugin.hpp
     vizplugins/vizkitplugin_p.hpp
+    vizplugins/Vizkit3dPluginRepository.hpp
+    vizplugins/vizkit3dplugins.hpp
+    vizplugins/vizkit3dplugins_p.hpp
     ConfigurationSelectDialog.hpp
 HEADERS
 UI
@@ -67,6 +74,14 @@ LIBS Qt5::Core
      Qt5::Gui
      Qt5::Widgets
 )
+
+if(TRANSFORMER_TYPEKIT_FOUND)
+    target_compile_definitions(rock-display PRIVATE HAVE_TRANSFORMER_TYPEKIT=1)
+    target_include_directories(rock-display PRIVATE ${TRANSFORMER_TYPEKIT_INCLUDE_DIRS})
+    target_link_libraries(rock-display ${TRANSFORMER_TYPEKIT_LINK_LIBRARIES})
+    message(STATUS "Using transformer typekit for transformer types")
+endif()
+
 add_definitions(-DBASE_LOG_INFO)
 
 rock_executable(rock-display_bin Main.cpp

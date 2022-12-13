@@ -172,10 +172,11 @@ void OutputPortItem::updataValue(bool handleOldData)
     {
         return;
     }
-    emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
 
     Typelib::Value val(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
-    
+
+    emit visualizerUpdate(val);
+
     if (!item)
     {
         while (nameItem->rowCount() > 0)
@@ -299,8 +300,8 @@ void InputPortItem::updataValue(bool handleOldData)
 
     currentData = Typelib::Value(handle->transport->getTypelibSample(handle->transportHandle), *(handle->type));
 
-    emit visualizerUpdate(handle->sample.get()->getRawConstPointer());
-    emit editableUpdate(handle->sample.get()->getRawPointer());
+    emit visualizerUpdate(currentData);
+    emit editableUpdate(currentData);
 
     if (oldDataBuffer.size() == 0)
     {

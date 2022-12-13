@@ -1,14 +1,19 @@
 
 #pragma once
 
-#include "../Vizkit3dPluginRepository.hpp"
+#include "vizkitplugin.hpp"
 
-class VirtualJoystickPluginHandle : public PluginHandle
-{
+namespace rock_display {
+
+class VirtualJoystickPlugin : public rockdisplay::vizkitplugin::Plugin {
+    Q_OBJECT;
 public:
-    VirtualJoystickPluginHandle();
-    std::string typeName;
-    virtual VizHandle *createViz() const override;
-    virtual bool probe(Typelib::Type const &type, const Typelib::Registry* registry = NULL) const override;
+    virtual bool probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) override;
+    virtual bool probeInputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) override;
+    virtual bool probeProperty(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) override;
+    virtual rockdisplay::vizkitplugin::Widget *createWidget() override;
+    virtual std::string getName() override;
+    virtual unsigned getFlags() override;
 };
 
+}

@@ -2,20 +2,99 @@
 #include "imageviewplugin.hpp"
 #include "imageviewplugin_p.hpp"
 #include <rock_widget_collection/RockWidgetCollection.h>
-#include <typelib/typemodel.hh>
 
-ImageViewPluginHandle::ImageViewPluginHandle()
-: PluginHandle("ImageView")
+using namespace rock_display;
+
+ImageViewWidget::ImageViewWidget(QWidget *widget, QMetaMethod method, QObject *parent)
+: rockdisplay::vizkitplugin::Widget(parent), widget(widget), method(method),
+outputportfield(new ImageViewOutputPortField(widget, method)),
+inputportfield(new ImageViewInputPortField(widget, method)),
+propertyfield(new ImageViewPropertyField(widget, method))
 {
-    typeName = "/base/samples/frame/Frame";
 }
 
-bool ImageViewPluginHandle::probe(Typelib::Type const &type, const Typelib::Registry* registry) const
+QWidget *ImageViewWidget::getWidget()
 {
-    return type.getName() == typeName;
+    return widget;
 }
 
-VizHandle *ImageViewPluginHandle::createViz() const
+rockdisplay::vizkitplugin::Field *ImageViewWidget::addOutputPortField( const rockdisplay::vizkitplugin::FieldDescription * type, std::string const &subpluginname )
+{
+    return outputportfield;
+}
+
+rockdisplay::vizkitplugin::Field *ImageViewWidget::addInputPortField( const rockdisplay::vizkitplugin::FieldDescription * type, std::string const &subpluginname )
+{
+    return inputportfield;
+}
+
+rockdisplay::vizkitplugin::Field *ImageViewWidget::addPropertyField( const rockdisplay::vizkitplugin::FieldDescription * type, std::string const &subpluginname )
+{
+    return propertyfield;
+}
+
+ImageViewOutputPortField::ImageViewOutputPortField(QWidget *widget, QMetaMethod method, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget), method(method)
+{
+}
+
+void ImageViewOutputPortField::updateOutputPort(rockdisplay::vizkitplugin::ValueHandle const *data)
+{
+    QGenericArgument val("void *", data->getRawPtr());
+    if (!val.data())
+    {
+        return;
+    }
+
+    method.invoke(widget, val);
+}
+
+ImageViewInputPortField::ImageViewInputPortField(QWidget *widget, QMetaMethod method, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget), method(method)
+{
+}
+
+void ImageViewInputPortField::updateInputPort(rockdisplay::vizkitplugin::ValueHandle *data)
+{
+    QGenericArgument val("void *", data->getRawPtr());
+    if (!val.data())
+    {
+        return;
+    }
+
+    method.invoke(widget, val);
+}
+
+ImageViewPropertyField::ImageViewPropertyField(QWidget *widget, QMetaMethod method, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget), method(method)
+{
+}
+
+void ImageViewPropertyField::updateProperty(rockdisplay::vizkitplugin::ValueHandle *data)
+{
+    QGenericArgument val("void *", data->getRawPtr());
+    if (!val.data())
+    {
+        return;
+    }
+
+    method.invoke(widget, val);
+}
+
+bool ImageViewPlugin::probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
+{
+    return fieldDesc->getTypeName() == "/base/samples/frame/Frame";
+}
+
+bool ImageViewPlugin::probeInputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) {
+    return fieldDesc->getTypeName() == "/base/samples/frame/Frame";
+}
+
+bool ImageViewPlugin::probeProperty(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) {
+    return fieldDesc->getTypeName() == "/base/samples/frame/Frame";
+}
+
+rockdisplay::vizkitplugin::Widget *ImageViewPlugin::createWidget()
 {
     RockWidgetCollection collection;
     QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
@@ -25,7 +104,7 @@ VizHandle *ImageViewPluginHandle::createViz() const
     {
         const std::string widgetName = widgetInterface->name().toStdString();
 
-        if (widgetName == pluginName)
+        if (widgetName == "ImageView")
         {
             imView = widgetInterface->createWidget(nullptr);
         }
@@ -56,107 +135,17 @@ VizHandle *ImageViewPluginHandle::createViz() const
         }
     }
 
-    ImageViewVizHandle *ivvh = new ImageViewVizHandle;
+    ImageViewWidget *ivvh = new ImageViewWidget(imView, found_method);
 
-    imView->installEventFilter(ivvh);
-
-    ivvh->method = found_method;
-    ivvh->widget = imView;
     return ivvh;
 }
 
-void ImageViewVizHandle::updateVisualizer(void const *data)
+std::string ImageViewPlugin::getName()
 {
-    QGenericArgument val("void *", data);
-    if (!val.data())
-    {
-        return;
-    }
-
-    method.invoke(widget, val);
+    return "ImageView";
 }
 
-bool ImageViewVizHandle::eventFilter(QObject *obj, QEvent *event) {
-    if (event->type() == QEvent::Close) {
-        emit closing(this);
-    }
-    return false;
+unsigned ImageViewPlugin::getFlags() {
+    return Flags::SingleFieldOnly;
 }
 
-
-/*
- * at the end, this should be no more complicated than the ruby part:
- *
- *
- *
- *
- * #prepares the c++ qt widget for the use in ruby with widget_grid
- *
- * Vizkit::UiLoader::extend_cplusplus_widget_class "ImageView" do
- *
- *   def default_options()
- *       options = Hash.new
- *       options[:time_overlay] = true
- *       options[:display_first] = true
- *       options
- *   end
- *
- *   def init
- *       if !defined? @init
- *           @options ||= default_options
- *           #connect(SIGNAL("activityChanged(bool)"),self,:setActive)
- *           @init = true
- *           @fallback = false
- *       end
- *   end
- *
- *   def display2(frame_pair,port_name)
- *       init
- *       frame = @options[:display_first] == true ? frame_pair.first : frame_pair.second
- *       display(frame,port_name)
- *   end
- *
- *   #display is called each time new data are available on the orocos output port
- *   #this functions translates the orocos data struct to the widget specific format
- *   def display(frame,port_name="")
- *       init
- *
- *       if @options[:time_overlay]
- *           if frame.time.instance_of?(Time)
- *               time = frame.time
- *           else
- *               time = Time.at(frame.time.seconds,frame.time.microseconds)
- *           end
- *           addTextWrapper(time.strftime("%F %H:%M:%S"), :bottomright, Qt::Color.new(Qt::black), false)
- *       end
- *
- *       if @fallback
- *           setRawImage(frame.frame_mode.to_s,frame.pixel_size,frame.size.width,frame.size.height,frame.image.to_byte_array[8..-1],frame.image.size)
- *       else
- *           @typelib_adapter ||= Vizkit::TypelibQtAdapter.new(self)
- *           if !@typelib_adapter.call_qt_method("setFrame",frame)
- *               Vizkit.warn "Cannot reach method setFrame."
- *               Vizkit.warn "This happens if an old log file is replayed and the type has changed."
- *               Vizkit.warn "Call rock-convert to update the logfile."
- *               Vizkit.warn "Falling back to use raw access."
- *               @fallback = true
- *               display(frame,port_name)
- *           end
- *       end
- *       update2
- *   end
- *
- *   def addTextWrapper(text, location, color, persistent)
- *       locationMap = {:topleft => 0,
- *           :topright => 1,
- *           :bottomleft => 2,
- *           :bottomright => 3}
- *       addText(text, locationMap[location], color, persistent)
- *   end
- *
- * end
- *
- * Vizkit::UiLoader.register_default_widget_for("ImageView","/base/samples/DistanceImage",:display)
- * Vizkit::UiLoader.register_default_widget_for("ImageView","/base/samples/frame/Frame",:display)
- * Vizkit::UiLoader.register_default_widget_for("ImageView","/base/samples/frame/FramePair",:display2)
- */

@@ -685,7 +685,7 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 
     value_handle = valueIn;
 
-    emit visualizerUpdate(valueIn.getData());
+    emit visualizerUpdate(valueIn);
 
     bool haveCustomValue = false;
 
@@ -849,7 +849,7 @@ Typelib::Value& EditableComplex::getValueHandle()
 
 void EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
 {
-    emit editableUpdate(valueIn.getData());
+    emit editableUpdate(valueIn);
 
     Complex::update(valueIn, updateUI, forceUpdate);
 }

@@ -1,4 +1,5 @@
 #include "VisualizerAdapter.hpp"
+#include "VizHandle.hpp"
 
 void VisualizerAdapter::addPlugin(const std::string &name, VizHandle *handle)
 {
@@ -7,6 +8,8 @@ void VisualizerAdapter::addPlugin(const std::string &name, VizHandle *handle)
             handle, &VizHandle::updateVisualizer);
     connect(this, &VisualizerAdapter::editableUpdate,
             handle, &VizHandle::updateEditable);
+    //if this assert fails, the signature here and in hasVisualizer must be updated.
+    assert(receivers(SIGNAL(visualizerUpdate(const Typelib::Value&))) != 0);
 }
 
 VizHandle *VisualizerAdapter::getVisualizer(const std::string& name)

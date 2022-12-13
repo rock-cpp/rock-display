@@ -3,23 +3,22 @@
 
 #include <QObject>
 
-QT_BEGIN_NAMESPACE
-class QWidget;
-QT_END_NAMESPACE
+namespace Typelib
+{
+    class Value;
+}
 
 class VizHandle : public QObject
 {
     Q_OBJECT
 public:
     virtual ~VizHandle() {}
-    virtual QObject *getVizkit3dPluginObject() = 0;
-    virtual QWidget *getStandaloneWidget() = 0;
 public slots:
-    virtual void updateVisualizer(void const *data){}
+    virtual void updateVisualizer(Typelib::Value const &value){}
     /* this sample can be kept around for editing purposes */
-    virtual void updateEditable(void *data){}
+    virtual void updateEditable(Typelib::Value const &value){}
 signals:
-    void editableChanged(void *data, bool force_send = false);
+    void editableChanged(Typelib::Value const &value, bool force_send = false);
     void closing(VizHandle *vh);
 };
 

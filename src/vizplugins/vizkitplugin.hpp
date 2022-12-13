@@ -2,6 +2,8 @@
 #pragma once
 
 #include <QObject>
+#include <mutex>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace RTT {
 namespace base {

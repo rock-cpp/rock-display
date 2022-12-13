@@ -3,12 +3,16 @@
 #include <iostream>
 #include <boost/regex.hpp>
 #include <typelib/registry.hh>
+#include <typelib/value.hh>
+#include <rtt/base/OutputPortInterface.hpp>
+#include <rtt/types/TypeInfo.hpp>
 
 static std::string convertTypelibToDottedTypeName(std::string const &typelibTypeName)
 {
     std::string dottedTypeName = typelibTypeName.substr(1, typelibTypeName.size());
-    static boost::regex re1("_m");
-    dottedTypeName = boost::regex_replace(dottedTypeName, re1, "");
+    //the _m names and wrapper:: namespace is not guaranteed to be binary compatible.
+    /*static boost::regex re1("_m");
+    dottedTypeName = boost::regex_replace(dottedTypeName, re1, "");*/
     static boost::regex re2("</");
     dottedTypeName = boost::regex_replace(dottedTypeName, re2, "<");
     static boost::regex re3("/");
@@ -34,65 +38,8 @@ static std::string convertDottedToTypelibTypeName(std::string const &dottedTypeN
 }
 
 Vizkit3dPluginHandle::Vizkit3dPluginHandle(std::string const &pluginName)
-: PluginHandle(pluginName)
+: pluginName(pluginName)
 {
-}
-
-VizHandle *Vizkit3dPluginHandle::createViz() const
-{
-    Vizkit3dVizHandle *newHandle = new Vizkit3dVizHandle;
-    newHandle->plugin = factory->createPlugin(QString::fromStdString(pluginName));
-    newHandle->method = method;
-    return newHandle;
-}
-
-/* this is not used for Vizkit3dPluginHandle because there is a faster variant that
- * does less duplicate work.
- */
-bool Vizkit3dPluginHandle::probe(Typelib::Type const &type, const Typelib::Registry* registry) const
-{
-    //try for a direct match first
-    std::string dottedType = convertTypelibToDottedTypeName(type.getName());
-
-    if (typeName == dottedType)
-    {
-        return true;
-    }
-
-    if(!registry)
-    {
-        return false;
-    }
-
-    //if there is a typelib registry, try using its isSame method
-
-    std::string pluginTypeName = convertDottedToTypelibTypeName(typeName);
-
-    auto pluginType = registry->get(pluginTypeName);
-    if (!pluginType)
-    {
-        //these are normal, the types for these plugins are not used in this deployment.
-        //no harm either, we do not remember a negative result from this.
-        //the scenario for a failure here would be: one registry is used for the sample and lookup here,
-        //that does not contain the typedef pluginTypeName refers to.
-        //another registry has the typedef, but now the basename already has typeToPlugins populated and
-        //the (now possible) resolution of the typedef is not found.
-        LOG_DEBUG_S << "Vizkit3dPluginRepository: could not find typelib type for " << pluginTypeName << " ..";
-        return false;
-    }
-
-    return type.isSame(*pluginType);
-}
-
-void Vizkit3dVizHandle::updateVisualizer(void const *data)
-{
-    QGenericArgument val("void *", data);
-    if (!val.data())
-    {
-        return;
-    }
-
-    method.invoke(plugin, val);
 }
 
 Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
@@ -164,6 +111,13 @@ Vizkit3dPluginRepository::Vizkit3dPluginRepository(QStringList &plugins)
             if (!foundUpdateFunctions)
             {
                 LOG_WARN_S << "Vizkit3dPluginRepository: no update functions found in " << libPath << "..";
+                Vizkit3dPluginHandle *handle = new Vizkit3dPluginHandle(pName.toStdString());
+                handle->factory = factory;
+                handle->libararyName = libPath;
+                handle->typeName = std::string();
+                handle->method = QMetaMethod();
+
+                datalessPlugins.push_back(handle);
             }
             
             delete plugin;
@@ -252,6 +206,10 @@ const std::vector<Vizkit3dPluginHandle*> Vizkit3dPluginRepository::getAllAvailab
             plugins.push_back(plugin);
         }
     }
-    
+    for (auto &dlp : datalessPlugins)
+    {
+        plugins.push_back(dlp);
+    }
+
     return plugins;
 }

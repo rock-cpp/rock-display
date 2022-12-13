@@ -1,10 +1,14 @@
 #pragma once
 
-#include "Vizkit3dPluginRepository.hpp"
 #include <qobject.h>
 #include <map>
 
 class VizHandle;
+
+namespace Typelib
+{
+    class Value;
+}
 
 class VisualizerAdapter : public QObject
 {
@@ -28,13 +32,12 @@ public:
     void removeVisualizer(VizHandle *plugin);
     virtual bool hasVisualizers()
     {
-        return receivers(SIGNAL(visualizerUpdate(void const *))) != 0;
+        return receivers(SIGNAL(visualizerUpdate(const Typelib::Value&))) != 0;
     }
 signals:
     /* *Update are used to pass data from the items/ports/properties to plugins
      *
-     * alternatively, one could pass around "Typelib::Value" instead of "void const *",
-     * retaining runtime type information */
-    void visualizerUpdate(void const * data);
-    void editableUpdate(void * data);
+     */
+    void visualizerUpdate(Typelib::Value const &value);
+    void editableUpdate(Typelib::Value const &value);
 };
