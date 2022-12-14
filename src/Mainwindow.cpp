@@ -603,6 +603,54 @@ void MainWindow::setItemExpanded(const QModelIndex& index, bool expanded)
     {
         ti->setExpanded(expanded);
     }
+    //scan for a port/property item, tell it to update its value display using old data
+    if(expanded) {
+        while (item)
+        {
+            TypedItem *ti = dynamic_cast<TypedItem *>(item);
+            if (!ti)
+            {
+                item = item->parent();
+                continue;
+            }
+            switch (ti->type())
+            {
+                case QStandardItem::ItemType::Type:
+                case ItemType::CONFIGITEM:
+                case ItemType::EDITABLEITEM:
+                {
+                    item = item->parent();
+                    break;
+                }
+                case ItemType::OUTPUTPORT:
+                {
+                    auto outputitem = static_cast<OutputPortItem *>(ti->getData());
+                    outputitem->updataValue(true);
+                    item = nullptr;
+                    break;
+                }
+                case ItemType::INPUTPORT:
+                {
+                    auto inputitem = static_cast<InputPortItem *>(ti->getData());
+                    inputitem->updataValue(true);
+                    item = nullptr;
+                    break;
+                }
+                case ItemType::PROPERTYITEM:
+                {
+                    auto propertyitem = static_cast<PropertyItem *>(ti->getData());
+                    propertyitem->updataValue();
+                    item = nullptr;
+                    break;
+                }
+                case ItemType::TASK:
+                case ItemType::NAMESERVICE:
+                default:
+                    item = nullptr;
+                    break;
+            }
+        }
+    }
 }
 
 struct ItemInfo
