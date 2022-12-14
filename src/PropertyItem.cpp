@@ -73,12 +73,8 @@ void PropertyItem::updataValue()
         }
 
         item = getEditableItem(currentData, handlerrepo, this->nameItem, this->valueItem);
-        item->update(currentData, true, true);
     }
-    else
-    {
-        item->update(currentData, true);
-    }
+    item->update(currentData);
 }
 
 const std::string& PropertyItem::getType()

@@ -68,10 +68,9 @@ public:
     /*
      * @param valueIn     the value to be handled by the item
      * @param updateUI    ?
-     * @param forceUpdate ?
      * @return            ?
      */
-    virtual void update(Typelib::Value& valueIn, bool updateUI = true, bool forceUpdate = false) = 0;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = true) = 0;
     virtual Typelib::Value& getValueHandle() { return value_handle; }
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) { return false; }
 
@@ -150,7 +149,7 @@ public:
     Array(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Array();
     
-    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };
 
 class EditableArray : public Array
@@ -170,7 +169,7 @@ public:
     Simple(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Simple();
     
-    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };
 
 class EditableSimple : public Simple
@@ -194,7 +193,7 @@ public:
     Complex(TypedItem *name = nullptr, TypedItem *value = nullptr);
     virtual ~Complex();
     
-    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };
 
 class EditableComplex : public Complex
@@ -207,5 +206,5 @@ public:
     virtual Typelib::Value& getValueHandle() override;
     virtual void setHandlerStack(std::vector<ConfigItemHandler const*> const &stack) override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
-    virtual void update(Typelib::Value& valueIn, bool updateUI = false, bool forceUpdate = false) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };

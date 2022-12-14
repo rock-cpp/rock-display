@@ -100,7 +100,7 @@ std::shared_ptr<ItemBase> Array::getItem(Typelib::Value& value, TypedItem *nameI
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+void Array::update(Typelib::Value& valueIn, bool updateUI)
 {    
     bool childrenUpdateUI = updateUI && name->isExpanded();
     value_handle = valueIn;
@@ -152,7 +152,7 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
     for (int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
     {
         Typelib::Value arrayV(static_cast<uint8_t *>(data) + i * indirect.getSize(), indirect);
-        children[i]->update(arrayV, childrenUpdateUI, forceUpdate);
+        children[i]->update(arrayV, childrenUpdateUI);
     }
     
     if (!updateUI)
@@ -174,7 +174,7 @@ void Array::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
             children.push_back(child);
         }
 
-        child->update(arrayV, childrenUpdateUI, forceUpdate);
+        child->update(arrayV, childrenUpdateUI);
         child->setName(QString::number(i));
         name->appendRow(child->getRow());
     }
@@ -316,7 +316,7 @@ std::string getValue<int8_t>(const Typelib::Value& value)
     return valueS;
 }
 
-void Simple::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+void Simple::update(Typelib::Value& valueIn, bool updateUI)
 {
     value_handle = valueIn;
 
@@ -678,7 +678,7 @@ std::shared_ptr<ItemBase> Complex::getItem(Typelib::Value& value, TypedItem *nam
     return ::getItem(value, handlerrepo, nameItem, valueItem);
 }
 
-void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+void Complex::update(Typelib::Value& valueIn, bool updateUI)
 {       
     bool childrenUpdateUI = updateUI && name->isExpanded();
     const Typelib::Type &type(valueIn.getType());
@@ -731,7 +731,7 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                 name->appendRow(newVal->getRow());
             }
 
-            children[i]->update(fieldV, childrenUpdateUI, forceUpdate);
+            children[i]->update(fieldV, childrenUpdateUI);
             i++;
         }
     }
@@ -770,7 +770,7 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
         for(int i = 0; i < std::min(currentRows, numElemsToDisplay); i++)
         {
             Typelib::Value elem = cont.getElement(valueIn.getData(), i);
-            children[i]->update(elem, childrenUpdateUI, forceUpdate);
+            children[i]->update(elem, childrenUpdateUI);
         }
         
         if (updateUI)
@@ -792,7 +792,7 @@ void Complex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
                     children.push_back(child);
                 }
 
-                child->update(elem, true, forceUpdate);
+                child->update(elem, true);
                 child->setName(QString::number(i));
                 name->appendRow(child->getRow());
             }
@@ -847,11 +847,11 @@ Typelib::Value& EditableComplex::getValueHandle()
     return value_handle;
 }
 
-void EditableComplex::update(Typelib::Value& valueIn, bool updateUI, bool forceUpdate)
+void EditableComplex::update(Typelib::Value& valueIn, bool updateUI)
 {
     emit editableUpdate(valueIn);
 
-    Complex::update(valueIn, updateUI, forceUpdate);
+    Complex::update(valueIn, updateUI);
 }
 
 std::shared_ptr<ItemBase> EditableComplex::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
