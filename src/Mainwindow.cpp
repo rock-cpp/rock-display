@@ -1410,6 +1410,7 @@ void MainWindow::prepareMenu(const QPoint &pos)
                 QAction *sta = menu->addAction("Start");
                 QAction *sto = menu->addAction("Stop");
                 QAction *con = menu->addAction("Configure");
+                QAction *clu = menu->addAction("Cleanup");
                 QAction *load = menu->addAction(tr("Load Configuration from file..."));
                 QAction *save = menu->addAction(tr("Save Configuration to file..."));
 
@@ -1432,6 +1433,11 @@ void MainWindow::prepareMenu(const QPoint &pos)
                         this, [task]()
                 {
                     task->configure();
+                });
+                connect(clu, &QAction::triggered,
+                        this, [task]()
+                {
+                    task->cleanup();
                 });
 
                 connect(load, &QAction::triggered,
