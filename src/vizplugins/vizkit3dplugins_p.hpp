@@ -35,7 +35,10 @@ private:
     struct TransformerData {
         RTT::base::OutputPortInterface *broadcaster_port;
         RTT::InputPort<transformer::ConfigurationState> *broadcaster_reader;
+        std::string broadcaster_taskname;
+        RTT::corba::TaskContextProxy *broadcaster_task;
         struct PortInfo {
+            RTT::corba::TaskContextProxy *task;
             RTT::base::OutputPortInterface *port;
             RTT::InputPort<base::samples::RigidBodyState> *reader;
         };
@@ -59,7 +62,7 @@ public:
     void push_rigidbodystate(base::samples::RigidBodyState const *trsf,
                              orocos_cpp::NameService *nameservice);
     void push_transformer_configuration(transformer::ConfigurationState const *state, orocos_cpp::NameService* nameservice);
-    void add_transformer_broadcaster_listener(orocos_cpp::NameService* nameservice);
+    void check_transformer_broadcaster_listener(orocos_cpp::NameService* nameservice);
 #endif
 public slots:
     virtual rockdisplay::vizkitplugin::Field *addOutputPortField(

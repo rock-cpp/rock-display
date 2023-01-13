@@ -37,6 +37,7 @@ struct hash<transformer::PortTransformationAssociation>
 #include <orocos_cpp/NameService.hpp>
 #include <rtt/InputPort.hpp>
 #include <rtt/base/OutputPortInterface.hpp>
+#include <rtt/transports/corba/TaskContextProxy.hpp>
 #endif
 
 using namespace rock_display;
@@ -161,10 +162,7 @@ QWidget *Vizkit3DPluginsWidget::getWidget()
 rockdisplay::vizkitplugin::Field *Vizkit3DPluginsWidget::addOutputPortField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname)
 {
 #ifdef HAVE_TRANSFORMER_TYPEKIT
-    if(transformerData.find(type->getNameService()) == transformerData.end() ||
-        !transformerData[type->getNameService()].broadcaster_reader) {
-        add_transformer_broadcaster_listener(type->getNameService());
-    }
+    check_transformer_broadcaster_listener(type->getNameService());
 
     if(subpluginname == "TransformerDispatch")
     {
@@ -302,28 +300,53 @@ void Vizkit3DPluginsWidget::removePropertyField(rockdisplay::vizkitplugin::Field
 
 #ifdef HAVE_TRANSFORMER_TYPEKIT
 
-void Vizkit3DPluginsWidget::add_transformer_broadcaster_listener(orocos_cpp::NameService *nameservice)
+void Vizkit3DPluginsWidget::check_transformer_broadcaster_listener(orocos_cpp::NameService *nameservice)
 {
     if (transformerData.find(nameservice) != transformerData.end() &&
             transformerData[nameservice].broadcaster_reader != nullptr)
-        return;
-
-    //list all tasks in the nameservice
-    for (auto &taskname : nameservice->getRegisteredTasks())
     {
-        //see if the task provides port "configuration_state" of type "/transformer/ConfigurationState"
-        RTT::TaskContext *taskContext = nameservice->getTaskContext(taskname);
-        for (auto &p : taskContext->ports()->getPorts())
+        auto &td = transformerData[nameservice];
+        if(td.broadcaster_task && (!td.broadcaster_task->server() || td.broadcaster_task->server()->_is_nil()))
         {
-            if (p->getName() == "configuration_state" &&
-                    p->getTypeInfo()->getTypeName() == "/transformer/ConfigurationState")
+            //TODO this is never reached, even though from inspecting TaskModel and TaskItem it seemed to be the right thing.
+            td.broadcaster_task = nullptr;
+            td.broadcaster_port = nullptr;
+            td.broadcaster_reader->disconnect();
+        }
+        if(!td.broadcaster_task)
+        {
+            if (!td.broadcaster_taskname.empty() && nameservice->isRegistered(td.broadcaster_taskname))
             {
-                //found the broadcaster
+                td.broadcaster_task = dynamic_cast<RTT::corba::TaskContextProxy*>(nameservice->getTaskContext(td.broadcaster_taskname));
+                if(td.broadcaster_task)
+                {
+                    auto port = td.broadcaster_task->getPort("configuration_state");
+                    if (port != td.broadcaster_port)
+                    {
+                        td.broadcaster_port = dynamic_cast<RTT::base::OutputPortInterface *>(port);
+                        td.broadcaster_reader->disconnect();
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        //list all tasks in the nameservice
+        for (auto &taskname : nameservice->getRegisteredTasks())
+        {
+            //see if the task provides port "configuration_state" of type "/transformer/ConfigurationState"
+            RTT::TaskContext *taskContext = nameservice->getTaskContext(taskname);
+            auto port = taskContext->getPort("configuration_state");
+            if (port && port->getTypeInfo()->getTypeName() == "/transformer/ConfigurationState")
+            {
+                //found a broadcaster
 
                 TransformerData &td = transformerData[nameservice];
 
+                td.broadcaster_taskname = taskname;
                 td.broadcaster_port =
-                    dynamic_cast<RTT::base::OutputPortInterface *>(p);
+                    dynamic_cast<RTT::base::OutputPortInterface *>(port);
                 td.broadcaster_reader = nullptr;
                 if (td.broadcaster_port)
                 {
@@ -352,28 +375,55 @@ void Vizkit3DPluginsWidget::push_transformer_configuration(transformer::Configur
     }
     for (auto &producer : state->port_transformation_associations)
     {
-
-        RTT::TaskContext *taskContext = nameservice->getTaskContext(producer.task);
-        if (!taskContext)
+        if(transformerData[nameservice].ports.find(producer) ==
+                transformerData[nameservice].ports.end())
         {
-            continue;
-        }
-        if (transformerData[nameservice].ports.find(producer) ==
-                transformerData[nameservice].ports.end() ||
-                !transformerData[nameservice].ports[producer].port)
-        {
-            transformerData[nameservice].ports[producer].port =
-                dynamic_cast<RTT::base::OutputPortInterface *>(taskContext->ports()->getPort(producer.port));
+            transformerData[nameservice].ports[producer].task = nullptr;
+            transformerData[nameservice].ports[producer].port = nullptr;
             transformerData[nameservice].ports[producer].reader = nullptr;
-            if (transformerData[nameservice].ports[producer].port)
+        }
+
+        auto &pi = transformerData[nameservice].ports[producer];
+
+        if (pi.task)
+        {
+            if(!pi.task->server() || pi.task->server()->_is_nil())
             {
-                transformerData[nameservice].ports[producer].reader =
-                    dynamic_cast<RTT::InputPort<base::samples::RigidBodyState> *>(
-                        transformerData[nameservice].ports[producer].port->antiClone());
-                RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
-                transformerData[nameservice].ports[producer].reader->setName(
-                    getFreePortName(clientTask, transformerData[nameservice].ports[producer].port));
-                clientTask->addPort(*transformerData[nameservice].ports[producer].reader);
+                pi.task = nullptr;
+                pi.port = nullptr;
+                pi.reader->disconnect();
+            }
+        }
+
+        if(!pi.task)
+        {
+            if (!nameservice->isRegistered(producer.task))
+            {
+                continue;
+            }
+            pi.task = dynamic_cast<RTT::corba::TaskContextProxy *>(nameservice->getTaskContext(producer.task));
+            if (!pi.task)
+            {
+                continue;
+            }
+            RTT::base::OutputPortInterface *port = dynamic_cast<RTT::base::OutputPortInterface *>(pi.task->ports()->getPort(producer.port));
+            if(port)
+            {
+                if (!pi.reader)
+                {
+                    pi.reader =
+                        dynamic_cast<RTT::InputPort<base::samples::RigidBodyState> *>(port->antiClone());
+                    RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
+                    pi.reader->setName(
+                        getFreePortName(clientTask, port));
+                    clientTask->addPort(*pi.reader);
+                }
+                pi.port = port;
+            }
+            if (pi.port != port)
+            {
+                pi.port = port;
+                pi.reader->disconnect();
             }
         }
     }
@@ -419,6 +469,7 @@ void Vizkit3DPluginsWidget::rttQueryTimeout() {
 #ifdef HAVE_TRANSFORMER_TYPEKIT
     for (auto &td : transformerData)
     {
+        check_transformer_broadcaster_listener(td.first);
         if(td.second.broadcaster_reader) {
             if (!td.second.broadcaster_reader->connected())
             {

@@ -61,7 +61,7 @@ QList<QStandardItem* > PortItem::getRow()
     return {nameItem, valueItem};
 }
 
-OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), haveOldData(false)
+OutputPortItem::OutputPortItem(RTT::base::OutputPortInterface* port, ConfigItemHandlerRepository *handlerrepo) : PortItem(port->getName(), handlerrepo) , handle(nullptr), reader(nullptr), haveOldData(false)
 {
     nameItem->setType(ItemType::OUTPUTPORT);
     valueItem->setType(ItemType::OUTPUTPORT);
@@ -104,16 +104,44 @@ void OutputPortItem::reset()
 
 void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* port)
 {
-    reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
+    if (handle && handle->port == port)
+    {
+        return;
+    }
+    if(reader && handle)
+    {
+        if (handle->port->getTypeInfo() != port->getTypeInfo())
+        {
+            //need a new anticlone for the changed type.
+            //unfortunately, we cannot remove the port so we leak it.
+            reader = nullptr;
+        }
+        else
+        {
+            //just disconnect the reader
+            reader->disconnect();
+        }
+    }
+    else
+    {
+        reader = nullptr;
+    }
     if(!reader)
     {
-        throw std::runtime_error("Error, could not get reader for port " + port->getName());
+        reader = dynamic_cast<RTT::base::InputPortInterface *>(port->antiClone());
+        if (!reader)
+        {
+            throw std::runtime_error("Error, could not get reader for port " + port->getName());
+        }
+        RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
+        reader->setName(getFreePortName(clientTask, port));
+        clientTask->addPort(*reader);
     }
-    RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
-    reader->setName(getFreePortName(clientTask, port));
-    clientTask->addPort(*reader);
 
-    handle = new PortHandle();
+    if(!handle)
+    {
+        handle = new PortHandle();
+    }
     handle->port = port;
     RTT::types::TypeInfo const *type = port->getTypeInfo();
     handle->transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
@@ -125,6 +153,11 @@ void OutputPortItem::updateOutputPortInterface(RTT::base::OutputPortInterface* p
         return;
     }
 
+    if(handle->transportHandle)
+    {
+        handle->transport->deleteHandle(handle->transportHandle);
+        handle->transportHandle = nullptr;
+    }
     handle->transportHandle = handle->transport->createSample();
     handle->sample = handle->transport->getDataSource(handle->transportHandle);
 
@@ -253,16 +286,44 @@ void InputPortItem::reset()
 
 void InputPortItem::updateInputPortInterface(RTT::base::InputPortInterface* port)
 {
-    writer = dynamic_cast<RTT::base::OutputPortInterface *>(port->antiClone());
+    if(handle && handle->port == port)
+    {
+        return;
+    }
+    if(writer && handle)
+    {
+        if (handle->port->getTypeInfo() != port->getTypeInfo())
+        {
+            //need a new anticlone for the changed type.
+            //unfortunately, we cannot remove the port so we leak it.
+            writer = nullptr;
+        }
+        else
+        {
+            //just disconnect the writer
+            writer->disconnect();
+        }
+    }
+    else
+    {
+        writer = nullptr;
+    }
     if(!writer)
     {
-        throw std::runtime_error("Error, could not get writer for port " + port->getName());
+        writer = dynamic_cast<RTT::base::OutputPortInterface *>(port->antiClone());
+        if (!writer)
+        {
+            throw std::runtime_error("Error, could not get writer for port " + port->getName());
+        }
+        RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
+        writer->setName(getFreePortName(clientTask, port));
+        clientTask->addPort(*writer);
     }
-    RTT::TaskContext *clientTask = OrocosHelpers::getClientTask();
-    writer->setName(getFreePortName(clientTask, port));
-    clientTask->addPort(*writer);
 
-    handle = new PortHandle();
+    if(!handle)
+    {
+        handle = new PortHandle();
+    }
     handle->port = port;
     RTT::types::TypeInfo const *type = port->getTypeInfo();
     handle->transport = dynamic_cast<orogen_transports::TypelibMarshallerBase *>(type->getProtocol(orogen_transports::TYPELIB_MARSHALLER_ID));
