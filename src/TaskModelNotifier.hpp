@@ -54,7 +54,7 @@ public slots:
         while (isRunning)
         {
             queryTasks();
-            usleep(1000); //FIXME usleep...
+            usleep(20000); //FIXME usleep...
         }
 
         emit finished();
