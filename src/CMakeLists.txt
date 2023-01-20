@@ -24,6 +24,7 @@ SOURCES
     configitemhandlers/StdStringHandler.cpp
     configitemhandlers/ImageCtxMenuHandler.cpp
     configitemhandlers/BinaryCtxMenuHandler.cpp
+    configitemhandlers/BoolHandler.cpp
     ConfigItemHandlerRepository.cpp
     vizplugins/imageviewplugin.cpp
     vizplugins/virtualjoystickplugin.cpp
@@ -47,6 +48,7 @@ MOC
     configitemhandlers/StdStringHandler.hpp
     configitemhandlers/ImageCtxMenuHandler.hpp
     configitemhandlers/BinaryCtxMenuHandler.hpp
+    configitemhandlers/BoolHandler.hpp
     ConfigItemHandlerRepository.hpp
     vizplugins/imageviewplugin.hpp
     vizplugins/imageviewplugin_p.hpp

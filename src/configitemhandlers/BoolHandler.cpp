@@ -1,4 +1,4 @@
-#include "EnumHandler.hpp"
+#include "BoolHandler.hpp"
 
 #include <typelib/value.hh>
 #include <QStandardItem>
@@ -13,7 +13,7 @@
 #include "../PortItem.hpp"
 #include "../NameServiceItemDelegate.hpp"
 
-QWidget *EnumHandler::createEditor(NameServiceItemDelegate const* delegate, QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+QWidget *BoolHandler::createEditor(NameServiceItemDelegate const* delegate, QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     NameServiceModel const *model = static_cast<NameServiceModel const *>(index.model());
     QStandardItem *item = model->itemFromIndex(index);
@@ -32,10 +32,8 @@ QWidget *EnumHandler::createEditor(NameServiceItemDelegate const* delegate, QWid
 
     Typelib::Value &value = itembase->getValueHandle();
     Typelib::Type const &type = value.getType();
-    if (type.getCategory() != Typelib::Type::Enum)
+    if (type.getCategory() != Typelib::Type::Numeric || type.getName() != "/bool")
         return nullptr;
-
-    const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>(type);
 
     QComboBox *cob = new QComboBox(parent);
     cob->setAutoFillBackground(true);
@@ -50,21 +48,8 @@ QWidget *EnumHandler::createEditor(NameServiceItemDelegate const* delegate, QWid
         emit d->closeEditor(cob);
     });
 
-    for(auto &e : enumT.values())
-    {
-        if (itembase->codec)
-        {
-            QTextCodec::ConverterState state;
-            const QString text = itembase->codec->toUnicode(e.first.data(), e.first.size(), &state);
-
-            if (state.invalidChars > 0)
-            {
-                delete cob;
-                return nullptr;
-            }
-            cob->addItem(text,e.second);
-        }
-    }
+    cob->addItem("false", QVariant(false));
+    cob->addItem("true", QVariant(true));
     //the combobox receives the mouse-up event from the mouse-down leading to its creation, thus
     //automatically hiding any open popups again. delay a bit, then show the popup.
     QTimer::singleShot(200, [cob]
@@ -74,7 +59,7 @@ QWidget *EnumHandler::createEditor(NameServiceItemDelegate const* delegate, QWid
     return cob;
 }
 
-void EnumHandler::setEditorData(QWidget *editor, const QModelIndex &index) const
+void BoolHandler::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
     QComboBox *cob = static_cast<QComboBox*>(editor);
 
@@ -101,32 +86,23 @@ void EnumHandler::setEditorData(QWidget *editor, const QModelIndex &index) const
 
     Typelib::Value &value = itembase->getValueHandle();
     Typelib::Type const &type = value.getType();
-    if (type.getCategory() != Typelib::Type::Enum)
+    if (type.getCategory() != Typelib::Type::Numeric || type.getName() != "/bool")
     {
-        cob->setCurrentText(tr("Not Enum type"));
+        cob->setCurrentText(tr("Not bool type"));
         return;
     }
 
-    Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(value.getData()));
-    if (!intVal)
+    bool *boolVal = static_cast<bool *>(value.getData());
+    if (!boolVal)
     {
-        cob->setCurrentText(tr("Enum data not available"));
+        cob->setCurrentText(tr("Bool data not available"));
         return;
     }
 
-    for (int i = 0; i < cob->count(); i++)
-    {
-        if (cob->itemData(i) == *intVal)
-        {
-            cob->setCurrentIndex(i);
-            return;
-        }
-    }
-
-    cob->setCurrentText(tr("Enum Index %1").arg(*intVal));
+    cob->setCurrentIndex(*boolVal ? 1 : 0);
 }
 
-bool EnumHandler::setModelData(QWidget *editor, NameServiceModel *model, const QModelIndex &index) const
+bool BoolHandler::setModelData(QWidget *editor, NameServiceModel *model, const QModelIndex &index) const
 {
     QComboBox *cob = static_cast<QComboBox*>(editor);
 
@@ -146,45 +122,42 @@ bool EnumHandler::setModelData(QWidget *editor, NameServiceModel *model, const Q
 
     Typelib::Value &value = itembase->getValueHandle();
     Typelib::Type const &type = value.getType();
-    if (type.getCategory() != Typelib::Type::Enum)
+    if (type.getCategory() != Typelib::Type::Numeric || type.getName() != "/bool")
         return false;
 
-    Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(value.getData()));
-    if (!intVal)
+    bool *boolVal = static_cast<bool *>(value.getData());
+    if (!boolVal)
         return false;
 
-    Typelib::Enum::integral_type newval = cob->currentData().toInt();
-    if (*intVal == newval)
+    bool newval = cob->currentData().toBool();
+    if (*boolVal == newval)
         return false;
-    *intVal = newval;
+    *boolVal = newval;
     return true;
 }
 
-void EnumHandler::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void BoolHandler::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     editor->setGeometry(option.rect);
 }
 
-bool EnumHandler::convertFromTypelibValue(QStandardItem *dst, Typelib::Value const &src, QTextCodec *codec) const
+bool BoolHandler::convertFromTypelibValue(QStandardItem *dst, Typelib::Value const &src, QTextCodec *codec) const
 {
     const Typelib::Type &type(src.getType());
-    std::string valueS = dst->text().toStdString();
-    if (codec)
-    {
-        QByteArray bytes = codec->fromUnicode(dst->text());
-        valueS = bytes.toStdString();
-    }
-    std::string oldValue = valueS;
+    QString valueS = dst->text();
+    QString oldValue = valueS;
 
-    if (type.getCategory() == Typelib::Type::Enum)
+    if (type.getCategory() == Typelib::Type::Numeric && type.getName() == "/bool")
     {
-        const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>(src.getType());
-        Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(src.getData()));
-        try {
-            valueS = enumT.get(*intVal);
-        } catch(Typelib::Enum::ValueNotFound const &e) {
-            valueS = "bad value";
+        bool *boolVal = static_cast<bool *>(src.getData());
+        if(!boolVal)
+        {
+            return false;
         }
+        if(*boolVal)
+            valueS = "true";
+        else
+            valueS = "false";
     }
     else
     {
@@ -194,48 +167,43 @@ bool EnumHandler::convertFromTypelibValue(QStandardItem *dst, Typelib::Value con
 
     if (valueS != oldValue)
     {
-        if (codec)
-        {
-            QTextCodec::ConverterState state;
-            const QString text = codec->toUnicode(valueS.data(), valueS.size(), &state);
-
-            if (state.invalidChars > 0)
-            {
-                return false;
-            }
-
-            dst->setText(text);
-            return true;
-        } else {
-            dst->setText(QString::fromStdString(valueS));
-            return true;
-        }
+        dst->setText(valueS);
+        return true;
     }
 
     return false;
 }
 
-bool EnumHandler::convertToTypelibValue(Typelib::Value &dst, QStandardItem *src, QTextCodec *codec) const
+bool BoolHandler::convertToTypelibValue(Typelib::Value &dst, QStandardItem *src, QTextCodec *codec) const
 {
     QString data = src->data(Qt::EditRole).toString();
 
     const Typelib::Type &type( dst.getType());
-    std::string valueS = data.toStdString();
-    if (codec)
-    {
-        QByteArray bytes = codec->fromUnicode(data);
-        valueS = bytes.toStdString();
-    }
+    bool dstval = false;
+    if(data.compare(QString("true"), Qt::CaseInsensitive))
+        dstval = true;
+    else if(data.compare(tr("true"), Qt::CaseInsensitive))
+        dstval = true;
+    else if(data.compare(QString("on"), Qt::CaseInsensitive))
+        dstval = true;
+    else if(data.compare(tr("on"), Qt::CaseInsensitive))
+        dstval = true;
+    else if(data.compare("1", Qt::CaseInsensitive))
+        dstval = true;
 
-    if (type.getCategory() == Typelib::Type::Enum)
+
+    if (type.getCategory() == Typelib::Type::Numeric && type.getName() == "/bool")
     {
-        const Typelib::Enum &enumT = static_cast<const Typelib::Enum &>( dst.getType());
-        Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>( dst.getData()));
-        if (!intVal)
+        bool *boolVal = static_cast<bool *>(dst.getData());
+        if(!boolVal)
+        {
             return false;
-        if (*intVal == enumT.get(valueS))
+        }
+        if(*boolVal == dstval)
+        {
             return false;
-        *intVal = enumT.get(valueS);
+        }
+        *boolVal = dstval;
         return true;
     }
     else
@@ -247,8 +215,8 @@ bool EnumHandler::convertToTypelibValue(Typelib::Value &dst, QStandardItem *src,
     return false;
 }
 
-bool EnumHandler::probe(Typelib::Type const &type, bool editing) const
+bool BoolHandler::probe(Typelib::Type const &type, bool editing) const
 {
-    return type.getCategory() == Typelib::Type::Enum;
+    return type.getCategory() == Typelib::Type::Numeric && type.getName() == "/bool";
 }
 

@@ -7,6 +7,7 @@
 #include "configitemhandlers/ContainerHandler.hpp"
 #include "configitemhandlers/ImageCtxMenuHandler.hpp"
 #include "configitemhandlers/BinaryCtxMenuHandler.hpp"
+#include "configitemhandlers/BoolHandler.hpp"
 
 ConfigItemHandlerRepository::ConfigItemHandlerRepository()
 {
@@ -15,6 +16,7 @@ ConfigItemHandlerRepository::ConfigItemHandlerRepository()
     configitemhandlers.push_back(new ContainerHandler());
     configitemhandlers.push_back(new ImageCtxMenuHandler());
     configitemhandlers.push_back(new BinaryCtxMenuHandler());
+    configitemhandlers.push_back(new BoolHandler());
 }
 
 std::vector<ConfigItemHandler const*> ConfigItemHandlerRepository::findNameServiceConfigItemHandlersFor(Typelib::Type const &type, bool editing)
