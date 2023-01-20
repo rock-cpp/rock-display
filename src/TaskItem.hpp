@@ -36,6 +36,7 @@ private:
     TypedItem statusItem;
     bool refreshOutputPorts;
     bool refreshInputPorts;
+    bool refreshStateReader;
     TypedItem inputPorts;
     TypedItem outputPorts;
     TypedItem properties;
@@ -63,6 +64,7 @@ public:
     {
         this->refreshOutputPorts = refresh;
         this->refreshInputPorts = refresh;
+        this->refreshStateReader = refresh;
     }
 
     /*

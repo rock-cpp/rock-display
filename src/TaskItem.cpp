@@ -18,6 +18,7 @@ TaskItem::TaskItem(RTT::corba::TaskContextProxy* _task, ConfigItemHandlerReposit
       statusItem(ItemType::TASK),
       refreshOutputPorts(true),
       refreshInputPorts(true),
+      refreshStateReader(true),
       stateChanged(false),
       handlerrepo(handlerrepo),
       orocos(orocos),
@@ -159,7 +160,7 @@ void TaskItem::update(bool handleOldData)
         updateProperties();
     }
 
-    if(refreshOutputPorts)
+    if(refreshStateReader)
     {
         if(state_reader && state_reader->connected())
         {
@@ -167,6 +168,7 @@ void TaskItem::update(bool handleOldData)
             //because the task went away and came back
             state_reader->disconnect();
         }
+        refreshStateReader = false;
     }
 
     if (!state_reader)
@@ -320,7 +322,22 @@ bool TaskItem::updateState()
 
     Typelib::Enum const *stateEnum = getStateEnum();
 
-    if (!stateEnum || !state_reader)
+    if (stateEnum && state_reader && !state_reader->connected())
+    {
+        const RTT::DataFlowInterface *dfi = task->ports();
+
+        RTT::base::OutputPortInterface *state_port = dynamic_cast<RTT::base::OutputPortInterface *>(dfi->getPort("state"));
+
+        if (state_port)
+        {
+            //reuse the existing reader
+            RTT::ConnPolicy policy(RTT::ConnPolicy::data());
+            policy.pull = true;
+            state_reader->connectTo(state_port, policy);
+        }
+    }
+
+    if (!stateEnum || !state_reader || !state_reader->connected())
     {
         //display RTT state
         RTT::base::TaskCore::TaskState state = task->getTaskState();
@@ -349,23 +366,8 @@ bool TaskItem::updateState()
                 break;
         }
     } else {
-        if (!state_reader->connected())
-        {
-            const RTT::DataFlowInterface *dfi = task->ports();
-
-            RTT::base::OutputPortInterface *state_port = dynamic_cast<RTT::base::OutputPortInterface *>(dfi->getPort("state"));
-
-            if(state_port)
-            {
-                //reuse the existing reader
-                RTT::ConnPolicy policy(RTT::ConnPolicy::data());
-                policy.pull = true;
-                state_reader->connectTo(state_port, policy);
-            }
-        }
-
         int32_t state;
-        if (state_reader->read(state) != RTT::NoData)
+        if (state_reader->readNewest(state) != RTT::NoData)
         {
             //display state from the port
             try
@@ -384,7 +386,7 @@ bool TaskItem::updateState()
         }
         else
         {
-            stateString = "No Data";
+            stateString = statusItem.text().toStdString();
         }
     }
     
