@@ -80,7 +80,6 @@ void TaskModelNotifier::queryTasks()
     std::map<std::string, RTT::corba::TaskContextProxy *>::iterator taskIt;
     for(const std::string &tname : tasks)
     {
-        RTT::corba::TaskContextProxy *task = nullptr;
         taskIt = nameToRegisteredTask.find(tname);
         std::vector<std::string>::iterator disconnectedTaskIt = std::find(disconnectedTasks.begin(), disconnectedTasks.end(), tname);
         bool wasDisconnected = (disconnectedTaskIt != disconnectedTasks.end());
@@ -92,7 +91,19 @@ void TaskModelNotifier::queryTasks()
                 disconnectedTasks.erase(disconnectedTaskIt);
             }
 
-            task = RTT::corba::TaskContextProxy::Create(tname);
+            RTT::TaskContext *tc = nameService->getTaskContext(tname);
+            RTT::corba::TaskContextProxy *task =
+                dynamic_cast<RTT::corba::TaskContextProxy *>(tc);
+            if (!task) {
+                try
+                {
+                    task = RTT::corba::TaskContextProxy::Create(tname);
+                }
+                catch (CosNaming::NamingContext::NotFound &e)
+                {
+                    continue;
+                }
+            }
             if (!task)
             {
                 continue;
