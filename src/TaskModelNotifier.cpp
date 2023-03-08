@@ -68,11 +68,12 @@ void TaskModelNotifier::queryTasks()
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        emit updateNameServiceStatus(std::string("CORBA: failed to get registered tasks.."));
+        //this happens when the corba-server has never seen any tasks interact with itself.
+        emit updateNameServiceStatus(std::string("connected: waiting for first Task"));
     }
     catch(...)
     {
-        emit updateNameServiceStatus(std::string("connected: could not get registered tasks.."));
+        emit updateNameServiceStatus(std::string("failed to get registered tasks.."));
         return;
     }
 
