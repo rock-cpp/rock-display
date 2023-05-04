@@ -186,18 +186,31 @@ void OutputPortItem::updataValue(bool handleOldData)
         }
     }
 
-    if (reader->read(handle->sample) == RTT::NewData)
-    {
-        //convert the native, Orocos sample back to its marshallable and inspectable Typelib form
-        handle->transport->refreshTypelibSample(handle->transportHandle);
+    try {
+        if (reader->read(handle->sample) == RTT::NewData)
+        {
+            //convert the native, Orocos sample back to its marshallable and inspectable Typelib form
+            handle->transport->refreshTypelibSample(handle->transportHandle);
 
-        haveOldData = true;
-    }
-    else if (handleOldData && haveOldData)
-    {
-    }
-    else
-    {
+            haveOldData = true;
+        }
+        else if (handleOldData && haveOldData)
+        {
+        }
+        else
+        {
+            return;
+        }
+    } catch(std::exception &e) {
+        LOG_ERROR_S << "OutputPortItem: The port read function threw an exception on port " + handle->port->getName() + " of task " + handle->port->getInterface()->getOwner()->getName() << ": " << boost::core::demangle(typeid(e).name()) << ": " << e.what();
+        return;
+    } catch(__cxxabiv1::__forced_unwind&) {
+        //this allows to catchall while still having working pthread cancellation.
+        //This implementation works for gcc. Other compilers/libc may need
+        //something else and fail to compile.
+        throw;
+    } catch(...) {
+        LOG_ERROR_S << "OutputPortItem: The port read function threw an exception on port " + handle->port->getName() + " of task " + handle->port->getInterface()->getOwner()->getName();
         return;
     }
 

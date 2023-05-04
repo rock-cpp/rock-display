@@ -4,6 +4,7 @@
 #include <rtt/base/PropertyBase.hpp>
 #include <rtt/types/TypeInfo.hpp>
 #include <base-logging/Logging.hpp>
+#include <boost/core/demangle.hpp>
 
 #include "Types.hpp"
 #include "TypedItem.hpp"
@@ -53,7 +54,20 @@ void PropertyItem::updateProperty(RTT::base::PropertyBase* property)
     transportHandle = transport->createSample();
     sample = transport->getDataSource(transportHandle);
     propertyDataSource = property->getDataSource();
-    transport->readDataSource(*propertyDataSource, transportHandle);
+    try {
+        transport->readDataSource(*propertyDataSource, transportHandle);
+    } catch(std::exception &e) {
+        LOG_ERROR_S << "PropertyItem: The readDataSource function threw an exception on property " + property->getName() + ": " << boost::core::demangle(typeid(e).name()) << ": " << e.what();
+        return;
+    } catch(__cxxabiv1::__forced_unwind&) {
+        //this allows to catchall while still having working pthread cancellation.
+        //This implementation works for gcc. Other compilers/libc may need
+        //something else and fail to compile.
+        throw;
+    } catch(...) {
+        LOG_ERROR_S << "PropertyItem: The readDataSource function threw an exception on property " + property->getName();
+        return;
+    }
 
     this->type = transport->getRegistry().get(transport->getMarshallingType());
     this->property = property;
