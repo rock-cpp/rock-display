@@ -44,6 +44,10 @@ public slots:
     virtual rockdisplay::vizkitplugin::Field *addOutputPortField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname) override;
     virtual rockdisplay::vizkitplugin::Field *addInputPortField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname) override;
     virtual rockdisplay::vizkitplugin::Field *addPropertyField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname) override;
+    virtual void taskAvailable(
+        rockdisplay::vizkitplugin::FieldDescription const *fieldDesc,
+        rockdisplay::vizkitplugin::Field *field,
+        bool available) override;
 };
 
 }

@@ -29,6 +29,17 @@ void VirtualJoystickInputPortField::updateInputPort(rockdisplay::vizkitplugin::V
 }
 
 void VirtualJoystickInputPortField::axisChanged(double x, double y) {
+    /*
+     * conversion:
+     *   sample.translation = x
+     *   sample.rotation = (x==0 && y==0)?0:-abs(y)*atan2(y,abs(x))
+     * alternative conversion:
+     *   sample.translation = a*options.maxspeed
+     *   sample.rotation = -b*options.maxrotspeed
+     *
+     * TODO: figure out a way to switch between these two, preferably in a way
+     *       that is consistent throughout all widgets
+     */
     if (!value || !value->getRawPtr())
         return;
     {
@@ -103,6 +114,14 @@ rockdisplay::vizkitplugin::Field *VirtualJoystickWidget::addPropertyField(const 
             propertyfield, SLOT(axisChanged(double,double)));
 
     return propertyfield;
+}
+
+void VirtualJoystickWidget::taskAvailable(
+    rockdisplay::vizkitplugin::FieldDescription const *fieldDesc,
+    rockdisplay::vizkitplugin::Field *field,
+    bool available)
+{
+    widget->setEnabled(available);
 }
 
 bool VirtualJoystickPlugin::probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
