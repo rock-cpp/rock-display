@@ -311,11 +311,21 @@ public slots:
     /**
      * @brief Remove a standalone Subplugin from the widget
      *
-     * The field was previously returned by addStandaloneSubplugin
+     * The plugin was previously returned by addStandaloneSubplugin
      *
      * @param plugin StandaloneSubplugin returned by addStandaloneSubplugin
      */
     virtual void removeStandaloneSubplugin(StandaloneSubplugin *plugin) { }
+    /**
+     * @brief Notifies when a tasks availability changes
+     *
+     * The field was previously returned by one of the add*Field methods.
+     *
+     * @param fieldDesc FieldDescription associated with the field
+     * @param field Field returned by the add*Field method
+     */
+    virtual void taskAvailable(FieldDescription const *fieldDesc, Field *field,
+                               bool available) { }
 };
 
 /**
