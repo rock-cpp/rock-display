@@ -14,6 +14,9 @@
  *   inputs /base/samples/frame/FramePair using display2
  *     that calls to display to display just one, determined by option
  *   optionally displays a time code in bottom right corner
+ *
+ * TODO figure out how to do options with rock-display (for the time code
+ *   in this case)
  */
 
 using namespace rock_display;

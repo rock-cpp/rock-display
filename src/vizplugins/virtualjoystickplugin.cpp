@@ -7,6 +7,9 @@
 using namespace rock_display;
 
 /*
+ * VirtualJoystick
+ *   is a data source
+ *   outputs /base/commands/Motion2D
  *   using signal axisChanged(double a,double b)
  *     conversion:
  *       sample.translation = x
@@ -16,6 +19,9 @@ using namespace rock_display;
  *       sample.rotation = -b*options.maxrotspeed
  *   should use a wrapper to provide configuration
  *   task availability is mapped to setEnabled (enabled property?)
+ *
+ * TODO: figure out a way to switch between the two conversions, preferably in
+ *       a way that is consistent throughout all widgets
  */
 
 VirtualJoystickInputPortField::VirtualJoystickInputPortField(QWidget *widget, QObject *parent)
@@ -36,9 +42,6 @@ void VirtualJoystickInputPortField::axisChanged(double x, double y) {
      * alternative conversion:
      *   sample.translation = a*options.maxspeed
      *   sample.rotation = -b*options.maxrotspeed
-     *
-     * TODO: figure out a way to switch between these two, preferably in a way
-     *       that is consistent throughout all widgets
      */
     if (!value || !value->getRawPtr())
         return;
