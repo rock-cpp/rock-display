@@ -35,7 +35,14 @@
 #include "TaskItem.hpp"
 #include "configuration.hpp"
 #include "ConfigurationSelectDialog.hpp"
+#include "vizplugins/artificialhorizonplugin.hpp"
 #include "vizplugins/imageviewplugin.hpp"
+#include "vizplugins/orientationviewplugin.hpp"
+#include "vizplugins/rangeviewplugin.hpp"
+#include "vizplugins/sonardisplayplugin.hpp"
+#include "vizplugins/sonarviewplugin.hpp"
+#include "vizplugins/sonarwidgetplugin.hpp"
+#include "vizplugins/streamalignerwidgetplugin.hpp"
 #include "vizplugins/virtualjoystickplugin.hpp"
 #include "vizplugins/vizkitplugin_p.hpp"
 #include "vizplugins/vizkit3dplugins.hpp"
@@ -313,9 +320,16 @@ MainWindow::MainWindow(orocos_cpp::OrocosCpp &orocos, QWidget *parent) :
     NameServiceItemDelegate *delegate = new NameServiceItemDelegate(this);
     view->setItemDelegate(delegate);
 
+    plugins.push_back(new rock_display::ArtificialHorizonPlugin);
     plugins.push_back(new rock_display::ImageViewPlugin);
-    plugins.push_back(new rock_display::Vizkit3DPlugins);
+    plugins.push_back(new rock_display::OrientationViewPlugin);
+    plugins.push_back(new rock_display::RangeViewPlugin);
+    plugins.push_back(new rock_display::SonarDisplayPlugin);
+    plugins.push_back(new rock_display::SonarViewPlugin);
+    plugins.push_back(new rock_display::SonarWidgetPlugin);
+    plugins.push_back(new rock_display::StreamAlignerWidgetPlugin);
     plugins.push_back(new rock_display::VirtualJoystickPlugin);
+    plugins.push_back(new rock_display::Vizkit3DPlugins);
 
     std::sort(plugins.begin(), plugins.end(), [](rockdisplay::vizkitplugin::Plugin*a, rockdisplay::vizkitplugin::Plugin*b){
         std::string const &_a = a->getName();

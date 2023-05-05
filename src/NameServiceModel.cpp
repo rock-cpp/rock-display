@@ -5,6 +5,7 @@
 #ifndef NDEBUG
 #include <QApplication>
 #endif
+#include <cassert>
 
 NameServiceModel::NameServiceModel(ConfigItemHandlerRepository *handlerrepo, orocos_cpp::OrocosCpp &orocos, QObject* parent)
     : QStandardItemModel(parent), handlerrepo(handlerrepo), orocos(orocos)

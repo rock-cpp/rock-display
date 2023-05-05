@@ -26,7 +26,14 @@ SOURCES
     configitemhandlers/BinaryCtxMenuHandler.cpp
     configitemhandlers/BoolHandler.cpp
     ConfigItemHandlerRepository.cpp
+    vizplugins/artificialhorizonplugin.cpp
     vizplugins/imageviewplugin.cpp
+    vizplugins/orientationviewplugin.cpp
+    vizplugins/rangeviewplugin.cpp
+    vizplugins/sonardisplayplugin.cpp
+    vizplugins/sonarviewplugin.cpp
+    vizplugins/sonarwidgetplugin.cpp
+    vizplugins/streamalignerwidgetplugin.cpp
     vizplugins/virtualjoystickplugin.cpp
     vizplugins/vizkitplugin.cpp
     vizplugins/vizkit3dplugins.cpp
@@ -51,8 +58,22 @@ MOC
     configitemhandlers/BinaryCtxMenuHandler.hpp
     configitemhandlers/BoolHandler.hpp
     ConfigItemHandlerRepository.hpp
+    vizplugins/artificialhorizonplugin.hpp
+    vizplugins/artificialhorizonplugin_p.hpp
     vizplugins/imageviewplugin.hpp
     vizplugins/imageviewplugin_p.hpp
+    vizplugins/orientationviewplugin.hpp
+    vizplugins/orientationviewplugin_p.hpp
+    vizplugins/rangeviewplugin.hpp
+    vizplugins/rangeviewplugin_p.hpp
+    vizplugins/sonardisplayplugin.hpp
+    vizplugins/sonardisplayplugin_p.hpp
+    vizplugins/sonarviewplugin.hpp
+    vizplugins/sonarviewplugin_p.hpp
+    vizplugins/sonarwidgetplugin.hpp
+    vizplugins/sonarwidgetplugin_p.hpp
+    vizplugins/streamalignerwidgetplugin.hpp
+    vizplugins/streamalignerwidgetplugin_p.hpp
     vizplugins/virtualjoystickplugin.hpp
     vizplugins/virtualjoystickplugin_p.hpp
     vizplugins/vizkitplugin.hpp
