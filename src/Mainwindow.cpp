@@ -18,7 +18,6 @@
 
 #include <QCursor>
 #include <QCloseEvent>
-#include <rock_widget_collection/RockWidgetCollection.h>
 #include <rtt/base/DataSourceBase.hpp>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
 #include <rtt/base/DataSourceBase.hpp>
@@ -41,6 +40,13 @@
 #include "vizplugins/vizkitplugin_p.hpp"
 #include "vizplugins/vizkit3dplugins.hpp"
 #include <unordered_set>
+#include <QTimer>
+#include <QPushButton>
+#include <QDialogButtonBox>
+#include <QLabel>
+#include <QWidgetAction>
+#include <QMessageBox>
+#include <QFileDialog>
 
 void PluginWidgetQMainWindow::closeEvent(QCloseEvent *ev)
 {

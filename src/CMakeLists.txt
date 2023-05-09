@@ -70,7 +70,6 @@ DEPS_PKGCONFIG
     orocos_cpp
     lib_config
     vizkit3d
-    rock_widget_collection
     base-lib
     tinyxml
     frame_helper
