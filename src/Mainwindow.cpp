@@ -588,6 +588,10 @@ MainWindow::~MainWindow()
 {
     removeAllPlugins();
     cleanup();
+    for (auto &p : plugins)
+    {
+        delete p;
+    }
 }
 
 void MainWindow::onExpanded(const QModelIndex& index)

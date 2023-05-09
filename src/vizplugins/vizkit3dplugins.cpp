@@ -518,6 +518,7 @@ Vizkit3DPlugins::Vizkit3DPlugins()
 Vizkit3DPlugins::~Vizkit3DPlugins() {
     delete pluginRepo;
     v3dwidget->hide();
+    delete v3dwidget;
 }
 
 bool Vizkit3DPlugins::probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
