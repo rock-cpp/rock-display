@@ -1010,6 +1010,8 @@ std::vector<MainWindow::AddFieldInfo> MainWindow::findWidgetsThatCanShowItemButD
                 ai.plugin = p;
                 ai.widget = w.widget;
                 ai.converterfactory = tc.converterfactory;
+                if (subpluginNames.empty())
+                    subpluginNames.push_back(std::string());
                 for (auto const &n : subpluginNames)
                 {
                     if (seen_subplugins.find(n) != seen_subplugins.end())
