@@ -1,8 +1,10 @@
 
 #include "virtualjoystickplugin.hpp"
 #include "virtualjoystickplugin_p.hpp"
-#include <rock_widget_collection/RockWidgetCollection.h>
 #include <base/commands/Motion2D.hpp>
+#include "designer/pluginmanager_p.h"
+#include <QWidget>
+#include <QtUiPlugin/customwidget.h>
 
 using namespace rock_display;
 
@@ -127,6 +129,15 @@ void VirtualJoystickWidget::taskAvailable(
     widget->setEnabled(available);
 }
 
+VirtualJoystickPlugin::VirtualJoystickPlugin()
+    : widgetInterface(nullptr)
+{
+    widgetInterface = rockdisplay::QDesignerPluginManager::getInstance()->
+                          findWidgetByName("VirtualJoystick");
+    if (!widgetInterface)
+        std::cerr << "Could not find a Qt Designer widget called \"VirtualJoystick\"" << std::endl;
+}
+
 bool VirtualJoystickPlugin::probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
 {
     return false;
@@ -134,38 +145,31 @@ bool VirtualJoystickPlugin::probeOutputPort(rockdisplay::vizkitplugin::FieldDesc
 
 bool VirtualJoystickPlugin::probeInputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
 {
+    if(!widgetInterface)
+        return false;
     return fieldDesc->getTypeName() == "/base/commands/Motion2D";
 }
 
 bool VirtualJoystickPlugin::probeProperty(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
 {
+    if(!widgetInterface)
+        return false;
     return fieldDesc->getTypeName() == "/base/commands/Motion2D";
 }
 
 rockdisplay::vizkitplugin::Widget *VirtualJoystickPlugin::createWidget()
 {
-    RockWidgetCollection collection;
-    QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
-
-    QWidget *vjoy = nullptr;
-    for (QDesignerCustomWidgetInterface *widgetInterface: customWidgets)
+    if(!widgetInterface)
     {
-        const std::string widgetName = widgetInterface->name().toStdString();
-
-        if (widgetName == "VirtualJoystick")
-        {
-            vjoy = widgetInterface->createWidget(nullptr);
-        }
+        return nullptr;
     }
+    QWidget *vjoy = widgetInterface->createWidget(nullptr);
 
     if (!vjoy)
     {
         return nullptr;
     }
-/*
-    connect(vjoy, SIGNAL(axisChanged(double,double)),
-            vjvh, SLOT(axisChanged(double,double)));
-*/
+
     return new VirtualJoystickWidget(vjoy);
 }
 

@@ -31,6 +31,7 @@ SOURCES
     vizplugins/vizkitplugin.cpp
     vizplugins/vizkit3dplugins.cpp
     vizplugins/Vizkit3dPluginRepository.cpp
+    vizplugins/designer/pluginmanager.cpp
     ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
@@ -59,6 +60,7 @@ MOC
     vizplugins/Vizkit3dPluginRepository.hpp
     vizplugins/vizkit3dplugins.hpp
     vizplugins/vizkit3dplugins_p.hpp
+    vizplugins/designer/pluginmanager_p.h
     ConfigurationSelectDialog.hpp
 HEADERS
 UI

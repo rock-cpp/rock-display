@@ -7,15 +7,14 @@
 namespace rock_display {
 
 class ImageViewPlugin;
+class ImageViewWidget;
 
 class ImageViewOutputPortField : public rockdisplay::vizkitplugin::Field {
     Q_OBJECT;
 private:
-    QWidget *widget;
-    QMetaMethod frame_method;
-    QMetaMethod distanceimage_method;
+    ImageViewWidget *widget;
 public:
-    ImageViewOutputPortField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent = nullptr);
+    ImageViewOutputPortField(ImageViewWidget *widget, QObject *parent = nullptr);
 public slots:
     virtual void updateOutputPort(const rockdisplay::vizkitplugin::ValueHandle *value) override;
 };
@@ -23,11 +22,9 @@ public slots:
 class ImageViewInputPortField : public rockdisplay::vizkitplugin::Field {
     Q_OBJECT;
 private:
-    QWidget *widget;
-    QMetaMethod frame_method;
-    QMetaMethod distanceimage_method;
+    ImageViewWidget *widget;
 public:
-    ImageViewInputPortField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent = nullptr);
+    ImageViewInputPortField(ImageViewWidget *widget, QObject *parent = nullptr);
 public slots:
     virtual void updateInputPort(rockdisplay::vizkitplugin::ValueHandle *value) override;
 };
@@ -35,11 +32,9 @@ public slots:
 class ImageViewPropertyField : public rockdisplay::vizkitplugin::Field {
     Q_OBJECT;
 private:
-    QWidget *widget;
-    QMetaMethod frame_method;
-    QMetaMethod distanceimage_method;
+    ImageViewWidget *widget;
 public:
-    ImageViewPropertyField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent = nullptr);
+    ImageViewPropertyField(ImageViewWidget *widget, QObject *parent = nullptr);
 public slots:
     virtual void updateProperty(rockdisplay::vizkitplugin::ValueHandle *value) override;
 };
@@ -58,6 +53,7 @@ private:
 public:
     ImageViewWidget(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent = nullptr);
     virtual QWidget *getWidget() override;
+    void doUpdate(const rockdisplay::vizkitplugin::ValueHandle *data);
 public slots:
     virtual rockdisplay::vizkitplugin::Field *addOutputPortField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname) override;
     virtual rockdisplay::vizkitplugin::Field *addInputPortField(const rockdisplay::vizkitplugin::FieldDescription *type, std::string const &subpluginname) override;

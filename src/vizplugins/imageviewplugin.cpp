@@ -1,8 +1,12 @@
 
 #include "imageviewplugin.hpp"
 #include "imageviewplugin_p.hpp"
-#include <rock_widget_collection/RockWidgetCollection.h>
 #include <base/samples/Frame.hpp>
+#include <base/samples/DistanceImage.hpp>
+#include <iostream>
+#include "designer/pluginmanager_p.h"
+#include <QWidget>
+#include <QtUiPlugin/customwidget.h>
 
 /*
  * ImageView
@@ -24,9 +28,9 @@ using namespace rock_display;
 ImageViewWidget::ImageViewWidget(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent)
 : rockdisplay::vizkitplugin::Widget(parent), widget(widget),
 frame_method(frame_method), distanceimage_method(distanceimage_method),
-outputportfield(new ImageViewOutputPortField(widget, frame_method, distanceimage_method)),
-inputportfield(new ImageViewInputPortField(widget, frame_method, distanceimage_method)),
-propertyfield(new ImageViewPropertyField(widget, frame_method, distanceimage_method))
+outputportfield(new ImageViewOutputPortField(this)),
+inputportfield(new ImageViewInputPortField(this)),
+propertyfield(new ImageViewPropertyField(this))
 {
 }
 
@@ -50,164 +54,123 @@ rockdisplay::vizkitplugin::Field *ImageViewWidget::addPropertyField( const rockd
     return propertyfield;
 }
 
-ImageViewOutputPortField::ImageViewOutputPortField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent)
-: rockdisplay::vizkitplugin::Field(parent), widget(widget),
-frame_method(frame_method), distanceimage_method(distanceimage_method)
+void ImageViewWidget::doUpdate(const rockdisplay::vizkitplugin::ValueHandle *data) {
+    QMetaMethod method;
+    QGenericArgument val;
+
+    base::Time time;
+    if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/Frame")
+    {
+        method = frame_method;
+        val = QGenericArgument("void *", data->getRawPtr());
+        base::samples::frame::Frame const *sample = reinterpret_cast<base::samples::frame::Frame const *>(data->getRawPtr());
+        time = sample->time;
+    }
+    else if (data->getFieldDescription()->getTypeName() == "/base/samples/DistanceImage")
+    {
+        method = distanceimage_method;
+        val = QGenericArgument("void *", data->getRawPtr());
+        base::samples::DistanceImage const *sample = reinterpret_cast<base::samples::DistanceImage const *>(data->getRawPtr());
+        time = sample->time;
+    }
+    else if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/FramePair")
+    {
+        base::samples::frame::FramePair const *v =
+            reinterpret_cast<base::samples::frame::FramePair  const *>(
+                data->getRawPtr());
+        bool useFirst = true;//TODO options
+        method = frame_method;
+        if (useFirst)
+        {
+            val = QGenericArgument("void *", &v->first);
+        }
+        else
+        {
+            val = QGenericArgument("void *", &v->second);
+        }
+        time = v->time;
+    }
+    else
+    {
+        return;
+    }
+    if (!val.data())
+    {
+        return;
+    }
+
+    if(false) // @options[:time_overlay]
+    {
+        widget->metaObject()->invokeMethod(
+            widget, "addText",
+            Q_ARG(QString, QString::fromStdString(time.toString())),
+            Q_ARG(int, 3),
+            Q_ARG(QColor, Qt::black),
+            Q_ARG(bool, false));
+    }
+
+    method.invoke(widget, val);
+}
+
+ImageViewOutputPortField::ImageViewOutputPortField(ImageViewWidget *widget, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget)
 {
 }
 
 void ImageViewOutputPortField::updateOutputPort(rockdisplay::vizkitplugin::ValueHandle const *data)
 {
-    QMetaMethod method;
-    QGenericArgument val;
-
-    if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/Frame")
-    {
-        method = frame_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/DistanceImage")
-    {
-        method = distanceimage_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/FramePair")
-    {
-        base::samples::frame::FramePair const *v =
-            reinterpret_cast<base::samples::frame::FramePair  const *>(
-                data->getRawPtr());
-        bool useFirst = true;
-        if (useFirst)
-        {
-            val = QGenericArgument("void *", &v->first);
-        }
-        else
-        {
-            val = QGenericArgument("void *", &v->second);
-        }
-    }
-    else
-    {
-        return;
-    }
-    if (!val.data())
-    {
-        return;
-    }
-
-    method.invoke(widget, val);
+    widget->doUpdate(data);
 }
 
-ImageViewInputPortField::ImageViewInputPortField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent)
-: rockdisplay::vizkitplugin::Field(parent), widget(widget),
-frame_method(frame_method), distanceimage_method(distanceimage_method)
+ImageViewInputPortField::ImageViewInputPortField(ImageViewWidget *widget, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget)
 {
 }
 
 void ImageViewInputPortField::updateInputPort(rockdisplay::vizkitplugin::ValueHandle *data)
 {
-    QMetaMethod method;
-    QGenericArgument val;
-
-    if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/Frame")
-    {
-        method = frame_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/DistanceImage")
-    {
-        method = distanceimage_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/FramePair")
-    {
-        base::samples::frame::FramePair const *v =
-            reinterpret_cast<base::samples::frame::FramePair  const *>(
-                data->getRawPtr());
-        bool useFirst = true;
-        if (useFirst)
-        {
-            val = QGenericArgument("void *", &v->first);
-        }
-        else
-        {
-            val = QGenericArgument("void *", &v->second);
-        }
-    }
-    else
-    {
-        return;
-    }
-    if (!val.data())
-    {
-        return;
-    }
-
-    method.invoke(widget, val);
+    widget->doUpdate(data);
 }
 
-ImageViewPropertyField::ImageViewPropertyField(QWidget *widget, QMetaMethod frame_method, QMetaMethod distanceimage_method, QObject *parent)
-: rockdisplay::vizkitplugin::Field(parent), widget(widget),
-frame_method(frame_method), distanceimage_method(distanceimage_method)
+ImageViewPropertyField::ImageViewPropertyField(ImageViewWidget *widget, QObject *parent)
+: rockdisplay::vizkitplugin::Field(parent), widget(widget)
 {
 }
 
 void ImageViewPropertyField::updateProperty(rockdisplay::vizkitplugin::ValueHandle *data)
 {
-    QMetaMethod method;
-    QGenericArgument val;
+    widget->doUpdate(data);
+}
 
-    if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/Frame")
-    {
-        method = frame_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/DistanceImage")
-    {
-        method = distanceimage_method;
-        val = QGenericArgument("void *", data->getRawPtr());
-    }
-    else if (data->getFieldDescription()->getTypeName() == "/base/samples/frame/FramePair")
-    {
-        base::samples::frame::FramePair const *v =
-            reinterpret_cast<base::samples::frame::FramePair  const *>(
-                data->getRawPtr());
-        bool useFirst = true;
-        if (useFirst)
-        {
-            val = QGenericArgument("void *", &v->first);
-        }
-        else
-        {
-            val = QGenericArgument("void *", &v->second);
-        }
-    }
-    else
-    {
-        return;
-    }
-    if (!val.data())
-    {
-        return;
-    }
-
-    method.invoke(widget, val);
+ImageViewPlugin::ImageViewPlugin()
+    : widgetInterface(nullptr)
+{
+    widgetInterface = rockdisplay::QDesignerPluginManager::getInstance()->
+                      findWidgetByName("ImageView");
+    if (!widgetInterface)
+        std::cerr << "Could not find a Qt Designer widget called \"ImageView\"" << std::endl;
 }
 
 bool ImageViewPlugin::probeOutputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names)
 {
+    if(!widgetInterface)
+        return false;
     return fieldDesc->getTypeName() == "/base/samples/frame/Frame" ||
            fieldDesc->getTypeName() == "/base/samples/DistanceImage" ||
            fieldDesc->getTypeName() == "/base/samples/frame/FramePair";
 }
 
 bool ImageViewPlugin::probeInputPort(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) {
+    if(!widgetInterface)
+        return false;
     return fieldDesc->getTypeName() == "/base/samples/frame/Frame" ||
            fieldDesc->getTypeName() == "/base/samples/DistanceImage" ||
            fieldDesc->getTypeName() == "/base/samples/frame/FramePair";
 }
 
 bool ImageViewPlugin::probeProperty(rockdisplay::vizkitplugin::FieldDescription *fieldDesc, std::vector<std::string> &names) {
+    if(!widgetInterface)
+        return false;
     return fieldDesc->getTypeName() == "/base/samples/frame/Frame" ||
            fieldDesc->getTypeName() == "/base/samples/DistanceImage" ||
            fieldDesc->getTypeName() == "/base/samples/frame/FramePair";
@@ -215,19 +178,12 @@ bool ImageViewPlugin::probeProperty(rockdisplay::vizkitplugin::FieldDescription 
 
 rockdisplay::vizkitplugin::Widget *ImageViewPlugin::createWidget()
 {
-    RockWidgetCollection collection;
-    QList<QDesignerCustomWidgetInterface *> customWidgets = collection.customWidgets();
-
-    QWidget *imView = nullptr;
-    for (QDesignerCustomWidgetInterface *widgetInterface: customWidgets)
+    if(!widgetInterface)
     {
-        const std::string widgetName = widgetInterface->name().toStdString();
-
-        if (widgetName == "ImageView")
-        {
-            imView = widgetInterface->createWidget(nullptr);
-        }
+        return nullptr;
     }
+    QWidget *imView = rockdisplay::QDesignerPluginManager::getInstance()->
+                      findWidgetByName("ImageView")->createWidget(nullptr);
 
     if (!imView)
     {
@@ -259,11 +215,11 @@ rockdisplay::vizkitplugin::Widget *ImageViewPlugin::createWidget()
         {
             continue;
         }
-        if (parameterList[0].toStdString() != "base::samples::frame::Frame")
+        if (parameterList[0].toStdString() == "base::samples::frame::Frame")
         {
             found_frame_method = method;
         }
-        if (parameterList[0].toStdString() != "base::samples::DistanceImage")
+        if (parameterList[0].toStdString() == "base::samples::DistanceImage")
         {
             found_distanceimage_method = method;
         }
