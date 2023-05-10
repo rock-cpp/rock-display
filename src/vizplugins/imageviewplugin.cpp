@@ -182,8 +182,7 @@ rockdisplay::vizkitplugin::Widget *ImageViewPlugin::createWidget()
     {
         return nullptr;
     }
-    QWidget *imView = rockdisplay::QDesignerPluginManager::getInstance()->
-                      findWidgetByName("ImageView")->createWidget(nullptr);
+    QWidget *imView = widgetInterface->createWidget(nullptr);
 
     if (!imView)
     {
