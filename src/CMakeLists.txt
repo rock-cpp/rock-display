@@ -28,6 +28,7 @@ SOURCES
     ConfigItemHandlerRepository.cpp
     vizplugins/artificialhorizonplugin.cpp
     vizplugins/imageviewplugin.cpp
+    vizplugins/plot2dplugin.cpp
     vizplugins/orientationviewplugin.cpp
     vizplugins/rangeviewplugin.cpp
     vizplugins/sonardisplayplugin.cpp
@@ -62,6 +63,8 @@ MOC
     vizplugins/artificialhorizonplugin_p.hpp
     vizplugins/imageviewplugin.hpp
     vizplugins/imageviewplugin_p.hpp
+    vizplugins/plot2dplugin.hpp
+    vizplugins/plot2dplugin_p.hpp
     vizplugins/orientationviewplugin.hpp
     vizplugins/orientationviewplugin_p.hpp
     vizplugins/rangeviewplugin.hpp

@@ -37,6 +37,7 @@
 #include "ConfigurationSelectDialog.hpp"
 #include "vizplugins/artificialhorizonplugin.hpp"
 #include "vizplugins/imageviewplugin.hpp"
+#include "vizplugins/plot2dplugin.hpp"
 #include "vizplugins/orientationviewplugin.hpp"
 #include "vizplugins/rangeviewplugin.hpp"
 #include "vizplugins/sonardisplayplugin.hpp"
@@ -322,6 +323,7 @@ MainWindow::MainWindow(orocos_cpp::OrocosCpp &orocos, QWidget *parent) :
 
     plugins.push_back(new rock_display::ArtificialHorizonPlugin);
     plugins.push_back(new rock_display::ImageViewPlugin);
+    plugins.push_back(new rock_display::Plot2dPlugin);
     plugins.push_back(new rock_display::OrientationViewPlugin);
     plugins.push_back(new rock_display::RangeViewPlugin);
     plugins.push_back(new rock_display::SonarDisplayPlugin);
