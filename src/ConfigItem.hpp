@@ -161,6 +161,7 @@ public:
     virtual ~EditableArray();
     virtual Typelib::Value& getValueHandle() override;
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };
 
 class Simple : public ItemBase
@@ -180,6 +181,7 @@ public:
     virtual Typelib::Value& getValueHandle() override;
     bool updateFromEdit();
     virtual bool compareAndMark(Typelib::Value& valueCurrent, Typelib::Value& valueOld) override;
+    virtual void update(Typelib::Value& valueIn, bool updateUI = false) override;
 };
 
 class Complex : public ItemBase

@@ -105,6 +105,8 @@ void Array::update(Typelib::Value& valueIn, bool updateUI)
     bool childrenUpdateUI = updateUI && name->isExpanded();
     value_handle = valueIn;
 
+    emit visualizerUpdate(valueIn);
+
     for(auto &h : handlerStack)
     {
         if (updateUI && (h->flags() & ConfigItemHandler::Flags::ConvertsFromTypelibValue))
@@ -198,6 +200,13 @@ EditableArray::~EditableArray()
 Typelib::Value& EditableArray::getValueHandle()
 {
     return value_handle;
+}
+
+void EditableArray::update(Typelib::Value& valueIn, bool updateUI)
+{
+    emit editableUpdate(valueIn);
+
+    Array::update(valueIn, updateUI);
 }
 
 std::shared_ptr<ItemBase> EditableArray::getItem(Typelib::Value& value, TypedItem *nameItem, TypedItem *valueItem) const
@@ -319,6 +328,8 @@ std::string getValue<int8_t>(const Typelib::Value& value)
 void Simple::update(Typelib::Value& valueIn, bool updateUI)
 {
     value_handle = valueIn;
+
+    emit visualizerUpdate(valueIn);
 
     if (!updateUI)
     {
@@ -465,6 +476,13 @@ EditableSimple::~EditableSimple()
 Typelib::Value& EditableSimple::getValueHandle()
 {
     return value_handle;
+}
+
+void EditableSimple::update(Typelib::Value& valueIn, bool updateUI)
+{
+    emit editableUpdate(valueIn);
+
+    Simple::update(valueIn, updateUI);
 }
 
 template <class T>
