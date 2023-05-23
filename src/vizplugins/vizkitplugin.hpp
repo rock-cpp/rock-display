@@ -330,6 +330,8 @@ public slots:
 
 /**
  * @brief This interface provides entries for data transfer and a handle for removal of Fields from Widgets
+ *
+ * The Plugin owns this Field, it is allowed to delete it at any time.
  */
 class Field : public QObject {
     Q_OBJECT;

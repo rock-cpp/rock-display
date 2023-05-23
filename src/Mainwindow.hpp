@@ -150,15 +150,19 @@ public:
     TypeConverterFactory *converterfactory;
     std::unique_ptr<TypeConverter> converter;
     Typelib::Value orig_value;
+    bool removing;
     FieldVizHandle() : widget(nullptr), plugin(nullptr), item(nullptr),
         fieldHandle(nullptr), valueHandle(nullptr), outputportfield(nullptr),
         inputportfield(nullptr), propertyfield(nullptr),
-        converterfactory(nullptr) {}
+        converterfactory(nullptr), removing(false) {}
     ~FieldVizHandle();
+signals:
+    void fieldRemoved();
 public slots:
     virtual void updateVisualizer(Typelib::Value const &value) override;
     /* this sample can be kept around for editing purposes */
     virtual void updateEditable(Typelib::Value const &value) override;
+    void plugin_field_destroyed();
 private slots:
     void edited(bool force_send);
 };

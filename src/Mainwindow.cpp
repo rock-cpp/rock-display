@@ -18,10 +18,17 @@
 
 #include <QCursor>
 #include <QCloseEvent>
+#include <QTimer>
+#include <QPushButton>
+#include <QDialogButtonBox>
+#include <QLabel>
+#include <QWidgetAction>
+#include <QMessageBox>
+#include <QFileDialog>
 #include <rtt/base/DataSourceBase.hpp>
 #include <rtt/typelib/TypelibMarshallerBase.hpp>
-#include <rtt/base/DataSourceBase.hpp>
 #include <orocos_cpp/ConfigurationHelper.hpp>
+#include <unordered_set>
 
 #include "ui_task_inspector_window.h"
 #include "Types.hpp"
@@ -47,14 +54,6 @@
 #include "vizplugins/virtualjoystickplugin.hpp"
 #include "vizplugins/vizkitplugin_p.hpp"
 #include "vizplugins/vizkit3dplugins.hpp"
-#include <unordered_set>
-#include <QTimer>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QLabel>
-#include <QWidgetAction>
-#include <QMessageBox>
-#include <QFileDialog>
 
 void PluginWidgetQMainWindow::closeEvent(QCloseEvent *ev)
 {
@@ -96,6 +95,7 @@ RTTTypelibTypeConverter::~RTTTypelibTypeConverter() {
 TypeConverter::ConversionResult RTTTypelibTypeConverter::convertToResult(Typelib::Value const &value,
         const Typelib::Registry *registry)
 {
+    (void)registry;
     TypeConverter::ConversionResult result;
     orogen_transports::TypelibMarshallerBase::Handle *transportHandle =
         static_cast<orogen_transports::TypelibMarshallerBase::Handle *>(this->transportHandle);
@@ -143,6 +143,7 @@ TypeConverter::ConversionResult RTTAliasTypeConverter::convertToResult(Typelib::
 
 void RTTAliasTypeConverter::refreshFromResult(Typelib::Value &orig_value)
 {
+    (void)orig_value;
 }
 
 std::unique_ptr<TypeConverter> RTTTypelibTypeConverterFactory::createConverter() const
@@ -254,6 +255,26 @@ void FieldVizHandle::updateEditable(Typelib::Value const &value)
     {
         propertyfield->updateProperty(valueHandle);
     }
+}
+
+void FieldVizHandle::plugin_field_destroyed()
+{
+    //this may be called during removeFieldFromWidget, or never, or whenever
+    //the plugin wants to remove it.
+
+    //this will not be called after this FieldVizHandle has been destroyed,
+    //guaranteed by Qt.
+
+    //doing our cleanup first; the field definitely is no longer present.
+    outputportfield = nullptr;
+    inputportfield = nullptr;
+    propertyfield = nullptr;
+
+    //MainWindow marked this FieldVizHandle such that it is already destroying
+    //it, so don't emit the fieldRemoved. MainWindow could also look at
+    //removing itself.
+    if (!removing)
+        emit fieldRemoved();
 }
 
 void FieldVizHandle::edited(bool force_send)
@@ -1717,6 +1738,13 @@ bool MainWindow::addFieldToWidget(rockdisplay::vizkitplugin::Plugin *plugin, std
             //send the current, old, data if any to everything, including this new visualizer
             model->updateTasks(true);
             haveAdded = true;
+            connect(vh->outputportfield, &QObject::destroyed,
+                    vh, &FieldVizHandle::plugin_field_destroyed);
+            connect(vh, &FieldVizHandle::fieldRemoved,
+                    this, [this, vh, ti]()
+            {
+                removeFieldFromWidget(vh, ti);
+            });
         }
         else
         {
@@ -1750,6 +1778,13 @@ bool MainWindow::addFieldToWidget(rockdisplay::vizkitplugin::Plugin *plugin, std
             //send the current, old, data if any to everything, including this new visualizer
             model->updateTasks(true);
             haveAdded = true;
+            connect(vh->inputportfield, &QObject::destroyed,
+                    vh, &FieldVizHandle::plugin_field_destroyed);
+            connect(vh, &FieldVizHandle::fieldRemoved,
+                    this, [this, vh, ti]()
+            {
+                removeFieldFromWidget(vh, ti);
+            });
         }
         else
         {
@@ -1782,6 +1817,13 @@ bool MainWindow::addFieldToWidget(rockdisplay::vizkitplugin::Plugin *plugin, std
             //send the current, old, data if any to everything, including this new visualizer
             model->updateTasks(true);
             haveAdded = true;
+            connect(vh->propertyfield, &QObject::destroyed,
+                    vh, &FieldVizHandle::plugin_field_destroyed);
+            connect(vh, &FieldVizHandle::fieldRemoved,
+                    this, [this, vh, ti]()
+            {
+                removeFieldFromWidget(vh, ti);
+            });
         }
         else
         {
@@ -1881,6 +1923,8 @@ void MainWindow::destroyWidget(rockdisplay::vizkitplugin::Plugin *plugin, rockdi
 
 void MainWindow::removeFieldFromWidget(FieldVizHandle *fvh, TypedItem *ti)
 {
+    if(fvh->removing)
+        return;
     VisualizerAdapter *viz = static_cast<ItemBase *>(ti->getData());
     for (auto fit = fieldVizHandles.equal_range(ti);
             fit.first != fit.second; fit.first++)
@@ -1891,6 +1935,7 @@ void MainWindow::removeFieldFromWidget(FieldVizHandle *fvh, TypedItem *ti)
         }
         fieldVizHandles.erase(fit.first);
         viz->removeVisualizer(fvh);
+        fvh->removing = true;
         if (fvh->outputportfield)
         {
             fvh->widget->removeOutputPortField(fvh->fieldHandle, fvh->outputportfield);
@@ -1903,7 +1948,7 @@ void MainWindow::removeFieldFromWidget(FieldVizHandle *fvh, TypedItem *ti)
         {
             fvh->widget->removePropertyField(fvh->fieldHandle, fvh->propertyfield);
         }
-        delete fvh;
+        fvh->deleteLater();
         break;
     }
 }
