@@ -10,4 +10,5 @@
   <depend package="tools/orocos_cpp" />
   <depend package="gui/rock_widget_collection" />
   <depend package="drivers/orogen/transformer" optional="1" />
+  <depend package="boost" />
 </package>

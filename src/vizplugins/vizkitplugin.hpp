@@ -630,14 +630,14 @@ public:
 Q_DECLARE_INTERFACE(rockdisplay::vizkitplugin::PluginFactory, RockdisplayVizkitPluginFactory_iid)
 
 #define ROCKDISPLAY_VIZKIT_PLUGINFACTORY(FactoryTypeName, PluginTypename) \
-class FactoryTypeName : rockdisplay::vizkitplugin::PluginFactory { \
+class FactoryTypeName : public rockdisplay::vizkitplugin::PluginFactory { \
     Q_OBJECT; \
     Q_PLUGIN_METADATA(IID RockdisplayVizkitPluginFactory_iid) \
     Q_INTERFACES(rockdisplay::vizkitplugin::PluginFactory) \
 \
 public: \
-    virtual std::vector<VizkitPlugin*> createPlugins() { \
-        return {new PluginTypename();} \
+    virtual std::vector<rockdisplay::vizkitplugin::Plugin*> createPlugins() { \
+        return {new PluginTypename()}; \
     } \
 };
 

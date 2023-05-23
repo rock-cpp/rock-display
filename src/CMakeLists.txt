@@ -4,6 +4,8 @@ find_package(PkgConfig)
 
 pkg_check_modules(TRANSFORMER_TYPEKIT IMPORTED_TARGET transformer-typekit-gnulinux)
 
+add_subdirectory(vizplugins)
+
 rock_library(rock-display
 SOURCES
     TaskModel.cpp
@@ -19,6 +21,7 @@ SOURCES
     ConfigItem.cpp
     VisualizerAdapter.cpp
     configuration.cpp
+    rockdisplay_pluginmanager.cpp
     configitemhandlers/EnumHandler.cpp
     configitemhandlers/ContainerHandler.cpp
     configitemhandlers/StdStringHandler.cpp
@@ -26,20 +29,7 @@ SOURCES
     configitemhandlers/BinaryCtxMenuHandler.cpp
     configitemhandlers/BoolHandler.cpp
     ConfigItemHandlerRepository.cpp
-    vizplugins/artificialhorizonplugin.cpp
-    vizplugins/imageviewplugin.cpp
-    vizplugins/plot2dplugin.cpp
-    vizplugins/orientationviewplugin.cpp
-    vizplugins/rangeviewplugin.cpp
-    vizplugins/sonardisplayplugin.cpp
-    vizplugins/sonarviewplugin.cpp
-    vizplugins/sonarwidgetplugin.cpp
-    vizplugins/streamalignerwidgetplugin.cpp
-    vizplugins/virtualjoystickplugin.cpp
-    vizplugins/vizkitplugin.cpp
-    vizplugins/vizkit3dplugins.cpp
-    vizplugins/Vizkit3dPluginRepository.cpp
-    vizplugins/designer/pluginmanager.cpp
+    vizplugins/vizkitpluginimpl.cpp
     ConfigurationSelectDialog.cpp
 MOC
     TaskModel.hpp
@@ -52,6 +42,7 @@ MOC
     VisualizerAdapter.hpp
     VizHandle.hpp
     PluginHandle.hpp
+    rockdisplay_pluginmanager.hpp
     configitemhandlers/EnumHandler.hpp
     configitemhandlers/ContainerHandler.hpp
     configitemhandlers/StdStringHandler.hpp
@@ -59,32 +50,7 @@ MOC
     configitemhandlers/BinaryCtxMenuHandler.hpp
     configitemhandlers/BoolHandler.hpp
     ConfigItemHandlerRepository.hpp
-    vizplugins/artificialhorizonplugin.hpp
-    vizplugins/artificialhorizonplugin_p.hpp
-    vizplugins/imageviewplugin.hpp
-    vizplugins/imageviewplugin_p.hpp
-    vizplugins/plot2dplugin.hpp
-    vizplugins/plot2dplugin_p.hpp
-    vizplugins/orientationviewplugin.hpp
-    vizplugins/orientationviewplugin_p.hpp
-    vizplugins/rangeviewplugin.hpp
-    vizplugins/rangeviewplugin_p.hpp
-    vizplugins/sonardisplayplugin.hpp
-    vizplugins/sonardisplayplugin_p.hpp
-    vizplugins/sonarviewplugin.hpp
-    vizplugins/sonarviewplugin_p.hpp
-    vizplugins/sonarwidgetplugin.hpp
-    vizplugins/sonarwidgetplugin_p.hpp
-    vizplugins/streamalignerwidgetplugin.hpp
-    vizplugins/streamalignerwidgetplugin_p.hpp
-    vizplugins/virtualjoystickplugin.hpp
-    vizplugins/virtualjoystickplugin_p.hpp
-    vizplugins/vizkitplugin.hpp
     vizplugins/vizkitplugin_p.hpp
-    vizplugins/Vizkit3dPluginRepository.hpp
-    vizplugins/vizkit3dplugins.hpp
-    vizplugins/vizkit3dplugins_p.hpp
-    vizplugins/designer/pluginmanager_p.h
     ConfigurationSelectDialog.hpp
 HEADERS
 UI
@@ -97,6 +63,7 @@ DEPS_PKGCONFIG
     base-lib
     tinyxml
     frame_helper
+DEPS rockdisplay_vizkitplugin
 LIBS Qt5::Core
      Qt5::Gui
      Qt5::Widgets
