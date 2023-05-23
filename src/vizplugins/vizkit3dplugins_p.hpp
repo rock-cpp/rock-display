@@ -141,6 +141,7 @@ public:
     Vizkit3DPluginsWidget *widget;
 
     Vizkit3dPluginsTransformerDispatchOutputPortField(Vizkit3DPluginsWidget *widget);
+    ~Vizkit3dPluginsTransformerDispatchOutputPortField();
 public slots:
     virtual void updateOutputPort(const rockdisplay::vizkitplugin::ValueHandle *value) override;
 };

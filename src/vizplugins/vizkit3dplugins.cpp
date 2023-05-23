@@ -42,11 +42,13 @@ struct hash<transformer::PortTransformationAssociation>
 
 using namespace rock_display;
 
+#ifdef HAVE_TRANSFORMER_TYPEKIT
 Vizkit3DPluginsWidget::TransformerData::TransformerData()
     : broadcaster_port(nullptr), broadcaster_reader(nullptr),
       broadcaster_task(nullptr)
 {
 }
+#endif
 
 
 Vizkit3dPluginsOutputPortField::Vizkit3dPluginsOutputPortField(QObject *plugin, QMetaMethod method)
@@ -108,6 +110,8 @@ Vizkit3dPluginsTransformerDispatchOutputPortField::Vizkit3dPluginsTransformerDis
     : widget(widget)
 {
 }
+
+Vizkit3dPluginsTransformerDispatchOutputPortField::~Vizkit3dPluginsTransformerDispatchOutputPortField() = default;
 
 static std::string getFreePortName(RTT::TaskContext* clientTask, const RTT::base::PortInterface* portIf)
 {
