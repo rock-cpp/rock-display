@@ -31,7 +31,7 @@ SOURCES
     ConfigItemHandlerRepository.cpp
     vizplugins/vizkitpluginimpl.cpp
     ConfigurationSelectDialog.cpp
-MOC
+MOC5
     TaskModel.hpp
     TaskModelNotifier.hpp
     NameServiceModel.hpp
@@ -53,13 +53,13 @@ MOC
     vizplugins/vizkitplugin_p.hpp
     ConfigurationSelectDialog.hpp
 HEADERS
-UI
+UI5
     task_inspector_window.ui
     ConfigurationSelectDialog.ui
 DEPS_PKGCONFIG
     orocos_cpp
     lib_config
-    vizkit3d
+    vizkit3d-qt5
     base-lib
     tinyxml
     frame_helper
@@ -87,7 +87,8 @@ LIBS
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
-UI
+UI5
     task_inspector_window.ui
     ConfigurationSelectDialog.ui
 )
+

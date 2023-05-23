@@ -4,7 +4,7 @@ rock_find_cmake(Boost REQUIRED COMPONENTS regex)
 rock_library(rockdisplay_vizkitplugin SHARED
     SOURCES
     vizkitplugin.cpp
-    MOC
+    MOC5
     vizkitplugin.hpp
     HEADERS
     vizkitplugin.hpp
@@ -24,7 +24,7 @@ rock_library_common(rockdisplay_base_types_plugins SHARED
     designer/pluginmanager.cpp
     base_types_pluginfactory.cpp
 
-    MOC
+    MOC5
     artificialhorizonplugin.hpp
     artificialhorizonplugin_p.hpp
     imageviewplugin.hpp
@@ -62,7 +62,7 @@ rock_library_common(rockdisplay_plot2dplugin SHARED
     designer/pluginmanager.cpp
     plot2d_pluginfactory.cpp
 
-    MOC
+    MOC5
     plot2dplugin.hpp
     plot2dplugin_p.hpp
     designer/pluginmanager_p.h
@@ -89,7 +89,7 @@ rock_library_common(rockdisplay_vizkit3dplugin SHARED
     Vizkit3dPluginRepository.cpp
     vizkit3d_pluginfactory.cpp
 
-    MOC
+    MOC5
     vizkit3dplugins.hpp
     vizkit3dplugins_p.hpp
     vizkit3d_pluginfactory.hpp
