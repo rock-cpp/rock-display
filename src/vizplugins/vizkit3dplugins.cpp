@@ -43,7 +43,7 @@ struct hash<transformer::PortTransformationAssociation>
 using namespace rock_display;
 
 Vizkit3DPluginsWidget::TransformerData::TransformerData()
-    : broadcaster_port(nullptr), broadcaster_reader(nullptr)
+    : broadcaster_port(nullptr), broadcaster_reader(nullptr), broadcaster_task(nullptr)
 {
 }
 
