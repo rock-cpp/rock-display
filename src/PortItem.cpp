@@ -187,7 +187,7 @@ void OutputPortItem::updataValue(bool handleOldData)
     }
 
     try {
-        if (reader->read(handle->sample) == RTT::NewData)
+        if (reader->read(handle->sample, !haveOldData) == RTT::NewData)
         {
             //convert the native, Orocos sample back to its marshallable and inspectable Typelib form
             handle->transport->refreshTypelibSample(handle->transportHandle);
