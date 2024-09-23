@@ -9,6 +9,7 @@
   <depend package="base/cmake" />
   <depend package="tools/orocos_cpp" />
   <depend package="gui/rock_widget_collection" />
+  <depend package="gui/vizkit3d" />
   <depend package="drivers/orogen/transformer" optional="1" />
   <depend package="boost" />
 </package>
